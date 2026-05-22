@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   User, Users, Wrench, Target, Star, Crown, DollarSign, Sparkles,
   RotateCcw, BarChart3, AlertTriangle, Key, Lightbulb, ArrowRight,
-  Trophy, BookOpen, Crosshair, Search, X,
+  Trophy, BookOpen, Crosshair, Search, X, Plus, Calculator,
 } from "lucide-react";
 import { PARAGONS, DIFFICULTY_MULTIPLIERS } from "./constants/paragons";
 import { calculateParagonData, reverseCalculate, getBasePrice } from "./utils/calculator";
@@ -39,6 +39,85 @@ export default function App() {
   const [sacrificedTowerCash, setSacrificedTowerCash] = useState(0);
   const [sliderCash, setSliderCash] = useState(0);
   const [totems, setTotems] = useState(0);
+
+  // Pop Count Adder state
+  const [popAdderOpen, setPopAdderOpen] = useState(false);
+  const [popAdderEntries, setPopAdderEntries] = useState([""]);
+  const popAdderRefs = useRef([]);
+  const popAdderModalRef = useRef(null);
+
+  const popAdderTotal = useMemo(() => {
+    return popAdderEntries.reduce((sum, v) => sum + (parseInt(v.replace(/,/g, "")) || 0), 0);
+  }, [popAdderEntries]);
+
+  const openPopAdder = useCallback(() => {
+    setPopAdderEntries([""]);
+    setPopAdderOpen(true);
+  }, []);
+
+  const closePopAdder = useCallback(() => {
+    setPopAdderOpen(false);
+    setPopAdderEntries([""]);
+  }, []);
+
+  const applyPopAdder = useCallback(() => {
+    setPops(popAdderTotal);
+    closePopAdder();
+  }, [popAdderTotal, closePopAdder]);
+
+  const handlePopAdderChange = useCallback((idx, val) => {
+    setPopAdderEntries(prev => {
+      const next = [...prev];
+      next[idx] = val;
+      return next;
+    });
+  }, []);
+
+  const handlePopAdderKeyDown = useCallback((e, idx) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      setPopAdderEntries(prev => {
+        const next = [...prev.slice(0, idx + 1), "", ...prev.slice(idx + 1)];
+        return next;
+      });
+      setTimeout(() => {
+        const nextRef = popAdderRefs.current[idx + 1];
+        if (nextRef) nextRef.focus();
+      }, 0);
+    } else if (e.key === "Backspace" && popAdderEntries[idx] === "" && popAdderEntries.length > 1) {
+      e.preventDefault();
+      setPopAdderEntries(prev => {
+        const next = prev.filter((_, i) => i !== idx);
+        return next;
+      });
+      setTimeout(() => {
+        const prevRef = popAdderRefs.current[Math.max(0, idx - 1)];
+        if (prevRef) prevRef.focus();
+      }, 0);
+    }
+  }, [popAdderEntries]);
+
+  const removePopAdderEntry = useCallback((idx) => {
+    setPopAdderEntries(prev => {
+      if (prev.length === 1) return [""];
+      return prev.filter((_, i) => i !== idx);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (popAdderOpen) {
+      setTimeout(() => {
+        if (popAdderRefs.current[0]) popAdderRefs.current[0].focus();
+      }, 50);
+    }
+  }, [popAdderOpen]);
+
+  useEffect(() => {
+    if (!popAdderOpen) return;
+    const handleKey = (e) => { if (e.key === "Escape") closePopAdder(); };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [popAdderOpen, closePopAdder]);
 
   // 3. Get Active Paragon Data
   const activeParagon = useMemo(() => PARAGONS[selectedParagonId], [selectedParagonId]);
@@ -354,6 +433,10 @@ export default function App() {
                 <button className="quick-btn" onClick={setMaxPops}>Max Pops (16.2M)</button>
                 <button className="quick-btn" onClick={() => setIncome(0)}>Reset Income</button>
                 <button className="quick-btn" onClick={setMaxIncome}>Max Income ($4.05M)</button>
+                <button className="quick-btn pop-adder-trigger-btn" onClick={openPopAdder}>
+                  <Calculator size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} />
+                  Add up tower pops
+                </button>
               </div>
             </div>
           </div>
@@ -978,6 +1061,77 @@ export default function App() {
           </div>
         </div>
       </section>
+
+      {/* POP COUNT ADDER MODAL */}
+      {popAdderOpen && (
+        <div className="pop-adder-overlay" onClick={(e) => { if (e.target === e.currentTarget) closePopAdder(); }}>
+          <div className="pop-adder-modal" ref={popAdderModalRef}>
+            <div className="pop-adder-header">
+              <span className="pop-adder-title">
+                <Calculator size={18} style={{ verticalAlign: "-3px", marginRight: 8 }} />
+                Tower Pop Counter
+              </span>
+              <button className="pop-adder-close" onClick={closePopAdder}>
+                <X size={16} />
+              </button>
+            </div>
+
+            <p className="pop-adder-hint">
+              Enter each tower's pop count. Press <kbd>Enter</kbd> to add a new row, <kbd>Backspace</kbd> on an empty row to remove it.
+            </p>
+
+            <div className="pop-adder-entries">
+              {popAdderEntries.map((val, idx) => (
+                <div key={idx} className="pop-adder-row">
+                  <span className="pop-adder-index">{idx + 1}</span>
+                  <input
+                    ref={el => (popAdderRefs.current[idx] = el)}
+                    type="text"
+                    className="pop-adder-input"
+                    placeholder="e.g. 350,000"
+                    value={val}
+                    onChange={(e) => handlePopAdderChange(idx, e.target.value)}
+                    onKeyDown={(e) => handlePopAdderKeyDown(e, idx)}
+                  />
+                  <button
+                    className="pop-adder-remove"
+                    onClick={() => removePopAdderEntry(idx)}
+                    tabIndex={-1}
+                    aria-label="Remove"
+                  >
+                    <X size={13} />
+                  </button>
+                </div>
+              ))}
+
+              <button
+                className="pop-adder-add-row"
+                onClick={() => {
+                  setPopAdderEntries(prev => [...prev, ""]);
+                  setTimeout(() => {
+                    const lastRef = popAdderRefs.current[popAdderEntries.length];
+                    if (lastRef) lastRef.focus();
+                  }, 0);
+                }}
+              >
+                <Plus size={14} style={{ marginRight: 5 }} /> Add row
+              </button>
+            </div>
+
+            <div className="pop-adder-footer">
+              <div className="pop-adder-total">
+                Total: <strong>{popAdderTotal.toLocaleString()}</strong> pops
+              </div>
+              <div className="pop-adder-actions">
+                <button className="quick-btn" onClick={closePopAdder}>Cancel</button>
+                <button className="pop-adder-apply" onClick={applyPopAdder}>
+                  Apply to Pops
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* FOOTER */}
       <footer>
