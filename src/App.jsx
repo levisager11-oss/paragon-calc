@@ -4,6 +4,7 @@ import {
   RotateCcw, BarChart3, AlertTriangle, Key, Lightbulb, ArrowRight,
   Trophy, BookOpen, Crosshair, Search, X, Plus, Calculator,
 } from "lucide-react";
+import { Analytics } from "@vercel/analytics/react";
 import { PARAGONS, DIFFICULTY_MULTIPLIERS } from "./constants/paragons";
 import { calculateParagonData, reverseCalculate, getBasePrice } from "./utils/calculator";
 
@@ -1142,6 +1143,7 @@ export default function App() {
           Pair Programmed with Antigravity • DeepMind Coding Suite 2026.
         </p>
       </footer>
+      <Analytics />
     </div>
   );
 }
