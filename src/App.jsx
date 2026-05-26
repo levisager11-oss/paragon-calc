@@ -458,10 +458,10 @@ export default function App() {
                   <input
                     type="range"
                     min="0"
-                    max="150"
+                    max="100"
                     className={`range-slider ${activeParagon.category}-accent`}
                     value={upgrades}
-                    style={{ '--pct': pct(upgrades, 0, 150) }}
+                    style={{ '--pct': pct(upgrades, 0, 100) }}
                     onChange={(e) => setUpgrades(parseInt(e.target.value))}
                   />
                 </div>
@@ -469,7 +469,7 @@ export default function App() {
                   type="number"
                   className="number-input"
                   min="0"
-                  max="1000"
+                  max="100"
                   value={upgrades}
                   onChange={(e) => setUpgrades(Math.max(0, parseInt(e.target.value) || 0))}
                 />
