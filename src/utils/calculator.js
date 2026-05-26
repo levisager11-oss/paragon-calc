@@ -16,6 +16,7 @@ export function reverseCalculate({
   gameMode,
   targetDegree,
   useExtraT5s      = true,
+  useUpgrades      = true,
   useSacrificeCash = true,
   useSliderCash    = false,
   useTotems        = true,
@@ -35,8 +36,8 @@ export function reverseCalculate({
     POWER_LIMITS.t5.maxPower,
     maxT5s * POWER_LIMITS.t5.pointsPerExtra
   );
-  const maxPopsPower    = POWER_LIMITS.pops.maxPower;     // 90 000
-  const maxUpgradePower = POWER_LIMITS.upgrades.maxPower; // 10 000
+  const maxPopsPower    = POWER_LIMITS.pops.maxPower;                                // 90 000
+  const maxUpgradePower = useUpgrades ? POWER_LIMITS.upgrades.maxPower : 0;        // 10 000
   const maxCashPower    = POWER_LIMITS.cash.maxPower;     // 60 000
   const cashEnabled     = useSacrificeCash || useSliderCash;
 
@@ -101,7 +102,7 @@ export function reverseCalculate({
   const popsNeeded     = Math.round(popsPow * POWER_LIMITS.pops.popDivisor);
   const popsMaxed      = popsPow  >= maxPopsPower;
   const upgradesNeeded = Math.ceil(upgPow  / POWER_LIMITS.upgrades.pointsPerUpgrade);
-  const upgradesMaxed  = upgPow   >= maxUpgradePower;
+  const upgradesMaxed  = useUpgrades && upgPow >= POWER_LIMITS.upgrades.maxPower;
   const t5sNeeded      = t5Pow  > 0 ? Math.ceil(t5Pow / POWER_LIMITS.t5.pointsPerExtra) : 0;
   const t5sMaxed       = maxT5Power > 0 && t5Pow >= maxT5Power;
   const totemsNeeded   = totemPow > 0 ? Math.round(totemPow / 2000) : 0;
