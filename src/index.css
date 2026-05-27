@@ -1679,3 +1679,562 @@ footer a:hover {
 [data-theme="light"] .pop-adder-footer { border-top-color: rgba(0, 0, 0, 0.07); }
 [data-theme="light"] .pop-adder-total strong { color: var(--text-primary); }
 [data-theme="light"] .pop-adder-overlay { background: rgba(0, 0, 0, 0.35); }
+
+/* ================================
+   Mobile Responsive Styles
+   ================================ */
+
+/* Tablet & small desktop */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem 0.75rem;
+  }
+
+  /* Header: stack vertically */
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+  }
+
+  .logo-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+
+  .logo-text h1 {
+    font-size: 1.5rem;
+  }
+
+  .logo-text p {
+    font-size: 0.75rem;
+  }
+
+  .controls-header {
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .control-group {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-shrink: 0;
+  }
+
+  .control-group::-webkit-scrollbar {
+    display: none;
+  }
+
+  .control-btn {
+    font-size: 0.78rem;
+    padding: 0.4rem 0.7rem;
+    white-space: nowrap;
+  }
+
+  /* Paragon search */
+  .paragon-search-wrapper {
+    max-width: 100%;
+  }
+
+  .paragon-search-bar {
+    padding: 0.6rem 1rem;
+  }
+
+  .paragon-active-chip {
+    max-width: 100%;
+    gap: 0.6rem;
+    padding: 0.6rem 0.8rem;
+  }
+
+  .active-chip-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .active-chip-name {
+    font-size: 0.92rem;
+  }
+
+  .active-chip-price {
+    font-size: 0.78rem;
+  }
+
+  .paragon-suggestions {
+    max-width: 100%;
+  }
+
+  /* Panels */
+  .panel {
+    padding: 1.25rem;
+    border-radius: 18px;
+  }
+
+  .panel-title {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Input sections */
+  .input-section {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+
+  .input-header {
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .input-label {
+    font-size: 0.92rem;
+  }
+
+  .input-badge {
+    font-size: 0.72rem;
+    padding: 0.2rem 0.5rem;
+  }
+
+  .control-row {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .number-input {
+    width: 100%;
+    text-align: left;
+    font-size: 0.95rem;
+  }
+
+  /* Sticky results: unstick on mobile */
+  .sticky-results {
+    position: static;
+  }
+
+  /* Gauge */
+  .gauge-container {
+    padding: 1.5rem 1rem;
+  }
+
+  .circular-gauge {
+    width: 170px;
+    height: 170px;
+  }
+
+  .degree-number {
+    font-size: 3.5rem;
+  }
+
+  .degree-label {
+    font-size: 0.8rem;
+  }
+
+  .power-total {
+    font-size: 0.78rem;
+  }
+
+  /* Breakdown */
+  .breakdown-card {
+    padding: 1.25rem;
+    border-radius: 16px;
+  }
+
+  .breakdown-title {
+    font-size: 1.05rem;
+  }
+
+  /* Goal Planner */
+  .goal-planner-panel {
+    margin-top: 1.5rem;
+  }
+
+  .goal-planner-body {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .goal-toggle-row {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .goal-cash-group {
+    width: 100%;
+  }
+
+  .goal-cash-group .control-btn {
+    flex: 1;
+    text-align: center;
+    font-size: 0.72rem;
+    padding: 0.35rem 0.4rem;
+  }
+
+  /* Guide */
+  .guide-card {
+    padding: 1.25rem;
+    border-radius: 18px;
+  }
+
+  .guide-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  /* Quick buttons */
+  .quick-buttons {
+    gap: 0.35rem;
+  }
+
+  .quick-btn {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.45rem;
+  }
+
+  /* Diagnostics */
+  .diagnostics-card {
+    padding: 1.25rem;
+    border-radius: 16px;
+  }
+
+  .diagnostics-title {
+    font-size: 1rem;
+  }
+
+  /* Privacy */
+  .privacy-policy-section {
+    padding: 1.25rem;
+    border-radius: 18px;
+  }
+
+  /* Footer */
+  footer {
+    margin-top: 2rem;
+    font-size: 0.78rem;
+  }
+
+  /* Pop adder modal */
+  .pop-adder-modal {
+    max-width: 100%;
+    border-radius: 16px;
+  }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+  .container {
+    padding: 0.75rem 0.5rem;
+  }
+
+  header {
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .logo-section {
+    gap: 0.65rem;
+  }
+
+  .logo-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+  }
+
+  .logo-text h1 {
+    font-size: 1.2rem;
+  }
+
+  .logo-text p {
+    font-size: 0.68rem;
+    letter-spacing: 0.5px;
+  }
+
+  .controls-header {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 0.25rem;
+  }
+
+  .controls-header::-webkit-scrollbar {
+    display: none;
+  }
+
+  .control-btn {
+    font-size: 0.72rem;
+    padding: 0.35rem 0.55rem;
+  }
+
+  .theme-toggle-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+  }
+
+  /* Panels */
+  .panel {
+    padding: 1rem;
+    border-radius: 14px;
+  }
+
+  .panel-title {
+    font-size: 1.15rem;
+  }
+
+  /* Input sections */
+  .input-section {
+    padding: 0.8rem;
+    margin-bottom: 0.85rem;
+    border-radius: 10px;
+  }
+
+  .input-label {
+    font-size: 0.85rem;
+    gap: 0.35rem;
+  }
+
+  .input-badge {
+    font-size: 0.65rem;
+  }
+
+  /* Paragon chip */
+  .paragon-active-chip {
+    border-radius: 10px;
+    padding: 0.5rem 0.65rem;
+    gap: 0.5rem;
+  }
+
+  .active-chip-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 1.2rem;
+    border-radius: 8px;
+  }
+
+  .active-chip-name {
+    font-size: 0.85rem;
+  }
+
+  .active-chip-tower {
+    font-size: 0.7rem;
+  }
+
+  .active-chip-tag {
+    font-size: 0.6rem;
+    padding: 0.12rem 0.4rem;
+  }
+
+  .active-chip-price {
+    font-size: 0.72rem;
+  }
+
+  /* Suggestions */
+  .paragon-suggestions {
+    gap: 0.35rem;
+  }
+
+  .suggestion-chip {
+    font-size: 0.72rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  /* Gauge smaller */
+  .gauge-container {
+    padding: 1rem 0.5rem;
+  }
+
+  .circular-gauge {
+    width: 150px;
+    height: 150px;
+    border-width: 6px;
+  }
+
+  .gauge-glow-ring {
+    top: -6px;
+    left: -6px;
+    right: -6px;
+    bottom: -6px;
+    border-width: 6px;
+  }
+
+  .degree-number {
+    font-size: 3rem;
+  }
+
+  .degree-label {
+    font-size: 0.72rem;
+    letter-spacing: 1.5px;
+  }
+
+  .power-total {
+    font-size: 0.72rem;
+    padding: 0.15rem 0.45rem;
+  }
+
+  /* Breakdown */
+  .breakdown-card {
+    padding: 1rem;
+    border-radius: 14px;
+  }
+
+  .breakdown-title {
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+  }
+
+  .breakdown-header {
+    font-size: 0.78rem;
+  }
+
+  /* Waste banner */
+  .waste-banner {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.78rem;
+    border-radius: 10px;
+  }
+
+  /* Key capabilities list */
+  .panel ul {
+    font-size: 0.8rem;
+  }
+
+  /* Goal Planner */
+  .goal-planner-panel {
+    margin-top: 1rem;
+  }
+
+  .goal-planner-panel .panel-title {
+    font-size: 1.1rem;
+  }
+
+  .goal-controls .input-section {
+    margin-bottom: 0.85rem;
+  }
+
+  .goal-results {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+
+  .goal-row {
+    gap: 0.4rem;
+    padding: 0.45rem 0;
+  }
+
+  .goal-row-label {
+    font-size: 0.8rem;
+  }
+
+  .goal-row-value {
+    font-size: 0.82rem;
+  }
+
+  .goal-row-badge {
+    font-size: 0.58rem;
+  }
+
+  .goal-total-cash {
+    font-size: 0.82rem;
+  }
+
+  .goal-total-cash strong {
+    font-size: 0.9rem;
+  }
+
+  /* Guide */
+  .guide-card {
+    padding: 1rem;
+    border-radius: 14px;
+    margin-top: 1.25rem;
+  }
+
+  .paragon-selector-title {
+    font-size: 1.1rem;
+  }
+
+  .guide-column h4 {
+    font-size: 0.92rem;
+  }
+
+  .guide-column p,
+  .guide-column li {
+    font-size: 0.8rem;
+  }
+
+  /* Privacy */
+  .privacy-policy-section {
+    padding: 1rem;
+    border-radius: 14px;
+  }
+
+  .privacy-content {
+    font-size: 0.82rem;
+  }
+
+  /* Footer */
+  footer {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    font-size: 0.72rem;
+  }
+
+  .footer-nav a {
+    font-size: 0.78rem;
+  }
+
+  /* Pop adder */
+  .pop-adder-overlay {
+    padding: 0.5rem;
+    align-items: flex-end;
+  }
+
+  .pop-adder-modal {
+    border-radius: 16px 16px 0 0;
+    max-height: 85vh;
+  }
+
+  .pop-adder-header {
+    padding: 0.85rem 1rem 0.7rem;
+  }
+
+  .pop-adder-title {
+    font-size: 1rem;
+  }
+
+  .pop-adder-hint {
+    padding: 0.5rem 1rem 0;
+    font-size: 0.75rem;
+  }
+
+  .pop-adder-entries {
+    padding: 0.65rem 1rem;
+    max-height: 240px;
+  }
+
+  .pop-adder-input {
+    font-size: 0.88rem;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .pop-adder-footer {
+    padding: 0.75rem 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  /* Ad containers */
+  .ad-container {
+    min-height: 50px;
+  }
+
+  /* Sacrifice dashboard header */
+  .panel > div:first-child {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
