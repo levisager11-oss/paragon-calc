@@ -7,6 +7,7 @@ import {
 import { Analytics } from "@vercel/analytics/react";
 import { PARAGONS, DIFFICULTY_MULTIPLIERS } from "./constants/paragons";
 import { calculateParagonData, reverseCalculate, getBasePrice } from "./utils/calculator";
+import AdUnit from "./components/AdUnit";
 
 const pct = (val, min, max) => `${Math.round(((val - min) / (max - min)) * 100)}%`;
 
@@ -249,10 +250,10 @@ export default function App() {
       <header>
         <div className="logo-section">
           <div className="logo-icon">
-            <img src="/logo.png" alt="Paragon Logo" style={{ width: 40, height: 40, objectFit: "contain" }} />
+            <img src="/logo.png" alt="BTD6 Paragon Calculator Logo" width="40" height="40" style={{ objectFit: "contain" }} />
           </div>
           <div className="logo-text">
-            <h1>Paragon Calculator</h1>
+            <h1>BTD6 Paragon Calculator</h1>
             <p>Bloons TD 6 • Update 39+ Certified</p>
           </div>
         </div>
@@ -299,8 +300,11 @@ export default function App() {
         </div>
       </header>
 
+      {/* AD: Top Banner */}
+      <AdUnit slot="1234567890" format="horizontal" style={{ marginBottom: "1.5rem", textAlign: "center" }} />
+
       {/* PARAGON SELECTOR — SEARCH */}
-      <section style={{ marginBottom: "2rem", padding: "2rem 0" }}>
+      <section style={{ marginBottom: "2rem", padding: "2rem 0" }} aria-label="Paragon selector">
         {/* Search bar + dropdown */}
         <div className="paragon-search-wrapper">
           <div className="paragon-search-bar">
@@ -377,6 +381,7 @@ export default function App() {
       </section>
 
       {/* CORE WORKSPACE */}
+      <main>
       <div className={`dashboard-grid ${activeParagon.category}-accent`}>
         {/* Left Side: Inputs */}
         <section className="panel">
@@ -849,6 +854,9 @@ export default function App() {
         </section>
       </div>
 
+      {/* AD: Mid-page */}
+      <AdUnit slot="0987654321" format="auto" style={{ margin: "2rem 0", textAlign: "center" }} />
+
       {/* GOAL PLANNER */}
       <div className="panel goal-planner-panel">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
@@ -1083,6 +1091,51 @@ export default function App() {
         </div>
       </section>
 
+      {/* AD: Before footer */}
+      <AdUnit slot="1122334455" format="auto" style={{ margin: "2rem 0", textAlign: "center" }} />
+      </main>
+
+      {/* PRIVACY POLICY — Required for AdSense */}
+      <section className="privacy-policy-section" id="privacy-policy" aria-label="Privacy Policy">
+        <h2 className="paragon-selector-title">
+          Privacy Policy
+        </h2>
+        <div className="privacy-content">
+          <p><strong>Last updated:</strong> May 27, 2026</p>
+          <h3>Information We Collect</h3>
+          <p>
+            This website does not collect personal information directly. We use Google AdSense
+            to display advertisements, which may use cookies and web beacons to serve ads based on
+            your prior visits to this or other websites. Google's use of advertising cookies enables
+            it and its partners to serve ads based on your visit to this site and/or other sites on
+            the Internet.
+          </p>
+          <h3>Third-Party Advertising</h3>
+          <p>
+            We use Google AdSense to serve ads. Google may use cookies to personalize ads.
+            You may opt out of personalized advertising by visiting{" "}
+            <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer">Google Ads Settings</a>.
+            For more information about how Google uses data, visit{" "}
+            <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer">Google's Privacy & Terms</a>.
+          </p>
+          <h3>Analytics</h3>
+          <p>
+            We use Vercel Analytics to understand how visitors interact with this site. This data is
+            aggregated and anonymized. No personally identifiable information is stored.
+          </p>
+          <h3>Cookies</h3>
+          <p>
+            This site uses cookies for theme preference (light/dark mode) stored locally in your browser,
+            and third-party cookies from Google AdSense for ad personalization. You can control cookie
+            settings through your browser preferences.
+          </p>
+          <h3>Contact</h3>
+          <p>
+            If you have questions about this privacy policy, please open an issue on our GitHub repository.
+          </p>
+        </div>
+      </section>
+
       {/* POP COUNT ADDER MODAL */}
       {popAdderOpen && (
         <div className="pop-adder-overlay" onClick={(e) => { if (e.target === e.currentTarget) closePopAdder(); }}>
@@ -1156,11 +1209,18 @@ export default function App() {
 
       {/* FOOTER */}
       <footer>
+        <nav className="footer-nav" aria-label="Footer navigation">
+          <a href="#privacy-policy">Privacy Policy</a>
+          <span className="footer-sep">•</span>
+          <a href="https://github.com/levisager11-oss/paragon-calc" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </nav>
         <p>
-          BTD6 Paragon Calculator • Built for Ninjas and Monkey Kings. Bloons TD 6 is a registered trademark of Ninja Kiwi.
+          BTD6 Paragon Calculator — the free, open-source Paragon degree calculator for Bloons TD 6.
+          Calculate degrees 1-100 for all 13 Paragons including Apex Plasma Master, Ascended Shadow,
+          Navarch of the Seas, and more. Bloons TD 6 is a registered trademark of Ninja Kiwi.
         </p>
-        <p style={{ marginTop: "0.5rem" }}>
-          Pair Programmed with Antigravity • DeepMind Coding Suite 2026.
+        <p style={{ marginTop: "0.5rem", fontSize: "0.78rem" }}>
+          &copy; {new Date().getFullYear()} Paragon Calculator. Not affiliated with Ninja Kiwi.
         </p>
       </footer>
       <Analytics />
