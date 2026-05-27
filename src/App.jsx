@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import {
   User, Users, Wrench, Target, Star, Crown, DollarSign, Sparkles,
   RotateCcw, BarChart3, AlertTriangle, Key, Lightbulb, ArrowRight,
-  Trophy, BookOpen, Crosshair, Search, X, Plus, Calculator,
+  Trophy, BookOpen, Search, X, Plus, Calculator,
 } from "lucide-react";
 import { Analytics } from "@vercel/analytics/react";
 import { PARAGONS, DIFFICULTY_MULTIPLIERS } from "./constants/paragons";
@@ -28,6 +28,7 @@ export default function App() {
   // Goal Planner state
   const [targetDegree, setTargetDegree]         = useState(100);
   const [goalUseExtraT5s, setGoalUseExtraT5s] = useState(true);
+  const [goalUseUpgrades, setGoalUseUpgrades] = useState(true);
   const [goalCashMode, setGoalCashMode]       = useState("sacrifice"); // "none" | "sacrifice" | "slider"
   const [goalUseTotems, setGoalUseTotems]     = useState(true);
   const [goalStrategy, setGoalStrategy]         = useState("leastCash");
@@ -155,12 +156,13 @@ export default function App() {
     gameMode,
     targetDegree,
     useExtraT5s:      goalUseExtraT5s,
+    useUpgrades:      goalUseUpgrades,
     useSacrificeCash: goalCashMode === "sacrifice" || goalCashMode === "both",
     useSliderCash:    goalCashMode === "slider"    || goalCashMode === "both",
     useTotems:        goalUseTotems,
     strategy:         goalStrategy,
   }), [activeParagon, difficulty, gameMode, targetDegree,
-       goalUseExtraT5s, goalCashMode, goalUseTotems, goalStrategy]);
+       goalUseExtraT5s, goalUseUpgrades, goalCashMode, goalUseTotems, goalStrategy]);
 
   const handleSelectParagon = (id) => {
     setSelectedParagonId(id);
@@ -241,7 +243,7 @@ export default function App() {
       <header>
         <div className="logo-section">
           <div className="logo-icon">
-            <Crosshair size={34} strokeWidth={1.5} />
+            <img src="/logo.png" alt="Paragon Logo" style={{ width: 40, height: 40, objectFit: "contain" }} />
           </div>
           <div className="logo-text">
             <h1>Paragon Calculator</h1>
@@ -896,6 +898,7 @@ export default function App() {
               <div className="goal-toggles">
                 {[
                   { label: "Extra T5s",       sub: `max ${activeParagon.id === "apex_plasma_master" ? 1 : gameMode === "coop" ? 9 : 0} in ${gameMode}`, state: goalUseExtraT5s, set: setGoalUseExtraT5s },
+                  { label: "Upgrade Tiers",   sub: "max 100 upgrades (10,000 pts)", state: goalUseUpgrades, set: setGoalUseUpgrades },
                   { label: "Geraldo Totems", sub: "+2,000 pts each", state: goalUseTotems, set: setGoalUseTotems },
                 ].map(({ label, sub, state, set }) => (
                   <div key={label} className="goal-toggle-row">
@@ -957,11 +960,12 @@ export default function App() {
                   <span className="goal-row-value">{goalResults.popsNeeded.toLocaleString()}</span>
                   {goalResults.popsMaxed && <span className="goal-row-badge maxed">MAXED</span>}
                 </div>
-                <div className="goal-row">
+                <div className={`goal-row ${!goalUseUpgrades ? "goal-row-disabled" : ""}`}>
                   <Star size={ICON_MD} className="goal-row-icon" />
                   <span className="goal-row-label">Upgrade Tiers</span>
                   <span className="goal-row-value">{goalResults.upgradesNeeded}</span>
                   {goalResults.upgradesMaxed && <span className="goal-row-badge maxed">MAXED</span>}
+                  {!goalUseUpgrades && <span className="goal-row-badge off">OFF</span>}
                 </div>
                 <div className={`goal-row ${!goalUseExtraT5s ? "goal-row-disabled" : ""}`}>
                   <Crown size={ICON_MD} className="goal-row-icon" />
