@@ -385,7 +385,7 @@ export default function App() {
       <div className={`dashboard-grid ${activeParagon.category}-accent`}>
         {/* Left Side: Inputs */}
         <section className="panel">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "0.5rem" }}>
             <h2 className="panel-title" style={{ border: "none", margin: 0, padding: 0 }}>
               Sacrifice Dashboard
             </h2>
