@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import {
   User, Users, Wrench, Target, Star, Crown, DollarSign, Sparkles,
   RotateCcw, BarChart3, AlertTriangle, Key, Lightbulb, ArrowRight,
-  Trophy, BookOpen, Crosshair, Search, X, Plus, Calculator,
+  Trophy, BookOpen, Search, X, Plus, Calculator,
 } from "lucide-react";
 import { Analytics } from "@vercel/analytics/react";
 import { PARAGONS, DIFFICULTY_MULTIPLIERS } from "./constants/paragons";
@@ -241,7 +241,7 @@ export default function App() {
       <header>
         <div className="logo-section">
           <div className="logo-icon">
-            <Crosshair size={34} strokeWidth={1.5} />
+            <img src="/logo.png" alt="Paragon Logo" style={{ width: 40, height: 40, objectFit: "contain" }} />
           </div>
           <div className="logo-text">
             <h1>Paragon Calculator</h1>
