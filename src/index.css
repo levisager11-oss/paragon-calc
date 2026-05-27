@@ -1118,6 +1118,78 @@ footer a:hover {
   text-decoration: underline;
 }
 
+.footer-nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.footer-nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: var(--transition-fast);
+}
+
+.footer-nav a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.footer-sep {
+  color: var(--text-muted);
+}
+
+/* Ad Container */
+.ad-container {
+  width: 100%;
+  overflow: hidden;
+  min-height: 90px;
+}
+
+.ad-container ins {
+  width: 100%;
+}
+
+/* Privacy Policy Section */
+.privacy-policy-section {
+  margin-top: 2rem;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-light);
+  border-radius: 24px;
+  padding: 2rem;
+}
+
+.privacy-content {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.privacy-content h3 {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  color: var(--text-primary);
+  margin: 1.25rem 0 0.5rem;
+}
+
+.privacy-content p {
+  margin-bottom: 0.75rem;
+}
+
+.privacy-content a {
+  color: var(--accent-blue);
+  text-decoration: none;
+  transition: var(--transition-fast);
+}
+
+.privacy-content a:hover {
+  text-decoration: underline;
+}
+
 /* Custom Checkbox Toggle Button styling */
 .toggle-switch {
   display: inline-flex;
@@ -1576,6 +1648,10 @@ footer a:hover {
 [data-theme="light"] .goal-impossible strong { color: var(--text-primary); }
 
 [data-theme="light"] footer a:hover { color: var(--text-primary); }
+[data-theme="light"] .footer-nav a { color: var(--text-secondary); }
+[data-theme="light"] .footer-nav a:hover { color: var(--text-primary); }
+[data-theme="light"] .privacy-content h3 { color: var(--text-primary); }
+[data-theme="light"] .privacy-content a { color: #0284c7; }
 
 [data-theme="light"] .toggle-switch-label {
   background: rgba(0, 0, 0, 0.12);

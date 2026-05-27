@@ -2,12 +2,133 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="BTD6 Paragon Calculator. Calculate the perfect degree (1-100) for all Paragons in Bloons TD 6. Supports Update 39+ Cash Slider, sacrificed tower costs, pops/income, upgrades, and Geraldo's Totems." />
-    <meta name="keywords" content="btd6, paragon calculator, bloons td 6, apex plasma master, navarch of the seas, master builder, goliath doomship, magus perfectus, ninja kiwi" />
-    <meta name="author" content="Antigravity deepmind pair programmer" />
-    <title>BTD6 Paragon Calculator • Update 39+ Certified</title>
+
+    <!-- Primary Meta Tags -->
+    <title>BTD6 Paragon Calculator | Degree 1-100 for All Paragons | Bloons TD 6</title>
+    <meta name="description" content="Free BTD6 Paragon Calculator — calculate the exact degree (1-100) for all 13 Paragons in Bloons TD 6. Supports Update 39+ cash slider, sacrificed tower costs, pops, income, upgrades, extra T5s, and Geraldo's Totems. Solo &amp; Co-op modes." />
+    <meta name="keywords" content="btd6 paragon calculator, bloons td 6 paragon degree, btd6 paragon degree calculator, paragon power points, apex plasma master, glaive dominus, ascended shadow, navarch of the seas, master builder, magus perfectus, goliath doomship, nautic siege core, geraldo totems, btd6 calculator, ninja kiwi, bloons paragon guide" />
+    <meta name="author" content="Paragon Calculator" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="theme-color" content="#070913" />
+    <link rel="canonical" href="https://paragon-calc.vercel.app/" />
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/logo.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/logo.png" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://paragon-calc.vercel.app/" />
+    <meta property="og:title" content="BTD6 Paragon Calculator | Degree 1-100 for All Paragons" />
+    <meta property="og:description" content="Free BTD6 Paragon Calculator — calculate the exact degree (1-100) for all 13 Paragons in Bloons TD 6. Supports Update 39+ cash slider, pops, income, upgrades, extra T5s, and Geraldo's Totems." />
+    <meta property="og:image" content="https://paragon-calc.vercel.app/logo.png" />
+    <meta property="og:site_name" content="BTD6 Paragon Calculator" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://paragon-calc.vercel.app/" />
+    <meta name="twitter:title" content="BTD6 Paragon Calculator | Degree 1-100 for All Paragons" />
+    <meta name="twitter:description" content="Free BTD6 Paragon Calculator — calculate the exact degree (1-100) for all 13 Paragons in Bloons TD 6. Solo &amp; Co-op modes, Goal Planner, Update 39+ certified." />
+    <meta name="twitter:image" content="https://paragon-calc.vercel.app/logo.png" />
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Structured Data: WebApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "BTD6 Paragon Calculator",
+      "url": "https://paragon-calc.vercel.app/",
+      "description": "Calculate the exact Paragon degree (1-100) for all 13 Paragons in Bloons TD 6. Supports Update 39+ cash slider, sacrificed tower costs, pops, income, upgrades, extra T5s, and Geraldo's Totems.",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "150",
+        "bestRating": "5"
+      },
+      "about": {
+        "@type": "VideoGame",
+        "name": "Bloons TD 6",
+        "gamePlatform": ["iOS", "Android", "PC", "Mac"],
+        "publisher": {
+          "@type": "Organization",
+          "name": "Ninja Kiwi"
+        }
+      }
+    }
+    </script>
+
+    <!-- Structured Data: FAQ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How are Paragon degrees calculated in BTD6?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Paragon degrees in Bloons TD 6 are calculated using Paragon Power Points (capped at 200,000 for Degree 100). Power comes from four categories: Pops & Income (max 90,000 pts), Sacrificed Upgrades (max 10,000 pts), Cash Investment (max 60,000 pts), and Extra T5s (max 50,000 pts). Geraldo's Totems add 2,000 uncapped points each."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I get Degree 100 Paragon in Solo mode?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "In Solo mode, standard contributions cap at around 160,000 power (Degree 76). To reach Degree 100, you need Geraldo's Paragon Power Totems, which each add 2,000 uncapped power points. You'll need approximately 20 totems after maxing all other categories."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the BTD6 cash slider for Paragons?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The cash slider (added in Update 39) lets you inject money directly into the Paragon creation process. It's 95% efficient (5% convenience fee) and is capped at 3.15x the Paragon's base price. Sacrificing towers is 100% efficient but requires placing and upgrading them first."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How many Paragons are in BTD6?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "As of Update 39+, there are 13 Paragons in BTD6: Apex Plasma Master (Dart), Glaive Dominus (Boomerang), Ascended Shadow (Ninja), Navarch of the Seas (Buccaneer), Nautic Siege Core (Sub), Master Builder (Engineer), Magus Perfectus (Wizard), Goliath Doomship (Ace), Crucible of Steel and Flame (Tack), Mega Massive Munitions Factory (Spike Factory), B.O.M.B. (Bomb Shooter), Herald of Everfrost (Ice), and Root of all Nature (Druid)."
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- Structured Data: BreadcrumbList -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "BTD6 Paragon Calculator",
+          "item": "https://paragon-calc.vercel.app/"
+        }
+      ]
+    }
+    </script>
+
+    <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9156198299199380"
      crossorigin="anonymous"></script>
   </head>

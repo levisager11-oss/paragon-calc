@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://paragon-calc.vercel.app/sitemap.xml

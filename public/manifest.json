@@ -1,0 +1,21 @@
+{
+  "name": "BTD6 Paragon Calculator",
+  "short_name": "Paragon Calc",
+  "description": "Calculate the exact Paragon degree (1-100) for all Paragons in Bloons TD 6. Update 39+ certified.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070913",
+  "theme_color": "#070913",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
