@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import {
   User, Users, Wrench, Target, Star, Crown, DollarSign, Sparkles,
   RotateCcw, BarChart3, AlertTriangle, Key, Lightbulb, ArrowRight,
-  Trophy, BookOpen, Search, X, Plus, Calculator,
+  Trophy, BookOpen, Search, X, Plus, Calculator, Sun, Moon,
 } from "lucide-react";
 import { Analytics } from "@vercel/analytics/react";
 import { PARAGONS, DIFFICULTY_MULTIPLIERS } from "./constants/paragons";
@@ -19,6 +19,12 @@ export default function App() {
   const [selectedParagonId, setSelectedParagonId] = useState("apex_plasma_master");
   const [difficulty, setDifficulty] = useState("medium");
   const [gameMode, setGameMode] = useState("solo"); // "solo" or "coop"
+  const [lightMode, setLightMode] = useState(() => localStorage.getItem("theme") === "light");
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", lightMode ? "light" : "dark");
+    localStorage.setItem("theme", lightMode ? "light" : "dark");
+  }, [lightMode]);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -280,6 +286,16 @@ export default function App() {
               <Users size={ICON_SM} style={{ verticalAlign: "-3px", marginRight: 6 }} /> Co-op
             </button>
           </div>
+
+          {/* Light / Dark Mode Toggle */}
+          <button
+            className="theme-toggle-btn"
+            onClick={() => setLightMode(prev => !prev)}
+            title={lightMode ? "Switch to dark mode" : "Switch to light mode"}
+            aria-label={lightMode ? "Switch to dark mode" : "Switch to light mode"}
+          >
+            {lightMode ? <Moon size={ICON_MD} /> : <Sun size={ICON_MD} />}
+          </button>
         </div>
       </header>
 
