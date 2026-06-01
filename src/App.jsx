@@ -2,8 +2,62 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import {
   User, Users, Wrench, Target, Star, Crown, DollarSign, Sparkles,
   RotateCcw, BarChart3, AlertTriangle, Key, Lightbulb, ArrowRight,
-  Trophy, BookOpen, Search, X, Plus, Calculator, Sun, Moon,
+  Trophy, BookOpen, Search, X, Plus, Calculator, Sun, Moon, History,
 } from "lucide-react";
+
+const CHANGELOG = [
+  {
+    update: "Update 39",
+    date: "Oct 2024",
+    badge: "current",
+    label: "Current",
+    entries: [
+      "Added Cash Slider mechanic — inject in-game cash directly into Paragon creation (95% efficient, capped at 3.15× base price).",
+      "Calculator fully re-verified against in-game values for all 13 Paragons.",
+      "Goal Planner updated to support both Sacrifice and Slider cash sources.",
+    ],
+  },
+  {
+    update: "Update 38",
+    date: "Jul 2024",
+    badge: "past",
+    label: null,
+    entries: [
+      "Root of all Nature (Druid) and Crucible of Steel and Flame (Tack Shooter) Paragons added to the game and calculator.",
+      "Power formula confirmed unchanged — all existing calculations remain valid.",
+    ],
+  },
+  {
+    update: "Update 36",
+    date: "Feb 2024",
+    badge: "past",
+    label: null,
+    entries: [
+      "Herald of Everfrost (Ice Monkey) and Mega Massive Munitions Factory (Spike Factory) added.",
+      "Verified Geraldo Totem power value (+2,000 pts each) against live game data.",
+    ],
+  },
+  {
+    update: "Update 34",
+    date: "Aug 2023",
+    badge: "past",
+    label: null,
+    entries: [
+      "B.O.M.B. (Bomb Shooter) Paragon added — 13th Paragon in-game.",
+      "Co-op extra T5 cap confirmed at 9 additional sacrifices.",
+    ],
+  },
+  {
+    update: "Update 32",
+    date: "Feb 2023",
+    badge: "past",
+    label: null,
+    entries: [
+      "Magus Perfectus (Wizard), Goliath Doomship (Ace), and Nautic Siege Core (Sub) added.",
+      "Dart Monkey Solo exception documented: Master Double Cross MK allows 1 extra T5.",
+    ],
+  },
+];
 import { Analytics } from "@vercel/analytics/react";
 import { PARAGONS, DIFFICULTY_MULTIPLIERS } from "./constants/paragons";
 import { calculateParagonData, reverseCalculate, getBasePrice } from "./utils/calculator";
@@ -1091,6 +1145,43 @@ export default function App() {
         </div>
       </section>
 
+      {/* UPDATE CHANGELOG */}
+      <section className="guide-card changelog-section" id="changelog" aria-label="Update changelog">
+        <div className="changelog-header">
+          <h2 className="paragon-selector-title" style={{ marginBottom: 0 }}>
+            <History size={ICON_LG} /> Update History
+          </h2>
+          <span className="changelog-current-badge">
+            ✓ Verified: Update 39+
+          </span>
+        </div>
+        <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", marginTop: "0.6rem", marginBottom: "1.5rem", lineHeight: "1.5" }}>
+          This calculator is kept up-to-date with each Ninja Kiwi patch that affects Paragon mechanics. Check here to see what changed.
+        </p>
+
+        <div className="changelog-list">
+          {CHANGELOG.map((entry) => (
+            <div key={entry.update} className={`changelog-entry ${entry.badge === "current" ? "changelog-entry-current" : ""}`}>
+              <div className="changelog-dot" />
+              <div className="changelog-content">
+                <div className="changelog-meta">
+                  <span className="changelog-update">{entry.update}</span>
+                  <span className="changelog-date">{entry.date}</span>
+                  {entry.badge === "current" && (
+                    <span className="changelog-badge-current">Latest</span>
+                  )}
+                </div>
+                <ul className="changelog-items">
+                  {entry.entries.map((line, i) => (
+                    <li key={i}>{line}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* AD: Before footer */}
       <AdUnit slot="1122334455" format="auto" style={{ margin: "2rem 0", textAlign: "center" }} />
       </main>
@@ -1210,6 +1301,8 @@ export default function App() {
       {/* FOOTER */}
       <footer>
         <nav className="footer-nav" aria-label="Footer navigation">
+          <a href="#changelog">Changelog</a>
+          <span className="footer-sep">•</span>
           <a href="#privacy-policy">Privacy Policy</a>
           <span className="footer-sep">•</span>
           <a href="https://github.com/levisager11-oss/paragon-calc" target="_blank" rel="noopener noreferrer">GitHub</a>

@@ -2238,3 +2238,173 @@ footer a:hover {
     gap: 0.5rem;
   }
 }
+
+/* ================================
+   Update Changelog
+   ================================ */
+
+.changelog-section {
+  margin-top: 2rem;
+}
+
+.changelog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.changelog-current-badge {
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  color: #34d399;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+
+.changelog-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-left: 0.5rem;
+  border-left: 2px solid rgba(255, 255, 255, 0.07);
+}
+
+.changelog-entry {
+  position: relative;
+  padding: 0 0 1.5rem 1.75rem;
+}
+
+.changelog-entry:last-child {
+  padding-bottom: 0;
+}
+
+.changelog-dot {
+  position: absolute;
+  left: -5px;
+  top: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+}
+
+.changelog-entry-current .changelog-dot {
+  background: #34d399;
+  border-color: rgba(52, 211, 153, 0.5);
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
+}
+
+.changelog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.changelog-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.changelog-update {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.changelog-date {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.changelog-badge-current {
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0.12rem 0.45rem;
+  border-radius: 20px;
+}
+
+.changelog-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.changelog-items li {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  padding-left: 1rem;
+  position: relative;
+}
+
+.changelog-items li::before {
+  content: '–';
+  position: absolute;
+  left: 0;
+  color: var(--text-muted);
+}
+
+[data-theme="light"] .changelog-list {
+  border-left-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .changelog-dot {
+  background: rgba(0, 0, 0, 0.12);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .changelog-entry-current .changelog-dot {
+  background: #10b981;
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+[data-theme="light"] .changelog-update { color: var(--text-primary); }
+
+[data-theme="light"] .changelog-current-badge {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #059669;
+}
+
+[data-theme="light"] .changelog-badge-current {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+
+@media (max-width: 480px) {
+  .changelog-section {
+    margin-top: 1.25rem;
+  }
+
+  .changelog-entry {
+    padding-left: 1.25rem;
+    padding-bottom: 1.25rem;
+  }
+
+  .changelog-update {
+    font-size: 0.92rem;
+  }
+
+  .changelog-items li {
+    font-size: 0.8rem;
+  }
+}
