@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { Analytics } from "@vercel/analytics/react";
 import { PARAGONS, DIFFICULTY_MULTIPLIERS } from "./constants/paragons";
-import { calculateParagonData, reverseCalculate, getBasePrice } from "./utils/calculator";
+import { calculateParagonData, reverseCalculate, getBasePrice, splitIntoSacrificeTowers } from "./utils/calculator";
 import AdUnit from "./components/AdUnit";
 
 const pct = (val, min, max) => `${Math.round(((val - min) / (max - min)) * 100)}%`;
@@ -138,6 +138,21 @@ export default function App() {
     return Math.round(currentBasePrice * 3.15);
   }, [currentBasePrice]);
 
+  // Cost of the most expensive non-T5 tower you can sacrifice (a Tier-4 with a
+  // +2 crosspath), scaled to the selected difficulty. This is the largest cash
+  // chunk a single sacrifice tower can absorb at 100% efficiency.
+  const maxT4Cost = useMemo(() => {
+    if (!activeParagon.maxT4MediumCost) return 0;
+    return getBasePrice(activeParagon.maxT4MediumCost, difficulty);
+  }, [activeParagon, difficulty]);
+
+  // How much of the current slider cash could be re-routed into whole sacrifice
+  // towers (100% efficient) instead of staying on the 95%-efficient slider.
+  const sliderTowerSplit = useMemo(
+    () => splitIntoSacrificeTowers(sliderCash, maxT4Cost),
+    [sliderCash, maxT4Cost]
+  );
+
   // Paragon search
   const searchResults = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -232,6 +247,16 @@ export default function App() {
   const handleSacrificeCashText = (e) => {
     const val = parseInt(e.target.value.replace(/,/g, "")) || 0;
     setSacrificedTowerCash(Math.max(0, val));
+  };
+
+  // Move whole sacrifice-tower chunks off the (95% efficient) slider and onto
+  // the (100% efficient) sacrifice total, leaving only the sub-one-tower
+  // remainder on the slider so no money is wasted to the 5% premium.
+  const optimizeCash = () => {
+    const { sacrificeCash, remainder } = splitIntoSacrificeTowers(sliderCash, maxT4Cost);
+    if (sacrificeCash <= 0) return;
+    setSacrificedTowerCash(prev => prev + sacrificeCash);
+    setSliderCash(remainder);
   };
 
   const handlePopsText = (e) => {
@@ -626,6 +651,30 @@ export default function App() {
                 * Max cash slider injection in-game is 3.15x the base price:{" "}
                 <strong style={{ color: "#fff" }}>${maxSliderLimit.toLocaleString()}</strong>.
               </div>
+
+              {/* Slider → Sacrifice optimizer */}
+              {maxT4Cost > 0 && (
+                <div className="cash-optimize">
+                  <div className="cash-optimize-info">
+                    Most expensive sacrificeable tower:{" "}
+                    <strong>{activeParagon.tower} ({activeParagon.maxT4Build})</strong> ={" "}
+                    <strong style={{ color: "#fff" }}>${maxT4Cost.toLocaleString()}</strong>.
+                    {" "}Slider cash carries a 5% premium, so building whole sacrifice
+                    towers with it is always cheaper.
+                  </div>
+                  {sliderTowerSplit.towers > 0 ? (
+                    <button className="quick-btn cash-optimize-btn" onClick={optimizeCash}>
+                      <Lightbulb size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} />
+                      Optimize: move {sliderTowerSplit.towers} tower{sliderTowerSplit.towers > 1 ? "s" : ""} ($
+                      {sliderTowerSplit.sacrificeCash.toLocaleString()}) from slider → sacrifices
+                    </button>
+                  ) : sliderCash > 0 ? (
+                    <div className="cash-optimize-note">
+                      Slider holds less than one full tower — nothing to move.
+                    </div>
+                  ) : null}
+                </div>
+              )}
 
               <div className="quick-buttons">
                 <button

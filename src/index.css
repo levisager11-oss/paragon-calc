@@ -648,6 +648,43 @@ header {
   color: #fff;
 }
 
+/* Slider → Sacrifice cash optimizer */
+.cash-optimize {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  background: rgba(245, 158, 11, 0.07);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.cash-optimize-info {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.cash-optimize-btn {
+  align-self: flex-start;
+  border-color: rgba(245, 158, 11, 0.45);
+  color: #fcd34d;
+  font-size: 0.78rem;
+  padding: 0.4rem 0.7rem;
+}
+
+.cash-optimize-btn:hover {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fde68a;
+}
+
+.cash-optimize-note {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 /* Right Side - Results Display */
 .sticky-results {
   position: sticky;

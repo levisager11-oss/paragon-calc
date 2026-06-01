@@ -144,6 +144,31 @@ export function reverseCalculate({
 }
 
 /**
+ * Splits a cash amount into whole sacrifice-tower "chunks" plus a remainder.
+ *
+ * Sacrifice cash is 100% efficient, while the in-game cash slider charges a 5%
+ * premium. Since you can only sacrifice *whole* non-T5 towers, the most cash you
+ * can route through sacrifices (per tower) is the value of the most expensive
+ * legal non-T5 build — a Tier-4 tower with a +2 crosspath. This helper figures
+ * out how many such towers fit inside `amount`, returning the cash that should
+ * move to sacrifices and the sub-one-tower remainder that has to stay on the
+ * slider.
+ *
+ * @param {number} amount     - cash to redistribute (e.g. the current slider value)
+ * @param {number} maxT4Cost  - cost of the most expensive T4 (+2 crosspath) tower
+ * @returns {{towers:number, sacrificeCash:number, remainder:number}}
+ */
+export function splitIntoSacrificeTowers(amount, maxT4Cost) {
+  const safeAmount = Number(amount) > 0 ? Number(amount) : 0;
+  if (!(Number(maxT4Cost) > 0)) {
+    return { towers: 0, sacrificeCash: 0, remainder: safeAmount };
+  }
+  const towers = Math.floor(safeAmount / maxT4Cost);
+  const sacrificeCash = towers * maxT4Cost;
+  return { towers, sacrificeCash, remainder: safeAmount - sacrificeCash };
+}
+
+/**
  * Calculates the base price of a Paragon based on difficulty.
  * Standard BTD6 prices are rounded to the nearest multiple of 5.
  */
