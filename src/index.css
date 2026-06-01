@@ -139,6 +139,13 @@ header {
   flex-wrap: wrap;
 }
 
+.controls-header-graphics {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-left: auto;
+}
+
 .control-group {
   background: var(--bg-panel);
   border: 1px solid var(--border-light);

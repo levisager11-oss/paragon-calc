@@ -328,31 +328,33 @@ export default function App() {
             </button>
           </div>
 
-          {/* Design Selector — switch between the Classic and Ticket layouts */}
-          <div className="control-group">
+          <div className="controls-header-graphics">
+            {/* Design Selector — switch between the Classic and Ticket layouts */}
+            <div className="control-group">
+              <button
+                className={`control-btn ${designMode === "classic" ? "active" : ""}`}
+                onClick={() => setDesignMode("classic")}
+              >
+                Classic
+              </button>
+              <button
+                className={`control-btn ${designMode === "ticket" ? "active" : ""}`}
+                onClick={() => setDesignMode("ticket")}
+              >
+                Ticket
+              </button>
+            </div>
+
+            {/* Light / Dark Mode Toggle */}
             <button
-              className={`control-btn ${designMode === "classic" ? "active" : ""}`}
-              onClick={() => setDesignMode("classic")}
+              className="theme-toggle-btn"
+              onClick={() => setLightMode(prev => !prev)}
+              title={lightMode ? "Switch to dark mode" : "Switch to light mode"}
+              aria-label={lightMode ? "Switch to dark mode" : "Switch to light mode"}
             >
-              Classic
-            </button>
-            <button
-              className={`control-btn ${designMode === "ticket" ? "active" : ""}`}
-              onClick={() => setDesignMode("ticket")}
-            >
-              Ticket
+              {lightMode ? <Moon size={ICON_MD} /> : <Sun size={ICON_MD} />}
             </button>
           </div>
-
-          {/* Light / Dark Mode Toggle */}
-          <button
-            className="theme-toggle-btn"
-            onClick={() => setLightMode(prev => !prev)}
-            title={lightMode ? "Switch to dark mode" : "Switch to light mode"}
-            aria-label={lightMode ? "Switch to dark mode" : "Switch to light mode"}
-          >
-            {lightMode ? <Moon size={ICON_MD} /> : <Sun size={ICON_MD} />}
-          </button>
         </div>
       </header>
 
