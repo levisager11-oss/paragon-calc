@@ -447,6 +447,7 @@ export default function App() {
                 </div>
                 <input
                   type="text"
+                  inputMode="numeric"
                   className="number-input"
                   value={pops.toLocaleString()}
                   onChange={handlePopsText}
@@ -472,6 +473,7 @@ export default function App() {
                 </div>
                 <input
                   type="text"
+                  inputMode="numeric"
                   className="number-input"
                   value={income.toLocaleString()}
                   onChange={handleIncomeText}
@@ -617,6 +619,7 @@ export default function App() {
                 </div>
                 <input
                   type="text"
+                  inputMode="numeric"
                   className="number-input"
                   value={sacrificedTowerCash.toLocaleString()}
                   onChange={handleSacrificeCashText}
@@ -642,6 +645,7 @@ export default function App() {
                 </div>
                 <input
                   type="text"
+                  inputMode="numeric"
                   className="number-input"
                   value={sliderCash.toLocaleString()}
                   onChange={handleSliderCashText}
@@ -1211,6 +1215,7 @@ export default function App() {
                   <input
                     ref={el => (popAdderRefs.current[idx] = el)}
                     type="text"
+                    inputMode="numeric"
                     className="pop-adder-input"
                     placeholder="e.g. 350,000"
                     value={val}
