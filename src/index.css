@@ -1840,10 +1840,16 @@ footer a:hover {
     gap: 0.75rem;
   }
 
+  /* 16px font on focusable inputs prevents iOS Safari from auto-zooming on tap */
+  .number-input,
+  .paragon-search-input,
+  .pop-adder-input {
+    font-size: 16px;
+  }
+
   .number-input {
     width: 100%;
     text-align: left;
-    font-size: 0.95rem;
   }
 
   /* Sticky results: unstick on mobile */
@@ -2254,8 +2260,8 @@ footer a:hover {
   }
 
   .pop-adder-input {
-    font-size: 0.88rem;
-    padding: 0.4rem 0.6rem;
+    font-size: 16px;
+    padding: 0.5rem 0.6rem;
   }
 
   .pop-adder-footer {
@@ -2273,5 +2279,81 @@ footer a:hover {
   .panel > div:first-child {
     flex-wrap: wrap;
     gap: 0.5rem;
+  }
+}
+
+/* ================================
+   Touch Device Optimizations
+   ================================ */
+
+/* Remove the blue tap-flash on touch and kill the 300ms double-tap delay so
+   buttons feel instant on phones. */
+button,
+a,
+.control-btn,
+.quick-btn,
+.suggestion-chip,
+.toggle-switch,
+.range-slider {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* On touch screens (no precise pointer) the default control sizes are too small
+   to hit reliably — bump up the slider thumbs and interactive chips. */
+@media (pointer: coarse) {
+  .range-slider {
+    height: 6px;
+  }
+
+  .range-slider::-webkit-slider-thumb {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* Don't grow the thumb on "hover" — touch devices fire hover on tap and it
+     made the thumb jump under the finger. */
+  .range-slider::-webkit-slider-thumb:hover {
+    transform: none;
+  }
+
+  .quick-btn {
+    min-height: 36px;
+    padding: 0.4rem 0.7rem;
+  }
+
+  .control-btn {
+    min-height: 40px;
+  }
+
+  .search-clear-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .pop-adder-remove {
+    width: 32px;
+    height: 32px;
+  }
+
+  .pop-adder-close {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Make the toggle switches easier to flick */
+  .toggle-switch-label {
+    width: 54px;
+    height: 30px;
+    border-radius: 15px;
+  }
+
+  .toggle-switch-label::after {
+    width: 24px;
+    height: 24px;
+  }
+
+  .toggle-switch-input:checked + .toggle-switch-label::after {
+    left: 28px;
   }
 }
