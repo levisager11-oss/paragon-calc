@@ -5,6 +5,7 @@ import {
   Trophy, BookOpen, Search, X, Plus, Calculator, Sun, Moon,
 } from "lucide-react";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { PARAGONS, DIFFICULTY_MULTIPLIERS } from "./constants/paragons";
 import { calculateParagonData, reverseCalculate, getBasePrice, splitIntoSacrificeTowers } from "./utils/calculator";
 import AdUnit from "./components/AdUnit";
@@ -1273,6 +1274,7 @@ export default function App() {
         </p>
       </footer>
       <Analytics />
+      <SpeedInsights />
     </div>
   );
 }
