@@ -9,6 +9,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import { PARAGONS, DIFFICULTY_MULTIPLIERS } from "./constants/paragons";
 import { calculateParagonData, reverseCalculate, getBasePrice, splitIntoSacrificeTowers } from "./utils/calculator";
 import AdUnit from "./components/AdUnit";
+import TicketCalculator from "./components/TicketCalculator";
 
 const pct = (val, min, max) => `${Math.round(((val - min) / (max - min)) * 100)}%`;
 
@@ -22,11 +23,18 @@ export default function App() {
   const [difficulty, setDifficulty] = useState("medium");
   const [gameMode, setGameMode] = useState("solo"); // "solo" or "coop"
   const [lightMode, setLightMode] = useState(() => localStorage.getItem("theme") === "light");
+  // Which visual design to render: "classic" (default dark UI) or "ticket"
+  // (neo-brutalist arcade ticket). Persisted so the choice survives reloads.
+  const [designMode, setDesignMode] = useState(() => localStorage.getItem("design") === "ticket" ? "ticket" : "classic");
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", lightMode ? "light" : "dark");
     localStorage.setItem("theme", lightMode ? "light" : "dark");
   }, [lightMode]);
+
+  useEffect(() => {
+    localStorage.setItem("design", designMode);
+  }, [designMode]);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -270,6 +278,12 @@ export default function App() {
     setIncome(Math.max(0, val));
   };
 
+  // Render the alternate "ticket" design instead of the classic UI when selected.
+  // All hooks above run unconditionally, so this early return is hook-safe.
+  if (designMode === "ticket") {
+    return <TicketCalculator designMode={designMode} onSetDesign={setDesignMode} />;
+  }
+
   return (
     <div className="container">
       {/* HEADER SECTION */}
@@ -311,6 +325,22 @@ export default function App() {
               onClick={() => setGameMode("coop")}
             >
               <Users size={ICON_SM} style={{ verticalAlign: "-3px", marginRight: 6 }} /> Co-op
+            </button>
+          </div>
+
+          {/* Design Selector — switch between the Classic and Ticket layouts */}
+          <div className="control-group">
+            <button
+              className={`control-btn ${designMode === "classic" ? "active" : ""}`}
+              onClick={() => setDesignMode("classic")}
+            >
+              Classic
+            </button>
+            <button
+              className={`control-btn ${designMode === "ticket" ? "active" : ""}`}
+              onClick={() => setDesignMode("ticket")}
+            >
+              Ticket
             </button>
           </div>
 

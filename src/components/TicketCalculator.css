@@ -1,0 +1,196 @@
+/* TicketCalculator.css — neo-brutalist "arcade ticket" alternate design.
+   Every selector is scoped under .ticket-design so it can never leak into the
+   classic dark-theme UI (both stylesheets are loaded globally). */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+.ticket-design {
+  --cream: #fbf3e2;
+  --paper: #f4ead3;
+  --ink: #16120b;
+  --accent: #ef4f2c;
+  --accent-ink: #fff;
+  --blue: #2f6df0;
+  --green: #1f9d57;
+  --amber: #f5b81f;
+  --muted: #8a8170;
+  --line: #16120b;
+  --hard: 4px 4px 0 var(--ink);
+  --hard-sm: 3px 3px 0 var(--ink);
+  --bw: 2.5px;
+  --tfont: 'Space Grotesk', system-ui, sans-serif;
+  --dotbg: radial-gradient(var(--paper) 1.4px, transparent 1.4px);
+
+  min-height: 100vh;
+  width: 100%;
+  background: var(--cream);
+  background-image: var(--dotbg);
+  background-size: 14px 14px;
+  color: var(--ink);
+  font-family: var(--tfont);
+  -webkit-font-smoothing: antialiased;
+}
+
+.ticket-design * { box-sizing: border-box; }
+
+.ticket-design .app { max-width: 1200px; margin: 0 auto; padding: 26px 22px 40px; }
+
+/* ---------- TOP BAR ---------- */
+.ticket-design .topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; margin-bottom: 22px; }
+.ticket-design .brand { display: flex; align-items: center; gap: 13px; }
+.ticket-design .brand-mark { width: 46px; height: 46px; background: var(--accent); border: var(--bw) solid var(--ink); box-shadow: var(--hard-sm); display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+.ticket-design .bm-dot { width: 18px; height: 18px; background: var(--cream); border: var(--bw) solid var(--ink); border-radius: 50%; }
+.ticket-design .brand-title { font-size: 25px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; white-space: nowrap; }
+.ticket-design .brand-sub { font-size: 11px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent); margin-top: 4px; }
+.ticket-design .config { display: flex; gap: 16px; flex-wrap: wrap; }
+.ticket-design .config-group { display: flex; flex-direction: column; gap: 5px; }
+.ticket-design .config-label { font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+
+/* ---------- SEGMENTED ---------- */
+.ticket-design .seg { display: inline-flex; border: var(--bw) solid var(--ink); box-shadow: var(--hard-sm); background: #fff; }
+.ticket-design .seg-btn { font-family: var(--tfont); font-size: 12.5px; font-weight: 700; letter-spacing: 0.02em; padding: 7px 13px; background: transparent; border: none; border-left: var(--bw) solid var(--ink); cursor: pointer; color: var(--ink); transition: background .03s; }
+.ticket-design .seg-btn:first-child { border-left: none; }
+.ticket-design .seg-btn.on { background: var(--ink); color: var(--cream); }
+.ticket-design .seg-btn:not(.on):hover { background: var(--paper); }
+
+/* ---------- PARAGON RAIL ---------- */
+.ticket-design .rail-wrap { margin-bottom: 22px; }
+.ticket-design .rail-head { font-size: 10.5px; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; color: var(--muted); margin-bottom: 9px; }
+.ticket-design .rail-base { color: var(--accent); margin-left: 8px; }
+.ticket-design .rail { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 12px; scrollbar-width: thin; }
+.ticket-design .rail::-webkit-scrollbar { height: 7px; }
+.ticket-design .rail::-webkit-scrollbar-thumb { background: var(--ink); }
+.ticket-design .rail::-webkit-scrollbar-track { background: var(--paper); }
+.ticket-design .ptile { flex: 0 0 auto; width: 184px; display: flex; align-items: center; gap: 10px; text-align: left; background: #fff; border: var(--bw) solid var(--ink); box-shadow: var(--hard-sm); padding: 9px 11px; cursor: pointer; font-family: var(--tfont); position: relative; transition: transform .04s; }
+.ticket-design .ptile:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
+.ticket-design .ptile.on { background: var(--accent); color: #fff; }
+.ticket-design .ptile-mono { width: 34px; height: 34px; flex: 0 0 auto; background: var(--ink); color: var(--cream); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+.ticket-design .ptile.on .ptile-mono { background: #fff; color: var(--accent); }
+.ticket-design .ptile-info { min-width: 0; flex: 1; }
+.ticket-design .ptile-name { font-size: 13px; font-weight: 700; line-height: 1.05; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ticket-design .ptile-tower { font-size: 10.5px; font-weight: 500; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ticket-design .ptile.on .ptile-tower { color: rgba(255,255,255,0.82); }
+.ticket-design .ptile-cat { position: absolute; top: 6px; right: 7px; font-size: 8px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.ticket-design .ptile.on .ptile-cat { color: rgba(255,255,255,0.82); }
+
+/* ---------- MAIN GRID ---------- */
+.ticket-design .main { display: grid; grid-template-columns: minmax(0, 1fr) 430px; gap: 22px; align-items: start; }
+
+/* ---------- INPUTS ---------- */
+.ticket-design .inputs { background: #fff; border: var(--bw) solid var(--ink); box-shadow: var(--hard); padding: 20px 20px 16px; }
+.ticket-design .inputs-head { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 14px; padding-bottom: 12px; border-bottom: var(--bw) solid var(--ink); }
+.ticket-design .field { padding: 14px 0; border-top: 1.5px dashed rgba(22,18,11,0.22); }
+.ticket-design .field:first-of-type { border-top: none; padding-top: 2px; }
+.ticket-design .field-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.ticket-design .field-label { font-size: 14.5px; font-weight: 700; }
+.ticket-design .field-hint { font-size: 10.5px; font-weight: 500; color: var(--muted); margin-top: 2px; max-width: 320px; }
+.ticket-design .field-badge { flex: 0 0 auto; font-size: 12px; font-weight: 700; padding: 4px 9px; background: var(--paper); border: 2px solid var(--ink); color: var(--ink); white-space: nowrap; }
+.ticket-design .field-badge.max { background: var(--green); color: #fff; }
+.ticket-design .field-body { display: flex; flex-direction: column; gap: 12px; }
+.ticket-design .subfield { display: flex; flex-direction: column; gap: 3px; }
+.ticket-design .sub-label { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.ticket-design .sub-max { text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--muted); }
+
+/* number + slider */
+.ticket-design .nslider-top { display: flex; align-items: center; gap: 8px; }
+.ticket-design .nfield { display: flex; align-items: center; border: var(--bw) solid var(--ink); background: #fff; box-shadow: var(--hard-sm); flex: 1; min-width: 0; }
+.ticket-design .nfield-prefix { padding: 0 0 0 10px; font-weight: 700; font-size: 14px; color: var(--ink); }
+.ticket-design .nfield-input { flex: 1; min-width: 0; border: none; outline: none; font-family: var(--tfont); font-size: 15px; font-weight: 700; padding: 8px 10px; background: transparent; color: var(--ink); }
+.ticket-design .quick { display: flex; gap: 6px; }
+.ticket-design .quick-btn { font-family: var(--tfont); font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 7px 10px; background: var(--blue); color: #fff; border: var(--bw) solid var(--ink); box-shadow: var(--hard-sm); cursor: pointer; white-space: nowrap; }
+.ticket-design .quick-btn:active { transform: translate(2px, 2px); box-shadow: none; }
+.ticket-design .range { -webkit-appearance: none; appearance: none; width: 100%; height: 16px; background: transparent; cursor: pointer; margin: 6px 0 0; }
+.ticket-design .range::-webkit-slider-runnable-track { height: 8px; background: var(--paper); border: var(--bw) solid var(--ink); }
+.ticket-design .range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; background: var(--accent); border: var(--bw) solid var(--ink); margin-top: -8px; box-shadow: 2px 2px 0 var(--ink); }
+.ticket-design .range::-moz-range-track { height: 8px; background: var(--paper); border: var(--bw) solid var(--ink); }
+.ticket-design .range::-moz-range-thumb { width: 18px; height: 18px; border-radius: 0; background: var(--accent); border: var(--bw) solid var(--ink); box-shadow: 2px 2px 0 var(--ink); }
+
+/* stepper */
+.ticket-design .stepper { display: inline-flex; align-items: stretch; border: var(--bw) solid var(--ink); box-shadow: var(--hard-sm); background: #fff; width: fit-content; }
+.ticket-design .step-btn { width: 42px; font-family: var(--tfont); font-size: 20px; font-weight: 700; background: var(--paper); border: none; cursor: pointer; color: var(--ink); line-height: 1; }
+.ticket-design .step-btn:last-child { border-left: var(--bw) solid var(--ink); }
+.ticket-design .step-btn:first-child { border-right: var(--bw) solid var(--ink); }
+.ticket-design .step-btn:hover:not(:disabled) { background: var(--accent); color: #fff; }
+.ticket-design .step-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.ticket-design .step-val { min-width: 74px; display: flex; align-items: baseline; justify-content: center; gap: 3px; font-size: 18px; font-weight: 700; padding: 8px 6px; }
+.ticket-design .step-suffix { font-size: 12px; font-weight: 600; color: var(--muted); }
+.ticket-design .locked { font-size: 12px; font-weight: 600; color: var(--muted); padding: 9px 12px; border: 2px dashed rgba(22,18,11,0.3); background: var(--paper); }
+
+.ticket-design .reset { margin-top: 16px; font-family: var(--tfont); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; padding: 9px 14px; background: #fff; border: var(--bw) solid var(--ink); box-shadow: var(--hard-sm); cursor: pointer; color: var(--ink); }
+.ticket-design .reset:active { transform: translate(2px, 2px); box-shadow: none; }
+
+/* ---------- TICKET ---------- */
+.ticket-design .ticket-col { position: sticky; top: 18px; }
+.ticket-design .ticket { background: #fff; border: var(--bw) solid var(--ink); box-shadow: var(--hard); position: relative; }
+.ticket-design .ticket-hero { background: var(--accent); color: #fff; padding: 20px 22px 24px; }
+.ticket-design .hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.ticket-design .hero-cap { font-size: 10.5px; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; opacity: 0.92; }
+.ticket-design .hero-sub { font-size: 17px; font-weight: 700; margin-top: 3px; line-height: 1.05; max-width: 240px; }
+.ticket-design .hero-config { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; text-align: right; background: rgba(0,0,0,0.16); padding: 5px 9px; border: 2px solid rgba(0,0,0,0.25); white-space: nowrap; }
+.ticket-design .hero-config .dot { margin: 0 5px; opacity: 0.6; }
+.ticket-design .hero-degree { font-size: 118px; font-weight: 700; line-height: 0.84; letter-spacing: -0.04em; margin: 8px 0 6px; display: flex; align-items: baseline; }
+.ticket-design .hero-of { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; opacity: 0.7; margin-left: 6px; }
+.ticket-design .hero-power { margin-top: 4px; }
+.ticket-design .hp-row { display: flex; align-items: baseline; justify-content: space-between; }
+.ticket-design .hp-val { font-size: 20px; font-weight: 700; }
+.ticket-design .hp-cap { font-size: 11px; font-weight: 600; opacity: 0.85; }
+.ticket-design .hp-track { height: 12px; background: rgba(0,0,0,0.22); border: 2px solid rgba(0,0,0,0.3); margin-top: 7px; }
+.ticket-design .hp-fill { height: 100%; background: #fff; }
+.ticket-design .hero-gap { margin-top: 14px; font-size: 13px; font-weight: 600; }
+.ticket-design .hero-gap b { font-weight: 700; }
+.ticket-design .gap-max { font-weight: 700; letter-spacing: 0.02em; }
+
+.ticket-design .ticket-body { padding: 20px 22px 22px; position: relative; }
+.ticket-design .ticket-body::before { content: ""; position: absolute; top: -1px; left: 0; right: 0; border-top: 3px dashed rgba(22,18,11,0.25); }
+.ticket-design .notch-l, .ticket-design .notch-r { position: absolute; top: -13px; width: 24px; height: 24px; border-radius: 50%; background: var(--cream); border: var(--bw) solid var(--ink); z-index: 2; }
+.ticket-design .notch-l { left: -14px; }
+.ticket-design .notch-r { right: -14px; }
+
+.ticket-design .body-head { font-size: 11px; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+.ticket-design .bk-list { display: flex; flex-direction: column; gap: 11px; }
+.ticket-design .bk-row { display: grid; grid-template-columns: 116px 1fr 92px; align-items: center; gap: 10px; }
+.ticket-design .bk-label { font-size: 12.5px; font-weight: 600; }
+.ticket-design .bk-track { height: 18px; border: var(--bw) solid var(--ink); background: var(--paper); position: relative; }
+.ticket-design .bk-fill { position: absolute; top: 0; bottom: 0; left: 0; }
+.ticket-design .bk-val { font-size: 12px; font-weight: 500; text-align: right; color: var(--muted); }
+.ticket-design .bk-val b { color: var(--ink); font-weight: 700; }
+.ticket-design .bk-max { color: var(--green); font-weight: 700; }
+.ticket-design .bk-cap { color: var(--muted); }
+
+.ticket-design .road { margin-top: 20px; padding-top: 16px; border-top: var(--bw) solid var(--ink); }
+.ticket-design .road-head { display: flex; align-items: center; gap: 10px; margin-bottom: 11px; }
+.ticket-design .road-title { font-size: 15px; font-weight: 700; }
+.ticket-design .road-pick { font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; background: var(--blue); color: #fff; border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); padding: 3px 8px; }
+.ticket-design .road-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ticket-design .road-card { border: var(--bw) solid var(--ink); box-shadow: var(--hard-sm); background: #fff; padding: 10px 12px; }
+.ticket-design .road-card.primary { background: var(--blue); color: #fff; }
+.ticket-design .rc-unit { font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+.ticket-design .road-card.primary .rc-unit { color: rgba(255,255,255,0.85); }
+.ticket-design .rc-big { font-size: 19px; font-weight: 700; line-height: 1; letter-spacing: -0.01em; }
+.ticket-design .rc-note { font-size: 10.5px; font-weight: 500; margin-top: 5px; color: var(--muted); }
+.ticket-design .road-card.primary .rc-note { color: rgba(255,255,255,0.85); }
+
+.ticket-design .warns { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+.ticket-design .warn { display: flex; gap: 9px; align-items: flex-start; background: var(--amber); border: var(--bw) solid var(--ink); box-shadow: var(--hard-sm); padding: 9px 11px; font-size: 12px; font-weight: 600; line-height: 1.35; }
+.ticket-design .warn-bang { flex: 0 0 auto; width: 18px; height: 18px; background: var(--ink); color: var(--amber); font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+
+.ticket-design .foot { margin-top: 26px; font-size: 11px; font-weight: 500; color: var(--muted); text-align: center; letter-spacing: 0.01em; }
+.ticket-design .foot a { color: var(--accent); font-weight: 700; text-decoration: none; }
+.ticket-design .foot a:hover { text-decoration: underline; }
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 920px) {
+  .ticket-design .main { grid-template-columns: 1fr; }
+  .ticket-design .ticket-col { position: static; }
+  .ticket-design .ticket { max-width: 520px; }
+}
+@media (max-width: 560px) {
+  .ticket-design .app { padding: 18px 14px 32px; }
+  .ticket-design .topbar { gap: 14px; }
+  .ticket-design .config { width: 100%; justify-content: flex-start; }
+  .ticket-design .hero-degree { font-size: 96px; }
+  .ticket-design .ptile { width: 168px; }
+  .ticket-design .road-cards { grid-template-columns: 1fr; }
+  .ticket-design .bk-row { grid-template-columns: 92px 1fr 78px; gap: 8px; }
+  .ticket-design .field-hint { max-width: none; }
+}
