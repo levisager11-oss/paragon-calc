@@ -341,3 +341,95 @@
   .ticket-design .field-hint { max-width: none; }
   .ticket-design .guide-grid { grid-template-columns: 1fr; }
 }
+
+/* ---------- BUILD TOOLBAR (shared component, ticket skin) ----------
+   The share / save / embed / export toolbar (src/components/BuildToolbar.*)
+   renders inside .ticket-design, so these overrides re-skin its default
+   classic look into the neo-brutalist style. They inherit the ticket palette
+   vars, so they flip with .ticket-design.dark automatically. */
+.ticket-design .build-toolbar {
+  background: var(--card);
+  border: var(--bw) solid var(--ink);
+  box-shadow: var(--hard);
+  border-radius: 0;
+  backdrop-filter: none;
+  padding: 12px 16px;
+  margin-bottom: 22px;
+  font-family: var(--tfont);
+}
+.ticket-design .bt-label {
+  font-family: var(--tfont);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.ticket-design .bt-btn {
+  font-family: var(--tfont);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--ink);
+  background: var(--paper);
+  border: var(--bw) solid var(--ink);
+  box-shadow: var(--hard-sm);
+  border-radius: 0;
+  padding: 8px 12px;
+  transition: transform .04s;
+}
+.ticket-design .bt-btn:hover { border-color: var(--ink); filter: none; }
+.ticket-design .bt-btn:not(.bt-primary):hover { background: var(--accent); color: #fff; }
+.ticket-design .bt-btn:active { transform: translate(2px, 2px); box-shadow: none; }
+.ticket-design .bt-btn:disabled { opacity: 0.4; }
+.ticket-design .bt-primary {
+  background: var(--accent);
+  color: #fff;
+  border: var(--bw) solid var(--ink);
+}
+.ticket-design .bt-primary:hover { background: var(--accent); filter: brightness(1.05); }
+
+.ticket-design .bt-overlay { background: rgba(10, 8, 4, 0.55); backdrop-filter: none; }
+.ticket-design .bt-modal {
+  background: var(--card);
+  border: var(--bw) solid var(--ink);
+  box-shadow: 6px 6px 0 var(--ink);
+  border-radius: 0;
+  color: var(--ink);
+}
+.ticket-design .bt-modal-head { background: var(--accent); border-bottom: var(--bw) solid var(--ink); }
+.ticket-design .bt-modal-head h3 { color: #fff; font-family: var(--tfont); }
+.ticket-design .bt-close { background: rgba(0, 0, 0, 0.18); border: 2px solid rgba(0, 0, 0, 0.28); color: #fff; border-radius: 0; }
+.ticket-design .bt-close:hover { background: rgba(0, 0, 0, 0.3); color: #fff; }
+.ticket-design .bt-hint { color: var(--muted); font-weight: 500; }
+.ticket-design .bt-empty { color: var(--muted); font-weight: 600; }
+.ticket-design .bt-field {
+  background: var(--card);
+  border: var(--bw) solid var(--ink);
+  box-shadow: var(--hard-sm);
+  border-radius: 0;
+  color: var(--ink);
+  font-family: var(--tfont);
+  font-weight: 600;
+}
+.ticket-design .bt-field:focus { border-color: var(--ink); outline: none; }
+.ticket-design .bt-textarea { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-weight: 500; }
+.ticket-design .bt-list-load {
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  box-shadow: var(--hard-sm);
+  border-radius: 0;
+  color: var(--ink);
+}
+.ticket-design .bt-list-load:hover { background: var(--accent); color: #fff; }
+.ticket-design .bt-list-name { font-weight: 700; }
+.ticket-design .bt-list-sub { color: var(--muted); }
+.ticket-design .bt-list-load:hover .bt-list-sub { color: rgba(255, 255, 255, 0.85); }
+.ticket-design .bt-list-del {
+  background: var(--amber);
+  border: 2px solid var(--ink);
+  box-shadow: var(--hard-sm);
+  border-radius: 0;
+  color: #16120b;
+}
+.ticket-design .bt-list-del:hover { background: var(--amber); filter: brightness(1.05); }
