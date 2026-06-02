@@ -9,6 +9,8 @@ import {
   splitIntoSacrificeTowers,
 } from "../utils/calculator";
 import AdUnit from "./AdUnit";
+import BuildToolbar from "./BuildToolbar";
+import { decodeState, hasBuildParams } from "../utils/shareState";
 import "./TicketCalculator.css";
 
 /* ────────────────────────────────────────────────────────────────────────
@@ -98,6 +100,37 @@ function loadState() {
     if (raw) return { ...DEFAULTS, ...JSON.parse(raw) };
   } catch { /* ignore */ }
   return { ...DEFAULTS };
+}
+
+// Map between the shared build shape (utils/shareState.js) and this design's
+// internal state shape (which uses paragonId / mode / sacrificeCash).
+function shareToTicket(b) {
+  return {
+    paragonId: b.paragon,
+    difficulty: b.difficulty,
+    mode: b.gameMode,
+    pops: b.pops,
+    income: b.income,
+    upgrades: b.upgrades,
+    extraT5s: b.extraT5s,
+    sacrificeCash: b.sacrificedTowerCash,
+    sliderCash: b.sliderCash,
+    totems: b.totems,
+  };
+}
+function ticketToShare(s) {
+  return {
+    paragon: s.paragonId,
+    difficulty: s.difficulty,
+    gameMode: s.mode,
+    pops: s.pops,
+    income: s.income,
+    upgrades: s.upgrades,
+    extraT5s: s.extraT5s,
+    sacrificedTowerCash: s.sacrificeCash,
+    sliderCash: s.sliderCash,
+    totems: s.totems,
+  };
 }
 
 function maxT5sFor(paragon, gameMode) {
@@ -625,7 +658,13 @@ function GoalPlanner({ paragon, difficulty, mode, maxT5s }) {
 
 // ── the alternate calculator ────────────────────────────────────────────
 export default function TicketCalculator({ designMode, onSetDesign, lightMode, onSetTheme }) {
-  const [st, setSt] = useState(loadState);
+  // Seed from a shared / deep link (?paragon=&diff=&pops=…) when present,
+  // otherwise fall back to the persisted ticket state.
+  const [st, setSt] = useState(() =>
+    hasBuildParams(window.location.search)
+      ? shareToTicket(decodeState(window.location.search))
+      : loadState()
+  );
   const set = (patch) => setSt((s) => ({ ...s, ...patch }));
 
   const [search, setSearch] = useState("");
@@ -704,6 +743,10 @@ export default function TicketCalculator({ designMode, onSetDesign, lightMode, o
     totems: st.totems,
   }), [st, paragon]);
 
+  // Build snapshot + apply handler for the share / save / embed / export toolbar.
+  const currentState = useMemo(() => ticketToShare(st), [st]);
+  const applyState = useCallback((b) => setSt((s) => ({ ...s, ...shareToTicket(b) })), []);
+
   const bk = data.powerBreakdown;
   const isMax = (b) => b.max != null && b.power >= b.max;
   const badge = (b) => isMax(b) ? "MAX" : b.power > 0 ? "+" + fmtCompact(b.power) : "—";
@@ -751,6 +794,9 @@ export default function TicketCalculator({ designMode, onSetDesign, lightMode, o
             </div>
           </div>
         </header>
+
+        {/* BUILD ACTIONS — share / save / embed / export (top of page) */}
+        <BuildToolbar state={currentState} results={data} paragon={paragon} onLoadState={applyState} sharePath="/ticket" />
 
         {/* PARAGON RAIL */}
         <div className="rail-wrap">
@@ -964,6 +1010,10 @@ export default function TicketCalculator({ designMode, onSetDesign, lightMode, o
 
         <footer className="foot">
           <nav className="foot-nav">
+            <a href="/paragons">All Paragons</a>
+            <span className="foot-sep">•</span>
+            <a href="/faq">FAQ</a>
+            <span className="foot-sep">•</span>
             <a href="#privacy-policy">Privacy Policy</a>
             <span className="foot-sep">•</span>
             <a href="https://github.com/levisager11-oss/paragon-calc" target="_blank" rel="noopener noreferrer">GitHub</a>

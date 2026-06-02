@@ -435,7 +435,7 @@ export default function App() {
       </header>
 
       {/* BUILD ACTIONS — share / save / embed / export (top of page) */}
-      <BuildToolbar state={currentState} results={results} paragon={activeParagon} onLoadState={applyState} />
+      <BuildToolbar state={currentState} results={results} paragon={activeParagon} onLoadState={applyState} sharePath="/classic" />
 
       {/* AD: Top Banner */}
       <AdUnit slot="1234567890" format="horizontal" style={{ marginBottom: "1.5rem", textAlign: "center" }} />
