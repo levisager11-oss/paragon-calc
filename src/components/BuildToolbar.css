@@ -1,0 +1,175 @@
+/* Top-of-page build actions toolbar + its dialogs. Reuses the global theme
+   tokens defined in index.css. */
+
+.build-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+  padding: 0.7rem 1rem;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  backdrop-filter: blur(8px);
+}
+
+.bt-label {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.bt-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.bt-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.bt-btn:hover { background: rgba(255, 255, 255, 0.09); border-color: rgba(255, 255, 255, 0.18); }
+.bt-btn:disabled { opacity: 0.6; cursor: default; }
+.bt-btn svg { display: block; }
+
+.bt-primary {
+  color: #fff;
+  background: linear-gradient(135deg, #0891b2, #06b6d4);
+  border-color: transparent;
+}
+.bt-primary:hover { filter: brightness(1.08); background: linear-gradient(135deg, #0891b2, #06b6d4); }
+
+.bt-wide { width: 100%; justify-content: center; margin-top: 0.6rem; }
+
+/* ── Modal ─────────────────────────────────────────────────────────── */
+.bt-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 5, 12, 0.72);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 1000;
+}
+
+.bt-modal {
+  width: 100%;
+  max-width: 520px;
+  background: #0c0e16;
+  border: 1px solid var(--border-light);
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+.bt-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-light);
+}
+.bt-modal-head h3 {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  color: #fff;
+  margin: 0;
+}
+
+.bt-close {
+  display: inline-flex;
+  padding: 0.35rem;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.bt-close:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+
+.bt-body { padding: 1.25rem; }
+.bt-hint { color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; margin-bottom: 0.85rem; }
+.bt-empty { color: var(--text-secondary); font-size: 0.9rem; text-align: center; padding: 1.5rem 0.5rem; }
+
+.bt-field {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+}
+.bt-field:focus { outline: none; border-color: var(--accent-cyan); }
+.bt-textarea { resize: vertical; font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: 0.8rem; line-height: 1.5; }
+
+.bt-copyrow { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+.bt-copyrow .bt-field { flex: 1; min-width: 0; }
+.bt-copyrow .bt-btn { flex-shrink: 0; }
+.bt-copyrow-end { justify-content: flex-end; }
+
+.bt-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 360px;
+  overflow-y: auto;
+}
+.bt-list-item { display: flex; align-items: stretch; gap: 0.5rem; }
+.bt-list-load {
+  flex: 1;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.6rem 0.8rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  color: var(--text-primary);
+}
+.bt-list-load:hover { background: rgba(255, 255, 255, 0.09); }
+.bt-list-name { font-weight: 600; font-size: 0.92rem; }
+.bt-list-sub { font-size: 0.78rem; color: var(--text-muted); }
+.bt-list-del {
+  flex-shrink: 0;
+  width: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 10px;
+  color: #f87171;
+  cursor: pointer;
+}
+.bt-list-del:hover { background: rgba(239, 68, 68, 0.18); }
+
+@media (max-width: 560px) {
+  .build-toolbar { justify-content: center; }
+  .bt-actions { width: 100%; justify-content: center; }
+}
