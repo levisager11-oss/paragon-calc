@@ -1,4 +1,4 @@
-import { POWER_LIMITS } from "../constants/paragons";
+import { POWER_LIMITS } from "../constants/paragons.js";
 
 /**
  * Reverse calculator: given a target degree, returns the minimum inputs

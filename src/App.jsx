@@ -10,6 +10,8 @@ import { PARAGONS, DIFFICULTY_MULTIPLIERS } from "./constants/paragons";
 import { calculateParagonData, reverseCalculate, getBasePrice, splitIntoSacrificeTowers } from "./utils/calculator";
 import AdUnit from "./components/AdUnit";
 import TicketCalculator from "./components/TicketCalculator";
+import BuildToolbar from "./components/BuildToolbar";
+import { decodeState } from "./utils/shareState";
 
 const pct = (val, min, max) => `${Math.round(((val - min) / (max - min)) * 100)}%`;
 
@@ -31,10 +33,12 @@ const ICON_MD = 18;
 const ICON_LG = 20;
 
 export default function App() {
-  // 1. Core State
-  const [selectedParagonId, setSelectedParagonId] = useState("apex_plasma_master");
-  const [difficulty, setDifficulty] = useState("medium");
-  const [gameMode, setGameMode] = useState("solo"); // "solo" or "coop"
+  // 1. Core State — the initial build is read from the URL (?paragon=&diff=&pops=…)
+  // so shared links and the /paragons deep links open with the build preloaded.
+  const initialBuild = useMemo(() => decodeState(window.location.search), []);
+  const [selectedParagonId, setSelectedParagonId] = useState(() => initialBuild.paragon);
+  const [difficulty, setDifficulty] = useState(() => initialBuild.difficulty);
+  const [gameMode, setGameMode] = useState(() => initialBuild.gameMode); // "solo" or "coop"
   const [lightMode, setLightMode] = useState(() => localStorage.getItem("theme") === "light");
   // Which visual design to render: "classic" (default dark UI) or "ticket"
   // (neo-brutalist arcade ticket). The active design is driven by the URL route
@@ -95,14 +99,35 @@ export default function App() {
   const [goalUseTotems, setGoalUseTotems]     = useState(true);
   const [goalStrategy, setGoalStrategy]         = useState("leastCash");
 
-  // 2. Input Fields State
-  const [pops, setPops] = useState(0);
-  const [income, setIncome] = useState(0);
-  const [upgrades, setUpgrades] = useState(0);
-  const [extraT5s, setExtraT5s] = useState(0);
-  const [sacrificedTowerCash, setSacrificedTowerCash] = useState(0);
-  const [sliderCash, setSliderCash] = useState(0);
-  const [totems, setTotems] = useState(0);
+  // 2. Input Fields State (seeded from the URL build, if present)
+  const [pops, setPops] = useState(() => initialBuild.pops);
+  const [income, setIncome] = useState(() => initialBuild.income);
+  const [upgrades, setUpgrades] = useState(() => initialBuild.upgrades);
+  const [extraT5s, setExtraT5s] = useState(() => initialBuild.extraT5s);
+  const [sacrificedTowerCash, setSacrificedTowerCash] = useState(() => initialBuild.sacrificedTowerCash);
+  const [sliderCash, setSliderCash] = useState(() => initialBuild.sliderCash);
+  const [totems, setTotems] = useState(() => initialBuild.totems);
+
+  // Snapshot of the current build for the share / save / embed / export toolbar.
+  const currentState = useMemo(() => ({
+    paragon: selectedParagonId, difficulty, gameMode, pops, income, upgrades,
+    extraT5s, sacrificedTowerCash, sliderCash, totems,
+  }), [selectedParagonId, difficulty, gameMode, pops, income, upgrades,
+       extraT5s, sacrificedTowerCash, sliderCash, totems]);
+
+  // Apply a saved or shared build (from the toolbar) to every input at once.
+  const applyState = useCallback((s) => {
+    setSelectedParagonId(s.paragon);
+    setDifficulty(s.difficulty);
+    setGameMode(s.gameMode);
+    setPops(s.pops);
+    setIncome(s.income);
+    setUpgrades(s.upgrades);
+    setExtraT5s(s.extraT5s);
+    setSacrificedTowerCash(s.sacrificedTowerCash);
+    setSliderCash(s.sliderCash);
+    setTotems(s.totems);
+  }, []);
 
   // Pop Count Adder state
   const [popAdderOpen, setPopAdderOpen] = useState(false);
@@ -408,6 +433,9 @@ export default function App() {
           </button>
         </div>
       </header>
+
+      {/* BUILD ACTIONS — share / save / embed / export (top of page) */}
+      <BuildToolbar state={currentState} results={results} paragon={activeParagon} onLoadState={applyState} sharePath="/classic" />
 
       {/* AD: Top Banner */}
       <AdUnit slot="1234567890" format="horizontal" style={{ marginBottom: "1.5rem", textAlign: "center" }} />
@@ -1348,6 +1376,10 @@ export default function App() {
       {/* FOOTER */}
       <footer>
         <nav className="footer-nav" aria-label="Footer navigation">
+          <a href="/paragons">All Paragons</a>
+          <span className="footer-sep">•</span>
+          <a href="/faq">FAQ</a>
+          <span className="footer-sep">•</span>
           <a href="#privacy-policy">Privacy Policy</a>
           <span className="footer-sep">•</span>
           <a href="https://github.com/levisager11-oss/paragon-calc" target="_blank" rel="noopener noreferrer">GitHub</a>
