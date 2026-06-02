@@ -13,6 +13,19 @@ import TicketCalculator from "./components/TicketCalculator";
 
 const pct = (val, min, max) => `${Math.round(((val - min) / (max - min)) * 100)}%`;
 
+// Derive which design the current URL is pointing at. Each design now lives at
+// its own route (/classic and /ticket) so the two layouts are effectively
+// separate sites that can be linked and bookmarked independently. Returns null
+// when the path doesn't name a design (e.g. the bare "/" landing).
+const designFromPath = () => {
+  const p = window.location.pathname;
+  if (p.startsWith("/ticket")) return "ticket";
+  if (p.startsWith("/classic")) return "classic";
+  return null;
+};
+
+const pathForDesign = (mode) => (mode === "ticket" ? "/ticket" : "/classic");
+
 const ICON_SM = 16;
 const ICON_MD = 18;
 const ICON_LG = 20;
@@ -24,8 +37,25 @@ export default function App() {
   const [gameMode, setGameMode] = useState("solo"); // "solo" or "coop"
   const [lightMode, setLightMode] = useState(() => localStorage.getItem("theme") === "light");
   // Which visual design to render: "classic" (default dark UI) or "ticket"
-  // (neo-brutalist arcade ticket). Persisted so the choice survives reloads.
-  const [designMode, setDesignMode] = useState(() => localStorage.getItem("design") === "ticket" ? "ticket" : "classic");
+  // (neo-brutalist arcade ticket). The active design is driven by the URL route
+  // (/classic vs /ticket); we fall back to the last-used design (persisted) for
+  // the bare "/" landing so returning visitors keep their preference.
+  const [designMode, setDesignMode] = useState(() => {
+    const fromPath = designFromPath();
+    if (fromPath) return fromPath;
+    return localStorage.getItem("design") === "ticket" ? "ticket" : "classic";
+  });
+
+  // Navigate between the two designs by changing the route. This both updates
+  // the rendered design and pushes a real browser history entry so /classic and
+  // /ticket are linkable, bookmarkable, and work with back/forward.
+  const selectDesign = useCallback((mode) => {
+    setDesignMode(mode);
+    const path = pathForDesign(mode);
+    if (window.location.pathname !== path) {
+      window.history.pushState({}, "", path);
+    }
+  }, []);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", lightMode ? "light" : "dark");
@@ -35,6 +65,22 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("design", designMode);
   }, [designMode]);
+
+  // Keep the design in sync with the URL: canonicalise the bare "/" landing to
+  // the active design's route, and react to browser back/forward navigation.
+  useEffect(() => {
+    if (!designFromPath()) {
+      window.history.replaceState({}, "", pathForDesign(designMode));
+    }
+    const onPop = () => {
+      const fromPath = designFromPath();
+      if (fromPath) setDesignMode(fromPath);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+    // Run once on mount; designMode is only read for the initial canonicalise.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -284,7 +330,7 @@ export default function App() {
     return (
       <TicketCalculator
         designMode={designMode}
-        onSetDesign={setDesignMode}
+        onSetDesign={selectDesign}
         lightMode={lightMode}
         onSetTheme={setLightMode}
       />
@@ -339,13 +385,13 @@ export default function App() {
           <div className="control-group">
             <button
               className={`control-btn ${designMode === "classic" ? "active" : ""}`}
-              onClick={() => setDesignMode("classic")}
+              onClick={() => selectDesign("classic")}
             >
               Classic
             </button>
             <button
               className={`control-btn ${designMode === "ticket" ? "active" : ""}`}
-              onClick={() => setDesignMode("ticket")}
+              onClick={() => selectDesign("ticket")}
             >
               Ticket
             </button>
