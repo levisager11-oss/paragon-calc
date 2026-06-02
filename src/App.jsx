@@ -281,7 +281,14 @@ export default function App() {
   // Render the alternate "ticket" design instead of the classic UI when selected.
   // All hooks above run unconditionally, so this early return is hook-safe.
   if (designMode === "ticket") {
-    return <TicketCalculator designMode={designMode} onSetDesign={setDesignMode} />;
+    return (
+      <TicketCalculator
+        designMode={designMode}
+        onSetDesign={setDesignMode}
+        lightMode={lightMode}
+        onSetTheme={setLightMode}
+      />
+    );
   }
 
   return (
