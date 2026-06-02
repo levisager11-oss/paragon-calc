@@ -26,13 +26,28 @@ const designFromPath = () => {
 
 const pathForDesign = (mode) => (mode === "ticket" ? "/ticket" : "/classic");
 
+// Map a URL slug (e.g. "ascended-shadow") back to a paragon id so deep links
+// from the static /paragons/<slug> landing pages can preselect a paragon via
+// /classic?paragon=<slug>. Paragon ids only contain [a-z_], so slug = id with
+// underscores swapped for hyphens, and the reverse is unambiguous.
+const PARAGON_ID_BY_SLUG = Object.fromEntries(
+  Object.keys(PARAGONS).map((id) => [id.replace(/_/g, "-"), id])
+);
+const paragonIdFromQuery = () => {
+  const slug = new URLSearchParams(window.location.search).get("paragon");
+  if (!slug) return null;
+  return PARAGON_ID_BY_SLUG[slug.toLowerCase()] || null;
+};
+
 const ICON_SM = 16;
 const ICON_MD = 18;
 const ICON_LG = 20;
 
 export default function App() {
   // 1. Core State
-  const [selectedParagonId, setSelectedParagonId] = useState("apex_plasma_master");
+  const [selectedParagonId, setSelectedParagonId] = useState(
+    () => paragonIdFromQuery() || "apex_plasma_master"
+  );
   const [difficulty, setDifficulty] = useState("medium");
   const [gameMode, setGameMode] = useState("solo"); // "solo" or "coop"
   const [lightMode, setLightMode] = useState(() => localStorage.getItem("theme") === "light");
@@ -1348,6 +1363,10 @@ export default function App() {
       {/* FOOTER */}
       <footer>
         <nav className="footer-nav" aria-label="Footer navigation">
+          <a href="/paragons">All Paragons</a>
+          <span className="footer-sep">•</span>
+          <a href="/faq">FAQ</a>
+          <span className="footer-sep">•</span>
           <a href="#privacy-policy">Privacy Policy</a>
           <span className="footer-sep">•</span>
           <a href="https://github.com/levisager11-oss/paragon-calc" target="_blank" rel="noopener noreferrer">GitHub</a>
