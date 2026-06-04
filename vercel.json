@@ -1,6 +1,6 @@
 {
   "rewrites": [
     { "source": "/embed", "destination": "/embed.html" },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    { "source": "/((?!api/|ads\\.txt|robots\\.txt|sitemap\\.xml|manifest\\.json).*)", "destination": "/index.html" }
   ]
 }
