@@ -2,6 +2,8 @@
    tokens defined in index.css. */
 
 .build-toolbar {
+  position: relative;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -13,6 +15,11 @@
   border: 1px solid var(--border-light);
   border-radius: 14px;
   backdrop-filter: blur(8px);
+  overflow: visible;
+}
+
+.build-toolbar:has(.bt-more-menu[open]) {
+  z-index: 200;
 }
 
 .bt-label {
@@ -51,7 +58,7 @@
   position: absolute;
   top: calc(100% + 0.5rem);
   right: 0;
-  z-index: 30;
+  z-index: 210;
   min-width: 180px;
   display: grid;
   gap: 0.5rem;
@@ -223,7 +230,7 @@
   .bt-actions {
     width: 100%;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: 1fr;
     align-items: stretch;
     justify-content: stretch;
     position: relative;
