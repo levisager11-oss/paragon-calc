@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   User, Users, Wrench, Target, Star, Crown, DollarSign, Sparkles,
   RotateCcw, BarChart3, AlertTriangle, Key, Lightbulb, ArrowRight,
@@ -277,8 +277,12 @@ export default function App() {
     // Solo vs Co-op constraints on extra T5s
     if (gameMode === "solo") {
       if (selectedParagonId === "apex_plasma_master") {
-        if (extraT5s > 1) setExtraT5s(1);
-      } else {
+        if (extraT5s > 1) {
+          // Keep the controlled input legal after switching into solo Dart mode.
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setExtraT5s(1);
+        }
+      } else if (extraT5s !== 0) {
         setExtraT5s(0);
       }
     }
@@ -287,7 +291,7 @@ export default function App() {
     if (sliderCash > maxSliderLimit) {
       setSliderCash(maxSliderLimit);
     }
-  }, [selectedParagonId, gameMode, currentBasePrice, maxSliderLimit]);
+  }, [selectedParagonId, gameMode, maxSliderLimit, extraT5s, sliderCash]);
 
   // 5. Compute Calculations
   const results = useMemo(() => {
@@ -437,11 +441,8 @@ export default function App() {
       {/* BUILD ACTIONS — share / save / embed / export (top of page) */}
       <BuildToolbar state={currentState} results={results} paragon={activeParagon} onLoadState={applyState} sharePath="/classic" />
 
-      {/* AD: Top Banner */}
-      <AdUnit slot="1234567890" format="horizontal" style={{ marginBottom: "1.5rem", textAlign: "center" }} />
-
       {/* PARAGON SELECTOR — SEARCH */}
-      <section style={{ marginBottom: "2rem", padding: "2rem 0" }} aria-label="Paragon selector">
+      <section className="paragon-selector-section" aria-label="Paragon selector">
         {/* Search bar + dropdown */}
         <div className="paragon-search-wrapper">
           <div className="paragon-search-bar">
@@ -1019,8 +1020,8 @@ export default function App() {
         </section>
       </div>
 
-      {/* AD: Mid-page */}
-      <AdUnit slot="0987654321" format="auto" style={{ margin: "2rem 0", textAlign: "center" }} />
+      {/* AD: Top Banner */}
+      <AdUnit slot="1234567890" format="horizontal" style={{ margin: "1.5rem 0 2rem", textAlign: "center" }} />
 
       {/* GOAL PLANNER */}
       <div className="panel goal-planner-panel">
@@ -1201,6 +1202,9 @@ export default function App() {
           </div>
         </div>
       </div>
+
+      {/* AD: Mid-page */}
+      <AdUnit slot="0987654321" format="auto" style={{ margin: "2rem 0", textAlign: "center" }} />
 
       {/* DETAILED FORMULAS AND GUIDE SECTION */}
       <section className="guide-card">

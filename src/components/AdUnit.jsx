@@ -1,8 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function AdUnit({ slot, format = "auto", responsive = true, style }) {
   const adRef = useRef(null);
   const pushed = useRef(false);
+  const [adState, setAdState] = useState("pending");
 
   useEffect(() => {
     if (pushed.current) return;
@@ -16,8 +17,27 @@ export default function AdUnit({ slot, format = "auto", responsive = true, style
     }
   }, []);
 
+  useEffect(() => {
+    const ad = adRef.current;
+    if (!ad) return undefined;
+
+    const syncAdState = () => {
+      const status = ad.getAttribute("data-ad-status");
+      if (status === "filled" || status === "unfilled") {
+        setAdState(status);
+      }
+    };
+
+    syncAdState();
+    if (typeof MutationObserver === "undefined") return undefined;
+
+    const observer = new MutationObserver(syncAdState);
+    observer.observe(ad, { attributes: true, attributeFilter: ["data-ad-status"] });
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="ad-container" style={style}>
+    <div className="ad-container" data-ad-state={adState} style={style}>
       <ins
         className="adsbygoogle"
         style={{ display: "block" }}

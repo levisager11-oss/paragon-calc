@@ -330,12 +330,41 @@
   .ticket-design .pd-related { border-left: none; border-top: 2px dashed var(--dash); padding-left: 0; padding-top: 14px; }
 }
 @media (max-width: 560px) {
+  .ticket-design { overflow-x: hidden; }
   .ticket-design .app { padding: 18px 14px 32px; }
-  .ticket-design .topbar { gap: 14px; }
-  .ticket-design .config { width: 100%; justify-content: flex-start; }
+  .ticket-design .topbar { gap: 14px; align-items: stretch; }
+  .ticket-design .brand-title { white-space: normal; }
+  .ticket-design .config {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .ticket-design .config-group { min-width: 0; }
+  .ticket-design .seg { width: 100%; min-width: 0; display: flex; }
+  .ticket-design .config-group:first-child .seg {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ticket-design .seg-btn {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    padding: 7px 8px;
+    font-size: 12px;
+    text-overflow: clip;
+    white-space: nowrap;
+  }
   .ticket-design .rail-search { width: 100%; min-width: 0; }
+  .ticket-design .rail { max-width: 100%; }
   .ticket-design .hero-degree { font-size: 96px; }
   .ticket-design .ptile { width: 168px; }
+  .ticket-design .pdetail { max-width: 100%; overflow: hidden; padding: 14px; }
+  .ticket-design .pd-head { flex-wrap: wrap; }
+  .ticket-design .pd-price { width: 100%; text-align: center; }
+  .ticket-design .pd-abilities { overflow-wrap: anywhere; }
+  .ticket-design .rel-chip { min-width: 0; }
+  .ticket-design .rel-name { min-width: 0; }
   .ticket-design .road-cards { grid-template-columns: 1fr; }
   .ticket-design .bk-row { grid-template-columns: 92px 1fr 78px; gap: 8px; }
   .ticket-design .field-hint { max-width: none; }
@@ -364,6 +393,17 @@
   letter-spacing: 0.13em;
   text-transform: uppercase;
   color: var(--muted);
+}
+.ticket-design .bt-secondary-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.ticket-design .bt-more-menu { display: none; }
+.ticket-design .bt-more-trigger { list-style: none; }
+.ticket-design .bt-more-trigger::-webkit-details-marker { display: none; }
+.ticket-design .bt-more-panel {
+  background: var(--card);
+  border: var(--bw) solid var(--ink);
+  box-shadow: var(--hard);
+  border-radius: 0;
+  padding: 9px;
 }
 .ticket-design .bt-btn {
   font-family: var(--tfont);
@@ -433,3 +473,8 @@
   color: #16120b;
 }
 .ticket-design .bt-list-del:hover { background: var(--amber); filter: brightness(1.05); }
+
+@media (max-width: 560px) {
+  .ticket-design .bt-secondary-actions { display: none; }
+  .ticket-design .bt-more-menu { display: block; min-width: 0; width: 100%; }
+}

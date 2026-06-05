@@ -28,6 +28,45 @@
   flex-wrap: wrap;
 }
 
+.bt-secondary-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.bt-more-menu {
+  display: none;
+  position: relative;
+}
+
+.bt-more-trigger {
+  list-style: none;
+}
+
+.bt-more-trigger::-webkit-details-marker {
+  display: none;
+}
+
+.bt-more-panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 30;
+  min-width: 180px;
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  background: #0c0e16;
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+}
+
+.bt-more-panel .bt-btn {
+  width: 100%;
+  justify-content: flex-start;
+}
+
 .bt-btn {
   display: inline-flex;
   align-items: center;
@@ -170,6 +209,55 @@
 .bt-list-del:hover { background: rgba(239, 68, 68, 0.18); }
 
 @media (max-width: 560px) {
-  .build-toolbar { justify-content: center; }
-  .bt-actions { width: 100%; justify-content: center; }
+  .build-toolbar {
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-content: stretch;
+    padding: 0.8rem;
+  }
+
+  .bt-label {
+    text-align: center;
+  }
+
+  .bt-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: stretch;
+    justify-content: stretch;
+    position: relative;
+  }
+
+  .bt-secondary-actions {
+    display: none;
+  }
+
+  .bt-more-menu {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .bt-btn {
+    min-width: 0;
+    width: 100%;
+    justify-content: center;
+    overflow: hidden;
+    padding-inline: 0.65rem;
+  }
+
+  .bt-more-trigger {
+    height: 100%;
+  }
+
+  .bt-more-panel .bt-btn {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 360px) {
+  .bt-actions {
+    grid-template-columns: 1fr;
+  }
 }

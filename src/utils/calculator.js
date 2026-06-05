@@ -49,7 +49,7 @@ export function reverseCalculate({
   const takeTotems   = (r) => useTotems && r > 0 ? Math.ceil(r / 2000) * 2000 : 0;
 
   // ── strategy dispatch ─────────────────────────────────────────────────
-  let popsPow = 0, upgPow = 0, t5Pow = 0, cashPow = 0, totemPow = 0;
+  let popsPow = 0, upgPow, t5Pow, cashPow = 0, totemPow;
   let rem = targetPower;
 
   if (strategy === 'leastCash') {
@@ -231,7 +231,6 @@ export function calculateParagonData({
   // Max T5 power is 50,000 (pointsPerExtra = 6,000)
   const rawT5Power = extraT5s * POWER_LIMITS.t5.pointsPerExtra;
   const t5Power = Math.min(POWER_LIMITS.t5.maxPower, rawT5Power);
-  const t5Capped = rawT5Power > POWER_LIMITS.t5.maxPower;
 
   // 2. Non-T5 Upgrades Power
   // Max upgrades power is 10,000 (100 power per upgrade)
@@ -287,7 +286,6 @@ export function calculateParagonData({
   const degree = calculateDegreeFromPower(totalPower);
 
   // Next Degree calculations
-  const currentDegreeThreshold = getPowerThreshold(degree);
   const nextDegree = Math.min(100, degree + 1);
   const nextDegreeThreshold = getPowerThreshold(nextDegree);
   const powerGap = nextDegree === degree ? 0 : nextDegreeThreshold - totalPower;
@@ -300,8 +298,6 @@ export function calculateParagonData({
   if (degree < 100 && powerGap > 0) {
     // How many pops needed
     if (!popsCapped) {
-      const popsPowerNeeded = Math.min(POWER_LIMITS.pops.maxPower - popsPower, powerGap);
-      const popsNeeded = popsPowerNeeded * POWER_LIMITS.pops.popDivisor;
       const totalEquivalentPopsNeeded = nextDegreeThreshold * POWER_LIMITS.pops.popDivisor;
       const remainingEquivalent = Math.max(0, totalEquivalentPopsNeeded - equivalentPops);
       recommendations.push({
@@ -313,9 +309,6 @@ export function calculateParagonData({
 
     // How many upgrades needed
     if (!upgradesCapped) {
-      const upgradesPowerNeeded = Math.min(POWER_LIMITS.upgrades.maxPower - upgradesPower, powerGap);
-      const upgradesNeeded = Math.ceil(upgradesPowerNeeded / POWER_LIMITS.upgrades.pointsPerUpgrade);
-      const totalUpgradesNeeded = Math.ceil(nextDegreeThreshold / POWER_LIMITS.upgrades.pointsPerUpgrade);
       const remainingUpgrades = Math.max(0, 100 - upgrades);
       recommendations.push({
         type: "upgrades",
