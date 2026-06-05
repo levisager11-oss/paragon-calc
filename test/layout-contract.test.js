@@ -43,6 +43,14 @@ describe("layout contracts", () => {
     expect(css).toMatch(/\.bt-more-panel\s*\{[\s\S]*z-index:\s*210/);
   });
 
+  it("defines light-mode surfaces for the classic More menu", () => {
+    const css = read("src/components/BuildToolbar.css");
+
+    expect(css).toMatch(/\[data-theme="light"\]\s+\.bt-more-panel\s*\{[\s\S]*background:\s*rgba\(255,\s*255,\s*255,\s*0\.98\)/);
+    expect(css).toMatch(/\[data-theme="light"\]\s+\.bt-more-panel\s+\.bt-btn\s*\{[\s\S]*background:\s*rgba\(15,\s*23,\s*42,\s*0\.04\)/);
+    expect(css).toMatch(/\[data-theme="light"\]\s+\.bt-modal\s*\{[\s\S]*background:\s*rgba\(255,\s*255,\s*255,\s*0\.98\)/);
+  });
+
   it("uses a two-column mobile grid for classic difficulty controls", () => {
     const css = read("src/index.css");
 
