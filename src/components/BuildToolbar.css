@@ -2,6 +2,8 @@
    tokens defined in index.css. */
 
 .build-toolbar {
+  position: relative;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -13,6 +15,11 @@
   border: 1px solid var(--border-light);
   border-radius: 14px;
   backdrop-filter: blur(8px);
+  overflow: visible;
+}
+
+.build-toolbar:has(.bt-more-menu[open]) {
+  z-index: 200;
 }
 
 .bt-label {
@@ -26,6 +33,45 @@
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+}
+
+.bt-secondary-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.bt-more-menu {
+  display: none;
+  position: relative;
+}
+
+.bt-more-trigger {
+  list-style: none;
+}
+
+.bt-more-trigger::-webkit-details-marker {
+  display: none;
+}
+
+.bt-more-panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 210;
+  min-width: 180px;
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  background: #0c0e16;
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+}
+
+.bt-more-panel .bt-btn {
+  width: 100%;
+  justify-content: flex-start;
 }
 
 .bt-btn {
@@ -169,7 +215,87 @@
 }
 .bt-list-del:hover { background: rgba(239, 68, 68, 0.18); }
 
+[data-theme="light"] .bt-more-panel {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+}
+
+[data-theme="light"] .bt-more-panel .bt-btn {
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.08);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .bt-more-panel .bt-btn:hover {
+  background: rgba(15, 23, 42, 0.08);
+  border-color: rgba(15, 23, 42, 0.14);
+}
+
+[data-theme="light"] .bt-modal {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
+}
+
+[data-theme="light"] .bt-modal-head {
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .bt-modal-head h3 {
+  color: var(--text-primary);
+}
+
 @media (max-width: 560px) {
-  .build-toolbar { justify-content: center; }
-  .bt-actions { width: 100%; justify-content: center; }
+  .build-toolbar {
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-content: stretch;
+    padding: 0.8rem;
+  }
+
+  .bt-label {
+    text-align: center;
+  }
+
+  .bt-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    justify-content: stretch;
+    position: relative;
+  }
+
+  .bt-secondary-actions {
+    display: none;
+  }
+
+  .bt-more-menu {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .bt-btn {
+    min-width: 0;
+    width: 100%;
+    justify-content: center;
+    overflow: hidden;
+    padding-inline: 0.65rem;
+  }
+
+  .bt-more-trigger {
+    height: 100%;
+  }
+
+  .bt-more-panel .bt-btn {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 360px) {
+  .bt-actions {
+    grid-template-columns: 1fr;
+  }
 }

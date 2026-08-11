@@ -182,6 +182,11 @@ header {
    Paragon Search Selector
    ================================ */
 
+.paragon-selector-section {
+  margin-bottom: 1.25rem;
+  padding: 1.25rem 0 1rem;
+}
+
 .paragon-search-wrapper {
   position: relative;
   margin: 0 auto 0.875rem;
@@ -433,6 +438,8 @@ header {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  min-width: 0;
+  max-width: 100%;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text-secondary);
@@ -443,6 +450,13 @@ header {
   border-radius: 20px;
   cursor: pointer;
   transition: var(--transition-fast);
+}
+
+.suggestion-chip span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .suggestion-chip:hover                  { color: #fff; background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); transform: translateY(-1px); }
@@ -1184,11 +1198,19 @@ footer a:hover {
 .ad-container {
   width: 100%;
   overflow: hidden;
-  min-height: 90px;
+  min-height: 0;
 }
 
 .ad-container ins {
   width: 100%;
+}
+
+.ad-container[data-ad-state="unfilled"] {
+  display: none;
+}
+
+.ad-container[data-ad-state="filled"] {
+  min-height: 90px;
 }
 
 /* Privacy Policy Section */
@@ -1773,6 +1795,11 @@ footer a:hover {
   }
 
   /* Paragon search */
+  .paragon-selector-section {
+    margin-bottom: 0.75rem;
+    padding: 1rem 0 0.75rem;
+  }
+
   .paragon-search-wrapper {
     max-width: 100%;
   }
@@ -1997,11 +2024,12 @@ footer a:hover {
   }
 
   .controls-header {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding-bottom: 0.25rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+    gap: 0.45rem;
+    overflow: visible;
+    padding-bottom: 0;
   }
 
   .controls-header::-webkit-scrollbar {
@@ -2009,8 +2037,31 @@ footer a:hover {
   }
 
   .control-btn {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
     font-size: 0.72rem;
     padding: 0.35rem 0.55rem;
+    line-height: 1.15;
+    white-space: normal;
+  }
+
+  .control-group {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .controls-header .control-group:first-of-type {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .controls-header .control-group:first-of-type .control-btn {
+    width: 100%;
+    font-size: 0.64rem;
+    padding-inline: 0.4rem;
+    white-space: normal;
   }
 
   .theme-toggle-btn {
@@ -2047,16 +2098,27 @@ footer a:hover {
 
   /* Paragon chip */
   .paragon-active-chip {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    align-items: center;
     border-radius: 10px;
     padding: 0.5rem 0.65rem;
     gap: 0.5rem;
   }
 
   .active-chip-icon {
+    grid-row: 1 / 4;
     width: 32px;
     height: 32px;
     font-size: 1.2rem;
     border-radius: 8px;
+  }
+
+  .active-chip-info,
+  .active-chip-tag,
+  .active-chip-price {
+    grid-column: 2;
+    justify-self: start;
   }
 
   .active-chip-name {
@@ -2078,10 +2140,18 @@ footer a:hover {
 
   /* Suggestions */
   .paragon-suggestions {
+    display: grid;
+    grid-template-columns: 1fr;
     gap: 0.35rem;
   }
 
+  .suggestions-label {
+    margin-right: 0;
+  }
+
   .suggestion-chip {
+    width: 100%;
+    justify-content: flex-start;
     font-size: 0.72rem;
     padding: 0.25rem 0.5rem;
   }

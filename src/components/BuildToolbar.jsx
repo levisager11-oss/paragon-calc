@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import {
-  Share2, Code2, Save, FolderOpen, ImageDown, Copy, Check, Trash2, X,
+  Share2, Code2, Save, FolderOpen, ImageDown, Copy, Check, Trash2, X, MoreHorizontal,
 } from "lucide-react";
 import { PARAGONS } from "../constants/paragons.js";
 import {
@@ -103,17 +103,33 @@ export default function BuildToolbar({ state, results, paragon, onLoadState, sha
     }
   }, [shareUrl]);
 
+  const renderSecondaryActions = () => (
+    <>
+      <button className="bt-btn" onClick={openSave}><Save size={16} /> Save</button>
+      <button className="bt-btn" onClick={openLoad}><FolderOpen size={16} /> Saved</button>
+      <button className="bt-btn" onClick={openEmbed}><Code2 size={16} /> Embed</button>
+      <button className="bt-btn" onClick={doExport} disabled={exporting}>
+        <ImageDown size={16} /> {exporting ? "Rendering…" : "Image"}
+      </button>
+    </>
+  );
+
   return (
     <div className="build-toolbar">
       <span className="bt-label">Degree {results.degree} build</span>
       <div className="bt-actions">
         <button className="bt-btn bt-primary" onClick={openShare}><Share2 size={16} /> Share</button>
-        <button className="bt-btn" onClick={openSave}><Save size={16} /> Save</button>
-        <button className="bt-btn" onClick={openLoad}><FolderOpen size={16} /> Saved</button>
-        <button className="bt-btn" onClick={openEmbed}><Code2 size={16} /> Embed</button>
-        <button className="bt-btn" onClick={doExport} disabled={exporting}>
-          <ImageDown size={16} /> {exporting ? "Rendering…" : "Image"}
-        </button>
+        <div className="bt-secondary-actions">
+          {renderSecondaryActions()}
+        </div>
+        <details className="bt-more-menu">
+          <summary className="bt-btn bt-more-trigger">
+            <MoreHorizontal size={16} /> More
+          </summary>
+          <div className="bt-more-panel">
+            {renderSecondaryActions()}
+          </div>
+        </details>
       </div>
 
       {dialog && (
