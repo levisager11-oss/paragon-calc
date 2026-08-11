@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import versionHandler from "../api/paragon/version.js";
 import healthHandler  from "../api/health.js";
+import { PARAGONS as API_PARAGONS } from "../api/_lib/shared.js";
+import { PARAGONS as UI_PARAGONS } from "../src/constants/paragons.js";
 import { makeReqRes } from "./helpers.js";
 
 // ─── GET /api/paragon/version ─────────────────────────────────────────────────
@@ -37,6 +39,21 @@ describe("GET /api/paragon/version", () => {
       expect(t).toHaveProperty("id");
       expect(t).toHaveProperty("tower");
       expect(t).toHaveProperty("paragon");
+    }
+  });
+
+  it("uses the current medium Paragon prices", () => {
+    const prices = {
+      glaive_dominus: 275000,
+      ascended_shadow: 600000,
+      navarch_of_the_seas: 550000,
+      nautic_siege_core: 500000,
+      magus_perfectus: 750000,
+    };
+
+    for (const [id, price] of Object.entries(prices)) {
+      expect(API_PARAGONS[id].mediumCost).toBe(price);
+      expect(UI_PARAGONS[id].mediumCost).toBe(price);
     }
   });
 
