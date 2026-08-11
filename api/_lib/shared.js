@@ -3,7 +3,7 @@
 
 export const API_VERSION      = "1.1";
 export const FORMULA_VERSION  = "1.0";
-export const FORMULA_REVISION = "2025-05";
+export const FORMULA_REVISION = "2026-08";
 
 export const VALID_DIFFICULTIES = ["easy", "medium", "hard", "impoppable"];
 
@@ -27,19 +27,19 @@ export const PARAGONS = {
   },
   glaive_dominus: {
     id: "glaive_dominus", name: "Glaive Dominus",
-    tower: "Boomerang Monkey", mediumCost: 375000,
+    tower: "Boomerang Monkey", mediumCost: 275000,
   },
   ascended_shadow: {
     id: "ascended_shadow", name: "Ascended Shadow",
-    tower: "Ninja Monkey", mediumCost: 500000,
+    tower: "Ninja Monkey", mediumCost: 600000,
   },
   navarch_of_the_seas: {
     id: "navarch_of_the_seas", name: "Navarch of the Seas",
-    tower: "Monkey Buccaneer", mediumCost: 500000,
+    tower: "Monkey Buccaneer", mediumCost: 550000,
   },
   nautic_siege_core: {
     id: "nautic_siege_core", name: "Nautic Siege Core",
-    tower: "Monkey Sub", mediumCost: 400000,
+    tower: "Monkey Sub", mediumCost: 500000,
   },
   master_builder: {
     id: "master_builder", name: "Master Builder",
@@ -47,7 +47,7 @@ export const PARAGONS = {
   },
   magus_perfectus: {
     id: "magus_perfectus", name: "Magus Perfectus",
-    tower: "Wizard Monkey", mediumCost: 800000,
+    tower: "Wizard Monkey", mediumCost: 750000,
   },
   goliath_doomship: {
     id: "goliath_doomship", name: "Goliath Doomship",
