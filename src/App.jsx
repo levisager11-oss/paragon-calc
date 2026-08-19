@@ -857,8 +857,8 @@ export default function App() {
                 <div style={{ paddingRight: "1rem" }}>
                   <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
                     Each Paragon Power Totem purchased from Geraldo adds 2,000 flat power. In Solo
-                    games this is the only way to bypass the power caps and reach <strong>Degree 100</strong> —
-                    {SOLO.totems} totems on top of a maxed build, or {SOLO_DART.totems} for a Dart Monkey.
+                    games this is the only way to bypass the power caps and reach <strong>Degree 100</strong>:
+                    it takes {SOLO.totems} totems on top of a maxed build, or {SOLO_DART.totems} for a Dart Monkey.
                   </p>
                 </div>
                 <div>
