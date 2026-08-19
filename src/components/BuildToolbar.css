@@ -173,3 +173,14 @@
   .build-toolbar { justify-content: center; }
   .bt-actions { width: 100%; justify-content: center; }
 }
+
+/* Keyboard focus: .bt-field:focus clears the outline, so restore a ring for
+   keyboard users specifically. */
+.build-toolbar button:focus-visible,
+.build-toolbar a:focus-visible,
+.bt-modal button:focus-visible,
+.bt-modal a:focus-visible,
+.bt-field:focus-visible {
+  outline: 2px solid var(--accent-cyan, #06b6d4);
+  outline-offset: 2px;
+}

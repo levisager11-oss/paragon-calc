@@ -157,3 +157,13 @@ body {
   font-family: 'Fredoka', sans-serif;
 }
 .embed-cta:hover { filter: brightness(1.08); }
+
+/* Keyboard focus: the select/input rules clear the outline, so restore a ring
+   for keyboard users specifically. */
+.embed a:focus-visible,
+.embed button:focus-visible,
+.embed .embed-select:focus-visible,
+.embed .embed-field input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

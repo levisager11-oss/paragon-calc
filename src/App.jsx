@@ -463,6 +463,7 @@ export default function App() {
             {searchQuery && (
               <button
                 className="search-clear-btn"
+                aria-label="Clear search"
                 onMouseDown={() => { setSearchQuery(""); setShowDropdown(false); searchInputRef.current?.focus(); }}
               >
                 <X size={13} />
@@ -473,10 +474,12 @@ export default function App() {
           {showDropdown && (
             <div className="paragon-dropdown">
               {searchResults.length > 0 ? searchResults.map(p => (
-                <div
+                <button
                   key={p.id}
+                  type="button"
                   className={`paragon-dropdown-item ${p.category}`}
                   onMouseDown={() => handleSelectParagon(p.id)}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSelectParagon(p.id); } }}
                 >
                   <span className="dropdown-icon">{p.icon}</span>
                   <div className="dropdown-info">
@@ -486,7 +489,7 @@ export default function App() {
                     </span>
                   </div>
                   <span className="dropdown-price">${getBasePrice(p.mediumCost, difficulty).toLocaleString()}</span>
-                </div>
+                </button>
               )) : (
                 <div className="dropdown-empty">No paragons match "{searchQuery}"</div>
               )}
@@ -546,12 +549,13 @@ export default function App() {
               {/* Pops Input */}
               <div className="control-row">
                 <div>
-                  <label style={{ fontSize: "0.85rem", color: "var(--text-secondary)", display: "block", marginBottom: "0.25rem" }}>
+                  <label htmlFor="pops-range" style={{ fontSize: "0.85rem", color: "var(--text-secondary)", display: "block", marginBottom: "0.25rem" }}>
                     Total Tower Pops (Damage)
                   </label>
                   <input
                     type="range"
                     min="0"
+                    id="pops-range"
                     max="16200000"
                     step="50000"
                     className={`range-slider ${activeParagon.category}-accent`}
@@ -564,6 +568,7 @@ export default function App() {
                   type="text"
                   inputMode="numeric"
                   className="number-input"
+                  aria-label="Total tower pops"
                   value={pops.toLocaleString()}
                   onChange={handlePopsText}
                 />
@@ -572,12 +577,13 @@ export default function App() {
               {/* Income Input */}
               <div className="control-row" style={{ marginTop: "0.5rem" }}>
                 <div>
-                  <label style={{ fontSize: "0.85rem", color: "var(--text-secondary)", display: "block", marginBottom: "0.25rem" }}>
+                  <label htmlFor="income-range" style={{ fontSize: "0.85rem", color: "var(--text-secondary)", display: "block", marginBottom: "0.25rem" }}>
                     Total Cash Generated (e.g. Buccaneer/Engi)
                   </label>
                   <input
                     type="range"
                     min="0"
+                    id="income-range"
                     max="4050000"
                     step="10000"
                     className={`range-slider ${activeParagon.category}-accent`}
@@ -590,6 +596,7 @@ export default function App() {
                   type="text"
                   inputMode="numeric"
                   className="number-input"
+                  aria-label="Total cash generated"
                   value={income.toLocaleString()}
                   onChange={handleIncomeText}
                 />
@@ -619,11 +626,12 @@ export default function App() {
             <div className="input-controls">
               <div className="control-row">
                 <div>
-                  <label style={{ fontSize: "0.85rem", color: "var(--text-secondary)", display: "block", marginBottom: "0.25rem" }}>
+                  <label htmlFor="upgrades-range" style={{ fontSize: "0.85rem", color: "var(--text-secondary)", display: "block", marginBottom: "0.25rem" }}>
                     Total upgrade tiers (e.g. four 0-2-4 towers = 4 * 6 = 24 upgrades)
                   </label>
                   <input
                     type="range"
+                    id="upgrades-range"
                     min="0"
                     max="100"
                     className={`range-slider ${activeParagon.category}-accent`}
@@ -635,6 +643,7 @@ export default function App() {
                 <input
                   type="number"
                   className="number-input"
+                  aria-label="Total sacrificed upgrade tiers"
                   min="0"
                   max="100"
                   value={upgrades}
@@ -686,6 +695,7 @@ export default function App() {
                       type="number"
                       className="number-input"
                       min="0"
+                      aria-label="Extra Tier 5 towers sacrificed"
                       max={gameMode === "solo" ? 1 : 9}
                       value={extraT5s}
                       onChange={(e) => {
@@ -718,12 +728,13 @@ export default function App() {
               {/* Sacrifice Tower Cash */}
               <div className="control-row">
                 <div>
-                  <label style={{ fontSize: "0.85rem", color: "var(--text-secondary)", display: "block", marginBottom: "0.25rem" }}>
+                  <label htmlFor="sacrifice-cash-range" style={{ fontSize: "0.85rem", color: "var(--text-secondary)", display: "block", marginBottom: "0.25rem" }}>
                     Value of Sacrificed Non-T5 Towers (<strong>100% efficient</strong>)
                   </label>
                   <input
                     type="range"
                     min="0"
+                    id="sacrifice-cash-range"
                     max={currentBasePrice * 3}
                     step="5000"
                     className={`range-slider ${activeParagon.category}-accent`}
@@ -736,6 +747,7 @@ export default function App() {
                   type="text"
                   inputMode="numeric"
                   className="number-input"
+                  aria-label="Value of sacrificed non-T5 towers, in dollars"
                   value={sacrificedTowerCash.toLocaleString()}
                   onChange={handleSacrificeCashText}
                 />
@@ -744,12 +756,13 @@ export default function App() {
               {/* Slider Cash */}
               <div className="control-row" style={{ marginTop: "0.5rem" }}>
                 <div>
-                  <label style={{ fontSize: "0.85rem", color: "var(--text-secondary)", display: "block", marginBottom: "0.25rem" }}>
+                  <label htmlFor="slider-cash-range" style={{ fontSize: "0.85rem", color: "var(--text-secondary)", display: "block", marginBottom: "0.25rem" }}>
                     In-Game Cash Slider Injection (<strong>95% efficient</strong>)
                   </label>
                   <input
                     type="range"
                     min="0"
+                    id="slider-cash-range"
                     max={maxSliderLimit}
                     step="5000"
                     className={`range-slider ${activeParagon.category}-accent`}
@@ -762,6 +775,7 @@ export default function App() {
                   type="text"
                   inputMode="numeric"
                   className="number-input"
+                  aria-label="Cash slider injection, in dollars"
                   value={sliderCash.toLocaleString()}
                   onChange={handleSliderCashText}
                 />
@@ -852,6 +866,7 @@ export default function App() {
                     type="number"
                     className="number-input"
                     min="0"
+                    aria-label="Geraldo Paragon Power Totems absorbed"
                     max="100"
                     value={totems}
                     onChange={(e) => setTotems(Math.max(0, parseInt(e.target.value) || 0))}
@@ -1066,6 +1081,7 @@ export default function App() {
               <div className="control-row">
                 <input
                   type="range" min="2" max="100"
+                  aria-label="Target degree"
                   className={`range-slider ${activeParagon.category}-accent`}
                   value={targetDegree}
                   style={{ '--pct': pct(targetDegree, 2, 100) }}
@@ -1073,6 +1089,7 @@ export default function App() {
                 />
                 <input
                   type="number" min="2" max="100"
+                  aria-label="Target degree"
                   className="number-input"
                   value={targetDegree}
                   onChange={(e) => setTargetDegree(Math.min(100, Math.max(2, parseInt(e.target.value) || 2)))}
@@ -1102,7 +1119,13 @@ export default function App() {
                       <span className="goal-toggle-sub">{sub}</span>
                     </div>
                     <label className="toggle-switch">
-                      <input type="checkbox" className="toggle-switch-input" checked={state} onChange={(e) => set(e.target.checked)} />
+                      <input
+                        type="checkbox"
+                        className="toggle-switch-input"
+                        aria-label={`Use ${label} towards the target degree`}
+                        checked={state}
+                        onChange={(e) => set(e.target.checked)}
+                      />
                       <span className="toggle-switch-label"></span>
                     </label>
                   </div>
