@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "gen:images": "node scripts/generate-images.js"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",

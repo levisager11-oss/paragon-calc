@@ -7,6 +7,9 @@ import {
   getBasePrice,
   reverseCalculate,
   splitIntoSacrificeTowers,
+  maxT5sFor,
+  soloCeilingFacts,
+  MAX_POWER,
 } from "../utils/calculator";
 import AdUnit from "./AdUnit";
 import BuildToolbar from "./BuildToolbar";
@@ -97,9 +100,20 @@ const STORAGE_KEY = "paragon-calc-ticket-v1";
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return { ...DEFAULTS, ...JSON.parse(raw) };
+    if (raw) return sanitize({ ...DEFAULTS, ...JSON.parse(raw) });
   } catch { /* ignore */ }
   return { ...DEFAULTS };
+}
+
+// Persisted state is user-writable and can outlive a rename, so anything that
+// is later used as a lookup key gets checked before it reaches the UI.
+function sanitize(s) {
+  return {
+    ...s,
+    paragonId: PARAGONS[s.paragonId] ? s.paragonId : DEFAULTS.paragonId,
+    difficulty: DIFFS.some((d) => d.value === s.difficulty) ? s.difficulty : DEFAULTS.difficulty,
+    mode: MODES.some((m) => m.value === s.mode) ? s.mode : DEFAULTS.mode,
+  };
 }
 
 // Map between the shared build shape (utils/shareState.js) and this design's
@@ -133,11 +147,9 @@ function ticketToShare(s) {
   };
 }
 
-function maxT5sFor(paragon, gameMode) {
-  if (gameMode === "coop") return 9;
-  if (paragon.id === "apex_plasma_master") return 1;
-  return 0;
-}
+// Solo power ceilings quoted in the guide, derived from the engine.
+const SOLO = soloCeilingFacts(PARAGONS.ascended_shadow);
+const SOLO_DART = soloCeilingFacts(PARAGONS.apex_plasma_master);
 
 // ── formatting helpers ──────────────────────────────────────────────────
 const fmtNum = (n) => Math.round(n).toLocaleString("en-US");
@@ -348,6 +360,7 @@ function Ticket({ data, paragon, difficulty, mode }) {
               {data.recommendations.map((r, i) => {
                 const map = {
                   pops: { unit: "More pops", big: fmtNum(r.value), note: "or " + fmtCash(Math.ceil(r.value / 4)) + " income" },
+                  upgrades: { unit: "Upgrade tiers", big: fmtNum(r.value) + (r.value === 1 ? " tier" : " tiers"), note: "100 power each" },
                   cash_sacrifice: { unit: "Tower sacrifice", big: fmtCash(r.value), note: "100% efficient" },
                   cash_slider: { unit: "Cash slider", big: fmtCash(r.value), note: "+5% premium" },
                   totems: { unit: "Geraldo totems", big: r.value + (r.value === 1 ? " totem" : " totems"), note: "+2,000 power each" },
@@ -788,7 +801,7 @@ export default function TicketCalculator({ designMode, onSetDesign, lightMode, o
               <span className="config-label">View</span>
               <Segmented
                 value={designMode}
-                onChange={onSetDesign}
+                onChange={(v) => onSetDesign(v, ticketToShare(st))}
                 options={[{ value: "classic", label: "Classic" }, { value: "ticket", label: "Ticket" }]}
               />
             </div>
@@ -914,8 +927,8 @@ export default function TicketCalculator({ designMode, onSetDesign, lightMode, o
             <Ticket
               data={data}
               paragon={paragon}
-              difficulty={DIFFS.find((d) => d.value === st.difficulty).label}
-              mode={MODES.find((m) => m.value === st.mode).label}
+              difficulty={(DIFFS.find((d) => d.value === st.difficulty) ?? DIFFS[1]).label}
+              mode={(MODES.find((m) => m.value === st.mode) ?? MODES[0]).label}
             />
           </section>
         </div>
@@ -930,9 +943,10 @@ export default function TicketCalculator({ designMode, onSetDesign, lightMode, o
         <section className="guide">
           <h2 className="guide-title">▤ How Paragon Calculations Work</h2>
           <p className="guide-intro">
-            In Bloons TD 6, a Paragon's Degree is calculated using Paragon Power Points (capped at 200,000). The
-            power points are distributed across four main caps (plus Geraldo's totems which bypass standard limits).
-            Here is a detailed breakdown of the official mathematical ratios used in-game (Update 39+):
+            In Bloons TD 6, a Paragon's Degree is calculated using Paragon Power Points (capped at
+            {MAX_POWER.toLocaleString()}). The power points are distributed across four main caps, plus Geraldo's
+            totems which bypass the standard limits. Here is a detailed breakdown of the mathematical ratios used
+            in-game (Update 54+):
           </p>
           <div className="guide-grid">
             <div className="guide-col">
@@ -962,8 +976,10 @@ export default function TicketCalculator({ designMode, onSetDesign, lightMode, o
               <h4>Geraldo's Totems (Uncapped)</h4>
               <p>
                 Each Paragon Power Totem contributes 2,000 flat power points. In Solo play, standard contributions cap
-                at 160,000 power (Degree 76) or 166,000 (Degree 79 for Dart Monkey). To reach Degree 100 in Solo, you
-                must absorb Geraldo Totems to make up the missing power.
+                at {SOLO.power.toLocaleString()} power (Degree {SOLO.degree}), or {SOLO_DART.power.toLocaleString()}
+                (Degree {SOLO_DART.degree}) for a Dart Monkey with Master Double Cross. Closing the gap to Degree 100
+                takes {SOLO.totems} totems, or {SOLO_DART.totems} for a Dart Monkey. Co-op reaches Degree 100 with no
+                totems at all.
               </p>
             </div>
           </div>

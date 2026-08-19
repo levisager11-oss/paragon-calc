@@ -39,88 +39,34 @@ import { randomUUID } from "node:crypto";
 import {
   API_VERSION, FORMULA_VERSION, FORMULA_REVISION,
   VALID_DIFFICULTIES, PARAGONS, POWER_LIMITS,
+  calculateParagonData,
 } from "../_lib/shared.js";
 
 // ─── Calculator ──────────────────────────────────────────────────────────────
-
-function getBasePrice(mediumCost, difficulty) {
-  const mult = { easy: 0.85, medium: 1.0, hard: 1.08, impoppable: 1.20 }[difficulty] ?? 1.0;
-  return Math.round((mediumCost * mult) / 5) * 5;
-}
-
-function getPowerThreshold(degree) {
-  if (degree <= 1) return 0;
-  if (degree >= 100) return 200000;
-  return Math.floor(
-    (50 * degree ** 3 + 5025 * degree ** 2 + 168324 * degree + 843000) / 600
-  );
-}
-
-function calculateDegreeFromPower(power) {
-  if (power >= 200000) return 100;
-  if (power <= 0) return 1;
-  for (let d = 99; d >= 1; d--) {
-    if (power >= getPowerThreshold(d)) return d;
-  }
-  return 1;
-}
+//
+// The degree maths lives in src/utils/calculator.js and is shared with the web
+// app, so the API and the site can never disagree about the same build. This
+// layer only reshapes the engine's result into the documented JSON contract.
 
 function runCalculation({
   paragon, difficulty, gameMode,
   pops, income, upgrades, extraT5s,
   sacrificedTowerCash, sliderCash, totems,
 }) {
-  const basePrice = getBasePrice(paragon.mediumCost, difficulty);
+  const calc = calculateParagonData({
+    paragon, difficulty, gameMode,
+    pops, income, upgrades, extraT5s,
+    sacrificedTowerCash, sliderCash, totems,
+  });
 
-  // Extra T5s (solo: only Dart Monkey can have 1 extra via Master Double Cross)
-  const effectiveExtraT5s =
-    gameMode === "coop"
-      ? extraT5s
-      : paragon.id === "apex_plasma_master"
-        ? Math.min(extraT5s, 1)
-        : 0;
-
-  const rawT5Power      = effectiveExtraT5s * POWER_LIMITS.t5.pointsPerExtra;
-  const t5Power         = Math.min(POWER_LIMITS.t5.maxPower, rawT5Power);
-
-  const rawUpgradesPow  = upgrades * POWER_LIMITS.upgrades.pointsPerUpgrade;
-  const upgradesPower   = Math.min(POWER_LIMITS.upgrades.maxPower, rawUpgradesPow);
-
-  const equivalentPops  = pops + income * 4;
-  const rawPopsPower    = Math.floor(equivalentPops / POWER_LIMITS.pops.popDivisor);
-  const popsPower       = Math.min(POWER_LIMITS.pops.maxPower, rawPopsPower);
-
+  const basePrice           = calc.basePrice;
   const sacrificePowerRatio = 20000 / basePrice;
   const sliderPowerRatio    = 20000 / (basePrice * 1.05);
-  const rawSacrificePow     = sacrificedTowerCash * sacrificePowerRatio;
-  const rawSliderPow        = sliderCash * sliderPowerRatio;
-  const rawCashPower        = rawSacrificePow + rawSliderPow;
-  const cashPower           = Math.floor(Math.min(POWER_LIMITS.cash.maxPower, rawCashPower));
-  const cashCapped          = rawCashPower > POWER_LIMITS.cash.maxPower;
-
-  let wastedCash = 0;
-  if (cashCapped) {
-    if (rawSacrificePow >= POWER_LIMITS.cash.maxPower) {
-      wastedCash =
-        sacrificedTowerCash - POWER_LIMITS.cash.maxPower / sacrificePowerRatio
-        + sliderCash;
-    } else {
-      wastedCash =
-        sliderCash - (POWER_LIMITS.cash.maxPower - rawSacrificePow) / sliderPowerRatio;
-    }
-    wastedCash = Math.max(0, Math.round(wastedCash));
-  }
-
-  const totemsPower = totems * 2000;
-
-  const totalPower   = t5Power + upgradesPower + popsPower + cashPower + totemsPower;
-  const degree       = calculateDegreeFromPower(totalPower);
-  const nextDegree   = Math.min(100, degree + 1);
-  const powerForNext = nextDegree === degree ? 0 : getPowerThreshold(nextDegree) - totalPower;
+  const bd                  = calc.powerBreakdown;
 
   const warnings = [];
 
-  if (extraT5s > 0 && gameMode === "solo" && paragon.id !== "apex_plasma_master") {
+  if (calc.ignoredExtraT5s > 0 && gameMode === "solo") {
     warnings.push({
       type: "invalid_extra_t5s_solo",
       message:
@@ -128,66 +74,81 @@ function runCalculation({
         "Extra T5s were ignored for this calculation.",
     });
   }
-  if (rawT5Power > POWER_LIMITS.t5.maxPower) {
-    const wasted = Math.floor((rawT5Power - POWER_LIMITS.t5.maxPower) / POWER_LIMITS.t5.pointsPerExtra);
+  if (calc.ignoredExtraT5s > 0 && gameMode === "coop") {
     warnings.push({
-      type: "extra_t5s_capped",
-      message: `Extra-T5 power is capped at 50,000. ${wasted} extra T5(s) provide no benefit.`,
+      type: "invalid_extra_t5s_coop",
+      message:
+        "Co-op allows at most 9 extra T5s (four players with three T5s each, minus the three " +
+        "the Paragon consumes). The surplus was ignored for this calculation.",
     });
   }
-  if (rawUpgradesPow > POWER_LIMITS.upgrades.maxPower) {
+  if (bd.t5.capped) {
+    // 9 extra T5s are worth 54,000 raw power against a 50,000 cap, so the
+    // overflow is reported as power rather than as a whole number of towers.
+    const wastedPower =
+      Math.min(extraT5s, 9) * POWER_LIMITS.t5.pointsPerExtra - POWER_LIMITS.t5.maxPower;
+    warnings.push({
+      type: "extra_t5s_capped",
+      message: `Extra-T5 power is capped at 50,000. ${wastedPower.toLocaleString()} power from extra T5s is wasted.`,
+    });
+  }
+  if (bd.upgrades.capped) {
     warnings.push({
       type: "upgrades_capped",
       message: `Upgrade power is capped at 10,000. ${upgrades - 100} upgrade tier(s) are wasted.`,
     });
   }
-  if (rawPopsPower > POWER_LIMITS.pops.maxPower) {
-    const wastedPops = Math.round(equivalentPops - 16200000);
+  if (bd.pops.capped) {
+    const wastedPops = Math.round(pops + income * 4 - 16200000);
     warnings.push({
       type: "pops_capped",
       message: `Pops/income power is capped at 90,000. ${wastedPops.toLocaleString()} equivalent pop(s) are wasted.`,
     });
   }
-  if (cashCapped && wastedCash > 0) {
+  if (bd.cash.capped && calc.wastedCash > 0) {
     warnings.push({
       type: "cash_capped",
-      message: `Cash power is capped at 60,000. $${wastedCash.toLocaleString()} is wasted — reduce cash sacrifice or slider input.`,
+      message: `Cash power is capped at 60,000. $${calc.wastedCash.toLocaleString()} is wasted — reduce cash sacrifice or slider input.`,
     });
   }
 
   return {
-    basePrice, totalPower, degree, nextDegree, powerForNext,
+    basePrice,
+    totalPower:   calc.totalPower,
+    degree:       calc.degree,
+    nextDegree:   calc.nextDegree,
+    powerForNext: calc.powerGap,
     breakdown: {
       pops: {
-        power:     popsPower,
-        max_power: POWER_LIMITS.pops.maxPower,
-        capped:    rawPopsPower > POWER_LIMITS.pops.maxPower,
-        fill_pct:  round2(popsPower / POWER_LIMITS.pops.maxPower * 100),
+        power:     bd.pops.power,
+        max_power: bd.pops.max,
+        capped:    bd.pops.capped,
+        fill_pct:  round2(bd.pops.pct),
         note:      "1 power per 180 pops (equivalent: $45 income = 180 pops)",
       },
       upgrades: {
-        power:     upgradesPower,
-        max_power: POWER_LIMITS.upgrades.maxPower,
-        capped:    rawUpgradesPow > POWER_LIMITS.upgrades.maxPower,
-        fill_pct:  round2(upgradesPower / POWER_LIMITS.upgrades.maxPower * 100),
+        power:     bd.upgrades.power,
+        max_power: bd.upgrades.max,
+        capped:    bd.upgrades.capped,
+        fill_pct:  round2(bd.upgrades.pct),
         note:      "100 power per upgrade tier on sacrificed non-T5 towers (max 100 tiers = 10,000 power)",
       },
       cash: {
-        power:     cashPower,
-        max_power: POWER_LIMITS.cash.maxPower,
-        capped:    cashCapped,
-        fill_pct:  round2(cashPower / POWER_LIMITS.cash.maxPower * 100),
+        power:     bd.cash.power,
+        max_power: bd.cash.max,
+        capped:    bd.cash.capped,
+        fill_pct:  round2(bd.cash.pct),
         note:      `Power rate: ${round2(sacrificePowerRatio)} per $1 (sacrifice) / ${round2(sliderPowerRatio)} per $1 (slider, 5% premium)`,
       },
       extra_t5s: {
-        power:     t5Power,
-        max_power: POWER_LIMITS.t5.maxPower,
-        capped:    rawT5Power > POWER_LIMITS.t5.maxPower,
-        fill_pct:  round2(t5Power / POWER_LIMITS.t5.maxPower * 100),
+        power:     bd.t5.power,
+        max_power: bd.t5.max,
+        capped:    bd.t5.capped,
+        fill_pct:  round2(bd.t5.pct),
         note:      "6,000 power per extra T5 beyond the 3 required to build the paragon (max ~8 extras = 50,000 power)",
       },
       totems: {
-        power:     totemsPower,
+        power:     bd.totems.power,
         max_power: null,
         capped:    false,
         fill_pct:  null,
@@ -195,7 +156,7 @@ function runCalculation({
       },
     },
     warnings,
-    wastedCash,
+    wastedCash: calc.wastedCash,
   };
 }
 
@@ -497,9 +458,10 @@ export default function handler(req, res) {
       game:  "BTD6",
       notes: [
         "Degree = calculateDegreeFromPower(totalPower) where totalPower = sum of all power sources.",
-        "Power threshold per degree D: floor((50D³ + 5025D² + 168324D + 843000) / 600).",
-        "Maximum: 200,000 total power = Degree 100.",
+        "Power threshold for degrees 2-99: floor((50D³ + 5025D² + 168324D + 843000) / 600).",
+        "Degree 1 = 0 power; Degree 100 = a flat 200,000 (the cubic only reaches 196,542 at D=100).",
         "Power caps: pops 90k | upgrades 10k | cash 60k | extra T5s 50k | totems uncapped.",
+        "Extra T5s are clamped to what the mode allows: 9 in co-op, 0 solo (1 for Dart Monkey via Master Double Cross).",
       ],
     },
     result: {

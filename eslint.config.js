@@ -8,7 +8,7 @@ export default defineConfig([
   globalIgnores(['dist']),
   {
     files: ['**/*.{js,jsx}'],
-    ignores: ['scripts/**'],
+    ignores: ['scripts/**', 'api/**', 'test/**'],
     extends: [
       js.configs.recommended,
       reactHooks.configs.flat.recommended,
@@ -20,7 +20,9 @@ export default defineConfig([
     },
   },
   {
-    files: ['scripts/**/*.js'],
+    // Build scripts, serverless functions and tests all run on Node, not in the
+    // browser — they need `process`, `console` and friends.
+    files: ['scripts/**/*.js', 'api/**/*.js', 'test/**/*.js'],
     extends: [js.configs.recommended],
     languageOptions: {
       globals: globals.node,

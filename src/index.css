@@ -262,6 +262,15 @@ header {
 }
 
 .paragon-dropdown-item {
+  /* Rendered as a <button> so search results are keyboard-reachable, hence the
+     UA style reset on top of the layout rules. */
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 0;
+  font: inherit;
+  color: inherit;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -963,6 +972,18 @@ header {
 .guide-column ul {
   padding-left: 1.25rem;
   margin-top: 0.25rem;
+}
+
+.guide-column .guide-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.guide-column strong {
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
 /* Utility Animations */
@@ -2355,5 +2376,66 @@ a,
 
   .toggle-switch-input:checked + .toggle-switch-label::after {
     left: 28px;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   ACCESSIBILITY
+   ───────────────────────────────────────────────────────────────────────── */
+
+/*
+ * Visible keyboard focus. Buttons had no focus styling at all, and several
+ * inputs set `outline: none` while relying on a border-colour change that is
+ * far too subtle to navigate by. The class-level selectors below are needed to
+ * out-specify those existing `:focus { outline: none }` rules.
+ */
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible,
+.number-input:focus-visible,
+.paragon-search-input:focus-visible,
+.pop-adder-input:focus-visible,
+.quick-btn:focus-visible,
+.control-btn:focus-visible,
+.theme-toggle-btn:focus-visible,
+.suggestion-chip:focus-visible,
+.search-clear-btn:focus-visible,
+.pop-adder-apply:focus-visible,
+.pop-adder-close:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 2px;
+}
+
+/* The custom toggle switch hides its checkbox, so move the ring to the track. */
+.toggle-switch-input:focus-visible + .toggle-switch-label {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 2px;
+}
+
+/* Paragon dropdown rows are click targets built from divs — make them reachable
+   and focusable like the buttons they behave as. */
+.paragon-dropdown-item:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: -2px;
+}
+
+/*
+ * Honour a reduced-motion preference. The degree gauge glow, the pulsing logo
+ * and every hover transition are decorative, and the gauge in particular
+ * animates continuously.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
   }
 }

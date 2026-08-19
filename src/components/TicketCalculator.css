@@ -433,3 +433,29 @@
   color: #16120b;
 }
 .ticket-design .bt-list-del:hover { background: var(--amber); filter: brightness(1.05); }
+
+/* ── Accessibility ──────────────────────────────────────────────────────── */
+
+/* The neo-brutalist controls had no keyboard focus indicator; a solid offset
+   ring in the ink colour matches the design's hard-edged borders. */
+.ticket-design a:focus-visible,
+.ticket-design button:focus-visible,
+.ticket-design input:focus-visible,
+.ticket-design select:focus-visible,
+.ticket-design textarea:focus-visible,
+.ticket-design .rs-input:focus-visible,
+.ticket-design .nfield-input:focus-visible,
+.ticket-design .padder-input:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticket-design *,
+  .ticket-design *::before,
+  .ticket-design *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
