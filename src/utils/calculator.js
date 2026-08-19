@@ -1,6 +1,69 @@
 import { POWER_LIMITS } from "../constants/paragons.js";
 
 /**
+ * Total Paragon Power that corresponds to Degree 100 — the hard ceiling in game.
+ */
+export const MAX_POWER = 200000;
+
+/**
+ * Degree thresholds, precomputed once at module load.
+ *
+ * Degrees 2-99 follow the community-documented cubic
+ *   P(D) = floor((50·D³ + 5025·D² + 168324·D + 843000) / 600)
+ * Degree 1 is the starting degree (0 power) and Degree 100 is a flat 200,000 —
+ * the cubic itself only reaches 196,542 at D=100, so the final step is larger
+ * than the curve suggests. That is the real in-game behaviour, not a rounding
+ * artefact: it is what makes a fully-maxed solo Paragon (160,000 power,
+ * Degree 91) need exactly 20 Geraldo totems to reach Degree 100, and a solo
+ * Dart Monkey with Master Double Cross (166,000 power, Degree 92) need 17 —
+ * both of which match the documented in-game minimums.
+ *
+ * Index i holds the power required for degree i; index 0 is unused.
+ */
+export const DEGREE_THRESHOLDS = (() => {
+  const table = new Array(101).fill(0);
+  for (let d = 2; d <= 99; d++) {
+    table[d] = Math.floor(
+      (50 * d ** 3 + 5025 * d ** 2 + 168324 * d + 843000) / 600
+    );
+  }
+  table[100] = MAX_POWER;
+  return table;
+})();
+
+/**
+ * How many Tier 5s can be sacrificed *beyond* the three the Paragon requires.
+ *
+ * Co-op: four players contribute three T5s each, so 12 total − 3 required = 9.
+ * Solo: none, except the Dart Monkey, whose "Master Double Cross" Monkey
+ * Knowledge allows a second Crossbow Master.
+ *
+ * Shared by the forward calculator, the Goal Planner and both UIs so the limit
+ * can never be stated differently in one place than it is applied in another.
+ */
+export function maxT5sFor(paragon, gameMode) {
+  if (gameMode === "coop") return 9;
+  if (paragon?.id === "apex_plasma_master") return 1;
+  return 0;
+}
+
+/**
+ * Highest total power reachable without Geraldo totems, for a given game mode.
+ * Solo non-Dart = 160,000 (Degree 91); solo Dart = 166,000 (Degree 92).
+ */
+export function powerCeilingWithoutTotems(paragon, gameMode) {
+  return (
+    POWER_LIMITS.pops.maxPower +
+    POWER_LIMITS.upgrades.maxPower +
+    POWER_LIMITS.cash.maxPower +
+    Math.min(
+      POWER_LIMITS.t5.maxPower,
+      maxT5sFor(paragon, gameMode) * POWER_LIMITS.t5.pointsPerExtra
+    )
+  );
+}
+
+/**
  * Reverse calculator: given a target degree, returns the minimum inputs
  * needed based on the chosen strategy.
  *
@@ -27,11 +90,7 @@ export function reverseCalculate({
   const sacrificePowerRate = 20000 / basePrice;
   const sliderPowerRate    = 20000 / (basePrice * 1.05);
 
-  const maxT5s =
-    !useExtraT5s ? 0
-    : gameMode === "coop" ? 9
-    : paragon.id === "apex_plasma_master" ? 1
-    : 0;
+  const maxT5s = useExtraT5s ? maxT5sFor(paragon, gameMode) : 0;
   const maxT5Power = Math.min(
     POWER_LIMITS.t5.maxPower,
     maxT5s * POWER_LIMITS.t5.pointsPerExtra
@@ -49,7 +108,8 @@ export function reverseCalculate({
   const takeTotems   = (r) => useTotems && r > 0 ? Math.ceil(r / 2000) * 2000 : 0;
 
   // ── strategy dispatch ─────────────────────────────────────────────────
-  let popsPow = 0, upgPow = 0, t5Pow = 0, cashPow = 0, totemPow = 0;
+  let popsPow = 0, cashPow = 0;
+  let upgPow, t5Pow, totemPow;
   let rem = targetPower;
 
   if (strategy === 'leastCash') {
@@ -74,15 +134,14 @@ export function reverseCalculate({
     t5Pow  = takeT5s(rem);      rem -= t5Pow;
 
     if (rem > 0) {
-      const availPops = cashEnabled ? maxPopsPower : maxPopsPower;
       const availCash = cashEnabled ? maxCashPower : 0;
-      const total     = availPops + availCash;
+      const total     = maxPopsPower + availCash;
 
-      if (!cashEnabled || total === 0) {
+      if (!cashEnabled) {
         popsPow = takePops(rem); rem -= popsPow;
       } else {
         // Proportional split: pops gets 90/(90+60)=60%, cash gets 40%
-        const popsFrac = availPops / total;
+        const popsFrac = maxPopsPower / total;
         let tPops = Math.round(rem * popsFrac);
         let tCash = rem - tPops;
 
@@ -177,7 +236,7 @@ export function getBasePrice(mediumCost, difficulty) {
   if (difficulty === "easy") multiplier = 0.85;
   if (difficulty === "hard") multiplier = 1.08;
   if (difficulty === "impoppable") multiplier = 1.20;
-  
+
   const rawPrice = mediumCost * multiplier;
   // BTD6 rounds to the nearest $5 or $10. Standard rounding to nearest 5:
   return Math.round(rawPrice / 5) * 5;
@@ -188,24 +247,20 @@ export function getBasePrice(mediumCost, difficulty) {
  */
 export function getPowerThreshold(degree) {
   if (degree <= 1) return 0;
-  if (degree >= 100) return 200000;
-  const d = degree;
-  // Formula: P = Math.floor((50*D^3 + 5025*D^2 + 168324*D + 843000) / 600)
-  return Math.floor((50 * Math.pow(d, 3) + 5025 * Math.pow(d, 2) + 168324 * d + 843000) / 600);
+  if (degree >= 100) return MAX_POWER;
+  return DEGREE_THRESHOLDS[degree];
 }
 
 /**
  * Determines the Degree (1-100) based on accumulated Power.
  */
 export function calculateDegreeFromPower(power) {
-  if (power >= 200000) return 100;
+  if (power >= MAX_POWER) return 100;
   if (power <= 0) return 1;
-  
+
   // Find the highest degree whose threshold is <= the current power
-  for (let d = 99; d >= 1; d--) {
-    if (power >= getPowerThreshold(d)) {
-      return d;
-    }
+  for (let d = 99; d >= 2; d--) {
+    if (power >= DEGREE_THRESHOLDS[d]) return d;
   }
   return 1;
 }
@@ -226,10 +281,14 @@ export function calculateParagonData({
   totems // Geraldo totems count
 }) {
   const basePrice = getBasePrice(paragon.mediumCost, difficulty);
-  
+
   // 1. Extra T5s Power
-  // Max T5 power is 50,000 (pointsPerExtra = 6,000)
-  const rawT5Power = extraT5s * POWER_LIMITS.t5.pointsPerExtra;
+  // Only count T5s the game actually allows for this mode/paragon — solo play
+  // permits none, except the Dart Monkey's Master Double Cross. (The API does
+  // the same, so both surfaces agree for identical inputs.)
+  const allowedT5s = maxT5sFor(paragon, gameMode);
+  const effectiveExtraT5s = Math.min(extraT5s, allowedT5s);
+  const rawT5Power = effectiveExtraT5s * POWER_LIMITS.t5.pointsPerExtra;
   const t5Power = Math.min(POWER_LIMITS.t5.maxPower, rawT5Power);
   const t5Capped = rawT5Power > POWER_LIMITS.t5.maxPower;
 
@@ -256,8 +315,11 @@ export function calculateParagonData({
   const rawSacrificeCashPower = sacrificedTowerCash * sacrificePowerRatio;
   const rawSliderCashPower = sliderCash * sliderPowerRatio;
   const rawCashPower = rawSacrificeCashPower + rawSliderCashPower;
-  
-  const cashPower = Math.min(POWER_LIMITS.cash.maxPower, rawCashPower);
+
+  // Power is a whole number in game — floor the fractional cash contribution
+  // rather than letting it leak decimals into the total (and into every "/ 200,000"
+  // readout). Matches api/paragon/calculate.js.
+  const cashPower = Math.floor(Math.min(POWER_LIMITS.cash.maxPower, rawCashPower));
   const cashCapped = rawCashPower > POWER_LIMITS.cash.maxPower;
 
   // Calculate wasted cash if capped
@@ -287,7 +349,6 @@ export function calculateParagonData({
   const degree = calculateDegreeFromPower(totalPower);
 
   // Next Degree calculations
-  const currentDegreeThreshold = getPowerThreshold(degree);
   const nextDegree = Math.min(100, degree + 1);
   const nextDegreeThreshold = getPowerThreshold(nextDegree);
   const powerGap = nextDegree === degree ? 0 : nextDegreeThreshold - totalPower;
@@ -295,50 +356,65 @@ export function calculateParagonData({
   // Max Slider allowed in-game (3.15x base price)
   const maxSliderAllowed = Math.round(basePrice * 3.15);
 
-  // Recommendations for bridging the power gap (if degree < 100)
+  // Recommendations for bridging the power gap (if degree < 100).
+  //
+  // Each entry answers "what would it take to close the *remaining gap* using
+  // only this source?" — so every suggestion is capped by both the gap and the
+  // category's own headroom, and says so when the source can't close it alone.
   const recommendations = [];
   if (degree < 100 && powerGap > 0) {
-    // How many pops needed
-    if (!popsCapped) {
-      const popsPowerNeeded = Math.min(POWER_LIMITS.pops.maxPower - popsPower, powerGap);
-      const popsNeeded = popsPowerNeeded * POWER_LIMITS.pops.popDivisor;
-      const totalEquivalentPopsNeeded = nextDegreeThreshold * POWER_LIMITS.pops.popDivisor;
-      const remainingEquivalent = Math.max(0, totalEquivalentPopsNeeded - equivalentPops);
+    const shortfallNote = (covered) =>
+      covered < powerGap
+        ? ` That maxes this category but still leaves ${(powerGap - covered).toLocaleString()} power to find elsewhere.`
+        : "";
+
+    // How many more pops (or income) are needed
+    const popsHeadroom = POWER_LIMITS.pops.maxPower - popsPower;
+    if (popsHeadroom > 0) {
+      const popsPowerNeeded = Math.min(popsHeadroom, powerGap);
+      // Power only ticks over on whole multiples of the divisor, so target the
+      // exact equivalent-pop total for the power level we want and subtract
+      // what has already been banked.
+      const targetPopsPower = popsPower + popsPowerNeeded;
+      const extraPopsNeeded = Math.max(
+        0,
+        Math.ceil(targetPopsPower * POWER_LIMITS.pops.popDivisor - equivalentPops)
+      );
       recommendations.push({
         type: "pops",
-        text: `Accumulate ${Math.ceil(remainingEquivalent).toLocaleString()} more Pops (or $${Math.ceil(remainingEquivalent / 4).toLocaleString()} in income) across sacrificed towers.`,
-        value: Math.ceil(remainingEquivalent)
+        text: `Accumulate ${extraPopsNeeded.toLocaleString()} more pops (or $${Math.ceil(extraPopsNeeded / 4).toLocaleString()} more income) across sacrificed towers.${shortfallNote(popsPowerNeeded)}`,
+        value: extraPopsNeeded
       });
     }
 
-    // How many upgrades needed
-    if (!upgradesCapped) {
-      const upgradesPowerNeeded = Math.min(POWER_LIMITS.upgrades.maxPower - upgradesPower, powerGap);
-      const upgradesNeeded = Math.ceil(upgradesPowerNeeded / POWER_LIMITS.upgrades.pointsPerUpgrade);
-      const totalUpgradesNeeded = Math.ceil(nextDegreeThreshold / POWER_LIMITS.upgrades.pointsPerUpgrade);
-      const remainingUpgrades = Math.max(0, 100 - upgrades);
+    // How many more upgrade tiers are needed
+    const upgradesHeadroom = POWER_LIMITS.upgrades.maxPower - upgradesPower;
+    if (upgradesHeadroom > 0) {
+      const upgradesPowerNeeded = Math.min(upgradesHeadroom, powerGap);
+      const extraUpgrades = Math.ceil(upgradesPowerNeeded / POWER_LIMITS.upgrades.pointsPerUpgrade);
       recommendations.push({
         type: "upgrades",
-        text: `Sacrifice ${remainingUpgrades} more Upgrade Tiers (e.g., twenty 0-2-3 towers has 5 tiers each, so 20 towers total).`,
-        value: remainingUpgrades
+        text: `Sacrifice ${extraUpgrades} more upgrade tier${extraUpgrades === 1 ? "" : "s"} on non-T5 towers (a 0-2-4 tower is worth 6 tiers).${shortfallNote(upgradesPowerNeeded)}`,
+        value: extraUpgrades
       });
     }
 
-    // How much cash needed (Slider or Tower sacrifices)
-    if (!cashCapped) {
-      const cashPowerNeeded = Math.min(POWER_LIMITS.cash.maxPower - cashPower, powerGap);
-      
+    // How much more cash is needed (Slider or Tower sacrifices)
+    const cashHeadroom = POWER_LIMITS.cash.maxPower - cashPower;
+    if (cashHeadroom > 0) {
+      const cashPowerNeeded = Math.min(cashHeadroom, powerGap);
+
       const sacrificeCashNeeded = Math.ceil(cashPowerNeeded / sacrificePowerRatio);
       const sliderCashNeeded = Math.ceil(cashPowerNeeded / sliderPowerRatio);
 
       recommendations.push({
         type: "cash_sacrifice",
-        text: `Spend $${sacrificeCashNeeded.toLocaleString()} on non-T5 towers to sacrifice (100% efficient).`,
+        text: `Spend $${sacrificeCashNeeded.toLocaleString()} more on non-T5 towers to sacrifice (100% efficient).${shortfallNote(cashPowerNeeded)}`,
         value: sacrificeCashNeeded
       });
       recommendations.push({
         type: "cash_slider",
-        text: `Inject $${sliderCashNeeded.toLocaleString()} directly via the Cash Slider (+5% premium cost).`,
+        text: `Inject $${sliderCashNeeded.toLocaleString()} more via the Cash Slider (+5% premium cost).${shortfallNote(cashPowerNeeded)}`,
         value: sliderCashNeeded
       });
     }
@@ -347,20 +423,20 @@ export function calculateParagonData({
     const totemsNeeded = Math.ceil(powerGap / 2000);
     recommendations.push({
       type: "totems",
-      text: `Absorb ${totemsNeeded} Geraldo Paragon Power Totems (+2,000 power each).`,
+      text: `Absorb ${totemsNeeded} Geraldo Paragon Power Totem${totemsNeeded === 1 ? "" : "s"} (+2,000 power each).`,
       value: totemsNeeded
     });
   }
 
   // Warning flags for capped contributions
   const warnings = [];
-  if (popsCapped && equivalentPops > 16200000) {
+  if (popsCapped) {
     warnings.push({
       type: "pops",
-      text: `Pops & Income power is fully maxed (90,000 pts). The extra ${(equivalentPops - 16200000).toLocaleString()} pops are wasted.`
+      text: `Pops & Income power is fully maxed (90,000 pts). The extra ${Math.round(equivalentPops - 16200000).toLocaleString()} equivalent pops are wasted.`
     });
   }
-  if (upgradesCapped && upgrades > 100) {
+  if (upgradesCapped) {
     warnings.push({
       type: "upgrades",
       text: `Upgrade tiers contribution is fully maxed (10,000 pts). The extra ${upgrades - 100} upgrades are wasted.`
@@ -372,10 +448,19 @@ export function calculateParagonData({
       text: `Cash investment is fully maxed (60,000 pts). You are wasting $${wastedCash.toLocaleString()} which provides zero benefit! Reduce your cash slider or sacrifice less.`
     });
   }
-  if (extraT5s > 0 && gameMode === "solo" && paragon.id !== "apex_plasma_master") {
+  if (t5Capped) {
+    const wastedT5s = Math.floor((rawT5Power - POWER_LIMITS.t5.maxPower) / POWER_LIMITS.t5.pointsPerExtra);
+    warnings.push({
+      type: "t5",
+      text: `Extra T5 power is fully maxed (50,000 pts). ${wastedT5s} extra T5${wastedT5s === 1 ? "" : "s"} provide no benefit.`
+    });
+  }
+  if (extraT5s > allowedT5s) {
     warnings.push({
       type: "mode_restriction",
-      text: `In Single Player (Solo), only the Dart Monkey can sacrifice an extra T5 (using Master Double Cross). Check your settings if this is a Co-op game!`
+      text: gameMode === "solo"
+        ? `In Single Player (Solo), only the Dart Monkey can sacrifice an extra T5 (using Master Double Cross). ${extraT5s - allowedT5s} extra T5${extraT5s - allowedT5s === 1 ? " was" : "s were"} ignored — switch to Co-op if this is a multiplayer game.`
+        : `Co-op allows at most 9 extra T5s (four players × three T5s, minus the three the Paragon consumes). ${extraT5s - allowedT5s} extra T5${extraT5s - allowedT5s === 1 ? " was" : "s were"} ignored.`
     });
   }
 
@@ -385,12 +470,14 @@ export function calculateParagonData({
     totalPower,
     degree,
     powerBreakdown: {
-      t5: { power: t5Power, max: POWER_LIMITS.t5.maxPower, pct: (t5Power / POWER_LIMITS.t5.maxPower) * 100 },
-      upgrades: { power: upgradesPower, max: POWER_LIMITS.upgrades.maxPower, pct: (upgradesPower / POWER_LIMITS.upgrades.maxPower) * 100 },
-      pops: { power: popsPower, max: POWER_LIMITS.pops.maxPower, pct: (popsPower / POWER_LIMITS.pops.maxPower) * 100 },
-      cash: { power: cashPower, max: POWER_LIMITS.cash.maxPower, pct: (cashPower / POWER_LIMITS.cash.maxPower) * 100 },
-      totems: { power: totemsPower, max: null, pct: null }
+      t5:       { power: t5Power,       max: POWER_LIMITS.t5.maxPower,       pct: (t5Power / POWER_LIMITS.t5.maxPower) * 100,             capped: t5Capped },
+      upgrades: { power: upgradesPower, max: POWER_LIMITS.upgrades.maxPower, pct: (upgradesPower / POWER_LIMITS.upgrades.maxPower) * 100, capped: upgradesCapped },
+      pops:     { power: popsPower,     max: POWER_LIMITS.pops.maxPower,     pct: (popsPower / POWER_LIMITS.pops.maxPower) * 100,         capped: popsCapped },
+      cash:     { power: cashPower,     max: POWER_LIMITS.cash.maxPower,     pct: (cashPower / POWER_LIMITS.cash.maxPower) * 100,         capped: cashCapped },
+      totems:   { power: totemsPower,   max: null,                           pct: null,                                                   capped: false }
     },
+    // Extra T5s the caller asked for but the game would not allow in this mode.
+    ignoredExtraT5s: Math.max(0, extraT5s - allowedT5s),
     powerGap,
     nextDegree,
     recommendations,
