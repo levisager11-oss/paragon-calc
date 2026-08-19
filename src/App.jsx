@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   User, Users, Wrench, Target, Star, Crown, DollarSign, Sparkles,
   RotateCcw, BarChart3, AlertTriangle, Key, Lightbulb, ArrowRight,
@@ -7,11 +7,14 @@ import {
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { PARAGONS, DIFFICULTY_MULTIPLIERS } from "./constants/paragons";
-import { calculateParagonData, reverseCalculate, getBasePrice, splitIntoSacrificeTowers } from "./utils/calculator";
+import {
+  calculateParagonData, reverseCalculate, getBasePrice, splitIntoSacrificeTowers,
+  maxT5sFor, soloCeilingFacts, MAX_POWER,
+} from "./utils/calculator";
 import AdUnit from "./components/AdUnit";
 import TicketCalculator from "./components/TicketCalculator";
 import BuildToolbar from "./components/BuildToolbar";
-import { decodeState } from "./utils/shareState";
+import { decodeState, encodeState } from "./utils/shareState";
 
 const pct = (val, min, max) => `${Math.round(((val - min) / (max - min)) * 100)}%`;
 
@@ -27,6 +30,11 @@ const designFromPath = () => {
 };
 
 const pathForDesign = (mode) => (mode === "ticket" ? "/ticket" : "/classic");
+
+// Solo ceilings quoted in the guide, derived from the engine so the prose can
+// never contradict the calculator on the same page.
+const SOLO = soloCeilingFacts(PARAGONS.ascended_shadow);
+const SOLO_DART = soloCeilingFacts(PARAGONS.apex_plasma_master);
 
 const ICON_SM = 16;
 const ICON_MD = 18;
@@ -50,17 +58,6 @@ export default function App() {
     return localStorage.getItem("design") === "ticket" ? "ticket" : "classic";
   });
 
-  // Navigate between the two designs by changing the route. This both updates
-  // the rendered design and pushes a real browser history entry so /classic and
-  // /ticket are linkable, bookmarkable, and work with back/forward.
-  const selectDesign = useCallback((mode) => {
-    setDesignMode(mode);
-    const path = pathForDesign(mode);
-    if (window.location.pathname !== path) {
-      window.history.pushState({}, "", path);
-    }
-  }, []);
-
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", lightMode ? "light" : "dark");
     localStorage.setItem("theme", lightMode ? "light" : "dark");
@@ -74,7 +71,8 @@ export default function App() {
   // the active design's route, and react to browser back/forward navigation.
   useEffect(() => {
     if (!designFromPath()) {
-      window.history.replaceState({}, "", pathForDesign(designMode));
+      // Keep the search string: it carries the shared build.
+      window.history.replaceState({}, "", pathForDesign(designMode) + window.location.search);
     }
     const onPop = () => {
       const fromPath = designFromPath();
@@ -128,6 +126,21 @@ export default function App() {
     setSliderCash(s.sliderCash);
     setTotems(s.totems);
   }, []);
+
+  // Navigate between the two designs by changing the route. This updates the
+  // rendered design, pushes a real browser history entry so /classic and /ticket
+  // are linkable and work with back/forward, and — importantly — carries the
+  // current build along in the query string. The two designs keep separate
+  // internal state, so without that the inputs would be lost on every switch,
+  // and a shared /?paragon=…&pops=… link would be stripped on arrival.
+  //
+  // `build` is supplied by the Ticket design when it hands control back, so its
+  // inputs flow into the classic UI too.
+  const selectDesign = useCallback((mode, build) => {
+    window.history.pushState({}, "", `${pathForDesign(mode)}?${encodeState(build ?? currentState)}`);
+    if (build) applyState(build);
+    setDesignMode(mode);
+  }, [currentState, applyState]);
 
   // Pop Count Adder state
   const [popAdderOpen, setPopAdderOpen] = useState(false);
@@ -272,22 +285,13 @@ export default function App() {
     setShowDropdown(false);
   };
 
-  // 4. Enforce Game Constraints on State Changes
-  useEffect(() => {
-    // Solo vs Co-op constraints on extra T5s
-    if (gameMode === "solo") {
-      if (selectedParagonId === "apex_plasma_master") {
-        if (extraT5s > 1) setExtraT5s(1);
-      } else {
-        setExtraT5s(0);
-      }
-    }
-
-    // Clamp slider cash if it exceeds new limits
-    if (sliderCash > maxSliderLimit) {
-      setSliderCash(maxSliderLimit);
-    }
-  }, [selectedParagonId, gameMode, currentBasePrice, maxSliderLimit]);
+  // 4. Enforce Game Constraints
+  // These limits depend on the selected paragon, mode and difficulty, so clamp
+  // during render rather than in an effect: the value is corrected before paint
+  // instead of after a second, cascading render.
+  const allowedT5s = maxT5sFor(activeParagon, gameMode);
+  if (extraT5s > allowedT5s) setExtraT5s(allowedT5s);
+  if (sliderCash > maxSliderLimit) setSliderCash(maxSliderLimit);
 
   // 5. Compute Calculations
   const results = useMemo(() => {
@@ -372,7 +376,7 @@ export default function App() {
           </div>
           <div className="logo-text">
             <h1>BTD6 Paragon Calculator</h1>
-            <p>Bloons TD 6 • Update 39+ Certified</p>
+            <p>Bloons TD 6 • Update 54+ Certified</p>
           </div>
         </div>
 
@@ -765,7 +769,7 @@ export default function App() {
 
               <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>
                 * Max cash slider injection in-game is 3.15x the base price:{" "}
-                <strong style={{ color: "#fff" }}>${maxSliderLimit.toLocaleString()}</strong>.
+                <strong style={{ color: "var(--text-primary)" }}>${maxSliderLimit.toLocaleString()}</strong>.
               </div>
 
               {/* Slider → Sacrifice optimizer */}
@@ -774,7 +778,7 @@ export default function App() {
                   <div className="cash-optimize-info">
                     Most expensive sacrificeable tower:{" "}
                     <strong>{activeParagon.tower} ({activeParagon.maxT4Build})</strong> ={" "}
-                    <strong style={{ color: "#fff" }}>${maxT4Cost.toLocaleString()}</strong>.
+                    <strong style={{ color: "var(--text-primary)" }}>${maxT4Cost.toLocaleString()}</strong>.
                     {" "}Slider cash carries a 5% premium, so building whole sacrifice
                     towers with it is always cheaper.
                   </div>
@@ -838,7 +842,9 @@ export default function App() {
               <div className="control-row">
                 <div style={{ paddingRight: "1rem" }}>
                   <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
-                    Each Paragon Power Totem purchased from Geraldo adds 2,000 flat power. In Solo games, this is the only way to bypass power limits and reach **Degree 100**!
+                    Each Paragon Power Totem purchased from Geraldo adds 2,000 flat power. In Solo
+                    games this is the only way to bypass the power caps and reach <strong>Degree 100</strong> —
+                    {SOLO.totems} totems on top of a maxed build, or {SOLO_DART.totems} for a Dart Monkey.
                   </p>
                 </div>
                 <div>
@@ -879,7 +885,7 @@ export default function App() {
 
             {/* In-Game Abilities highlight */}
             <div style={{ marginTop: "1rem", borderTop: "1px solid var(--border-light)", paddingTop: "1rem" }}>
-              <h4 style={{ fontSize: "0.95rem", fontFamily: "var(--font-heading)", color: "#fff", marginBottom: "0.5rem" }}>
+              <h4 style={{ fontSize: "0.95rem", fontFamily: "var(--font-heading)", color: "var(--text-primary)", marginBottom: "0.5rem" }}>
                 <Key size={ICON_SM} style={{ verticalAlign: "-3px", marginRight: 4 }} /> Key Capabilities:
               </h4>
               <ul style={{ paddingLeft: "1.25rem", fontSize: "0.85rem", color: "var(--text-secondary)", display: "flex", flexDirection: "column", gap: "0.35rem" }}>
@@ -1086,7 +1092,7 @@ export default function App() {
               </div>
               <div className="goal-toggles">
                 {[
-                  { label: "Extra T5s",       sub: `max ${activeParagon.id === "apex_plasma_master" ? 1 : gameMode === "coop" ? 9 : 0} in ${gameMode}`, state: goalUseExtraT5s, set: setGoalUseExtraT5s },
+                  { label: "Extra T5s",       sub: `max ${maxT5sFor(activeParagon, gameMode)} in ${gameMode}`, state: goalUseExtraT5s, set: setGoalUseExtraT5s },
                   { label: "Upgrade Tiers",   sub: "max 100 upgrades (10,000 pts)", state: goalUseUpgrades, set: setGoalUseUpgrades },
                   { label: "Geraldo Totems", sub: "+2,000 pts each", state: goalUseTotems, set: setGoalUseTotems },
                 ].map(({ label, sub, state, set }) => (
@@ -1208,50 +1214,53 @@ export default function App() {
           <BookOpen size={ICON_LG} /> How Paragon Calculations Work
         </h2>
         <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: "1.6" }}>
-          In Bloons TD 6, a Paragon's Degree is calculated using **Paragon Power Points** (capped at 200,000). 
-          The power points are distributed across four main caps (plus Geraldo's totems which bypass standard limits). 
-          Here is a detailed breakdown of the official mathematical ratios used in-game (Update 39+):
+          In Bloons TD 6, a Paragon's Degree is calculated using <strong>Paragon Power Points</strong>,
+          capped at {MAX_POWER.toLocaleString()} for Degree 100. Those points are distributed across
+          four capped categories, plus Geraldo's Totems which bypass the standard limits. Here is the
+          breakdown of the mathematical ratios used in-game (Update 54+):
         </p>
-        
+
         <div className="guide-grid">
           <div className="guide-column">
-            <h4><Target size={ICON_MD} style={{ verticalAlign: "-3px", marginRight: 6 }} />Pops & Income (Max 90,000 pts)</h4>
-            <p>
-              Towers deal damage and generate cash throughout the game. 
-              - 1 Power is awarded per **180 pops/damage**.
-              - 1 Power is awarded per **$45 of cash generated** (e.g. Buccaneer ships, Engineer traps). 
-              - $1 generated acts as 4 pops.
-              - **16,200,000 equivalent pops** are required to fully max this category.
-            </p>
+            <h4><Target size={ICON_MD} style={{ verticalAlign: "-3px", marginRight: 6 }} />Pops &amp; Income (Max 90,000 pts)</h4>
+            <p>Towers deal damage and generate cash throughout the game.</p>
+            <ul className="guide-list">
+              <li>1 Power per <strong>180 pops/damage</strong>.</li>
+              <li>1 Power per <strong>$45 of cash generated</strong> (e.g. Buccaneer ships, Engineer traps).</li>
+              <li>$1 generated counts as 4 pops.</li>
+              <li><strong>16,200,000 equivalent pops</strong> fully max this category.</li>
+            </ul>
           </div>
 
           <div className="guide-column">
             <h4><Star size={ICON_MD} style={{ verticalAlign: "-3px", marginRight: 6 }} />Sacrificed Upgrades (Max 10,000 pts)</h4>
-            <p>
-              Upgrades on sacrificed non-T5 towers supply power.
-              - 100 Power is awarded per **Upgrade tier** of sacrificed towers (excluding the baseline three T5s).
-              - For example, a 0-2-4 monkey has 6 upgrade tiers (0 + 2 + 4).
-              - **100 total upgrade tiers** are needed to max this category.
-            </p>
+            <p>Upgrades on sacrificed non-T5 towers supply power.</p>
+            <ul className="guide-list">
+              <li>100 Power per <strong>upgrade tier</strong> of sacrificed towers (excluding the baseline three T5s).</li>
+              <li>A 0-2-4 monkey is worth 6 upgrade tiers (0 + 2 + 4).</li>
+              <li><strong>100 total upgrade tiers</strong> max this category.</li>
+            </ul>
           </div>
 
           <div className="guide-column">
             <h4><DollarSign size={ICON_MD} style={{ verticalAlign: "-3px", marginRight: 6 }} />Cash Investment (Max 60,000 pts)</h4>
-            <p>
-              The money spent to buy sacrificed towers or injected directly via the **Cash Slider** adds power.
-              - Sacrificed Towers: 1 Power per <strong>$(Base Price / 20,000)</strong> spent (100% efficient).
-              - Cash Slider: 1 Power per <strong>$(Base Price * 1.05 / 20,000)</strong> spent (95% efficient due to convenience fee).
-              - **3.0x base price** in sacrifices or **3.15x base price** in slider cash maxes this category.
-            </p>
+            <p>Money spent buying sacrificed towers, or injected directly via the <strong>Cash Slider</strong>, adds power.</p>
+            <ul className="guide-list">
+              <li>Sacrificed towers: 1 Power per <strong>$(Base Price / 20,000)</strong> spent — 100% efficient.</li>
+              <li>Cash Slider: 1 Power per <strong>$(Base Price × 1.05 / 20,000)</strong> — 95% efficient, a 5% convenience fee.</li>
+              <li><strong>3.0× base price</strong> in sacrifices, or <strong>3.15× base price</strong> on the slider, maxes this category.</li>
+            </ul>
           </div>
 
           <div className="guide-column">
             <h4><Sparkles size={ICON_MD} style={{ verticalAlign: "-3px", marginRight: 6 }} />Geraldo's Totems (Uncapped)</h4>
-            <p>
-              Each **Paragon Power Totem** purchased from Geraldo's shop contributes **2,000 flat power points**.
-              - In Solo play, the standard contributions can only add a maximum of **160,000 power** (Degree 76) or **166,000 power** (Degree 79 for Dart Monkey).
-              - To achieve Degree 100 (200,000 power) in Solo, you must absorb Geraldo Totems to make up the missing power points!
-            </p>
+            <p>Each <strong>Paragon Power Totem</strong> from Geraldo's shop contributes a flat <strong>2,000 power points</strong>.</p>
+            <ul className="guide-list">
+              <li>In Solo play the standard categories cap out at <strong>{SOLO.power.toLocaleString()} power</strong> — Degree {SOLO.degree}.</li>
+              <li>A solo Dart Monkey reaches <strong>{SOLO_DART.power.toLocaleString()} power</strong> (Degree {SOLO_DART.degree}) thanks to Master Double Cross.</li>
+              <li>Closing the gap to Degree 100 takes <strong>{SOLO.totems} totems</strong>, or <strong>{SOLO_DART.totems}</strong> for a Dart Monkey.</li>
+              <li>In Co-op, four players' Tier 5s reach Degree 100 with no totems at all.</li>
+            </ul>
           </div>
         </div>
       </section>

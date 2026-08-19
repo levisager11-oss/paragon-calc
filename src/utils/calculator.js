@@ -64,6 +64,24 @@ export function powerCeilingWithoutTotems(paragon, gameMode) {
 }
 
 /**
+ * The three numbers the site quotes about solo play, derived from the engine so
+ * the guide/FAQ prose can never contradict the calculator sitting next to it:
+ * the power ceiling reachable without totems, the degree that lands on, and how
+ * many Geraldo totems close the remaining gap to Degree 100.
+ *
+ * Non-Dart paragon: 160,000 power / Degree 91 / 20 totems.
+ * Dart Monkey (Master Double Cross): 166,000 power / Degree 92 / 17 totems.
+ */
+export function soloCeilingFacts(paragon) {
+  const power = powerCeilingWithoutTotems(paragon, "solo");
+  return {
+    power,
+    degree: calculateDegreeFromPower(power),
+    totems: Math.ceil((MAX_POWER - power) / 2000),
+  };
+}
+
+/**
  * Reverse calculator: given a target degree, returns the minimum inputs
  * needed based on the chosen strategy.
  *

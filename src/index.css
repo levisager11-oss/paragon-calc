@@ -965,6 +965,18 @@ header {
   margin-top: 0.25rem;
 }
 
+.guide-column .guide-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.guide-column strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
 /* Utility Animations */
 @keyframes pulse-logo {
   0%, 100% {

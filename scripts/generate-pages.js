@@ -24,7 +24,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { PARAGONS, DIFFICULTY_MULTIPLIERS } from "../src/constants/paragons.js";
-import { getBasePrice, reverseCalculate } from "../src/utils/calculator.js";
+import { getBasePrice, reverseCalculate, soloCeilingFacts } from "../src/utils/calculator.js";
 import { FAQ_ITEMS } from "../src/constants/faq.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -151,12 +151,14 @@ ${keywords ? `<meta name="keywords" content="${esc(keywords)}" />\n` : ""}<meta 
 <meta property="og:url" content="${esc(canonical)}" />
 <meta property="og:title" content="${esc(title)}" />
 <meta property="og:description" content="${esc(description)}" />
-<meta property="og:image" content="${SITE_URL}/logo.png" />
+<meta property="og:image" content="${SITE_URL}/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
 <meta property="og:site_name" content="BTD6 Paragon Calculator" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="${esc(title)}" />
 <meta name="twitter:description" content="${esc(description)}" />
-<meta name="twitter:image" content="${SITE_URL}/logo.png" />
+<meta name="twitter:image" content="${SITE_URL}/og-image.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -240,6 +242,8 @@ function paragonPage(p) {
   }));
   const maxT4 = p.maxT4MediumCost ? getBasePrice(p.maxT4MediumCost, "medium") : 0;
 
+  const soloFacts = soloCeilingFacts(p);
+
   const solo = reverseCalculate({
     paragon: p,
     difficulty: "medium",
@@ -303,9 +307,11 @@ function paragonPage(p) {
 
   <section class="card">
     <h2>How to reach Degree 100 (solo)</h2>
-    <p>In solo play the four standard power categories top out below Degree 100, so a maxed ${esc(
+    <p>In solo play the four standard power categories top out at <strong>${num(
+      soloFacts.power
+    )} power</strong> &mdash; Degree ${soloFacts.degree} &mdash; so a maxed ${esc(
       p.name
-    )} needs <strong>Geraldo's Paragon Power Totems</strong> to close the gap. The most cash-efficient solo path on Medium difficulty:</p>
+    )} needs <strong>${soloFacts.totems} Geraldo Paragon Power Totems</strong> to close the gap to Degree 100. The most cash-efficient solo path on Medium difficulty:</p>
     <ul class="reqs">
       <li><strong>${num(solo.popsNeeded)}</strong> equivalent pops/damage (income counts as 4 pops per $1)</li>
       <li><strong>${solo.upgradesNeeded}</strong> sacrificed upgrade tiers</li>
@@ -453,6 +459,8 @@ function canonical(p) {
 function sitemap() {
   const entries = [
     { loc: "/", priority: "1.0", changefreq: "weekly" },
+    { loc: "/classic", priority: "0.9", changefreq: "weekly" },
+    { loc: "/ticket", priority: "0.8", changefreq: "weekly" },
     { loc: "/paragons", priority: "0.9", changefreq: "weekly" },
     { loc: "/faq", priority: "0.7", changefreq: "monthly" },
     ...Object.values(PARAGONS).map((p) => ({
