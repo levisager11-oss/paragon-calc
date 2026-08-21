@@ -116,16 +116,22 @@ are now regression tests in `test/calculator.test.js`.
 - **The `<meta name="keywords">` tag.** Ignored by Google, harmless, not worth
   the churn.
 
-## Worth verifying on a real deploy
+## Verified on a real deploy
 
-Item 22 changed the Vercel rewrite pattern. It behaves correctly under
-`vite preview`, but Vercel's routing order is not identical, so after deploying
-confirm that these return real files rather than the SPA shell:
+Item 22 changed the Vercel rewrite pattern, and item 26 made the serverless
+functions import across directories into `src/` — both behave differently under
+`vite preview` than on Vercel, so they were checked against the PR #25 preview
+deployment. All pass:
 
-```
-/paragons            /paragons/apex-plasma-master     /faq
-/ads.txt             /robots.txt                      /sitemap.xml
-/manifest.json       /og-image.png                    /icon-512.png
-```
+| Route | Result |
+| --- | --- |
+| `/paragons/apex-plasma-master` | real generated HTML, not the SPA shell — and quoting the corrected "166,000 power — Degree 92 — 17 totems" |
+| `/ads.txt` | served as `text/plain` (the regression that prompted the original exclusion list) |
+| `/sitemap.xml` | 18 URLs including `/classic` and `/ticket` |
+| `/manifest.json` | the corrected 192/512 icons |
+| `/api/paragon/version` | 200, `api_version` 1.2, full 13-tower roster |
+| `/api/paragon/calculate` | loads and responds (405 to GET, as documented) |
 
-and that `/classic`, `/ticket` and `/` still serve the app.
+The API results confirm Vercel's dependency tracing follows `api/_lib/shared.js`
+into `src/constants/paragons.js` and `src/utils/calculator.js`, so the
+de-duplication in item 26 is safe in production and not just under test.
