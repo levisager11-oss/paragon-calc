@@ -15,7 +15,8 @@ export default defineConfig([
       reactRefresh.configs.vite,
     ],
     languageOptions: {
-      globals: globals.browser,
+      // __PARAGON_ART__ is injected by vite.config.js (see `define`).
+      globals: { ...globals.browser, __PARAGON_ART__: 'readonly' },
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },

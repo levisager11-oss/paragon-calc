@@ -3,6 +3,7 @@ import {
   Share2, Code2, Save, FolderOpen, ImageDown, Copy, Check, Trash2, X,
 } from "lucide-react";
 import { PARAGONS } from "../constants/paragons.js";
+import ParagonIcon from "./ParagonIcon.jsx";
 import {
   buildShareUrl, buildEmbedSnippet, buildEmbedPreviewUrl,
 } from "../utils/shareState.js";
@@ -189,7 +190,10 @@ export default function BuildToolbar({ state, results, paragon, onLoadState, sha
                       return (
                         <li key={b.id} className="bt-list-item">
                           <button className="bt-list-load" onClick={() => doLoad(b)}>
-                            <span className="bt-list-name">{para ? para.icon : "🎯"} {b.name}</span>
+                            <span className="bt-list-name">
+                              {para && <ParagonIcon paragon={para} size={16} />}
+                              {b.name}
+                            </span>
                             <span className="bt-list-sub">{para ? para.name : "Unknown paragon"} · {fmtDate(b.savedAt)}</span>
                           </button>
                           <button className="bt-list-del" onClick={() => doDelete(b.id)} aria-label={`Delete ${b.name}`}>

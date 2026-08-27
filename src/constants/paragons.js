@@ -240,3 +240,10 @@ export const POWER_LIMITS = {
   pops: { maxPower: 90000, popDivisor: 180, incomeDivisor: 45 },
   cash: { maxPower: 60000 }
 };
+
+// Paragon artwork lives in public/paragon-art/<slug>.png, keyed by the same
+// slug the /paragons/<slug> routes use so the two never drift. Files are
+// optional: every consumer falls back to the paragon's emoji when one is
+// missing, so the roster works with partial or no art.
+export const paragonSlug = (p) => p.id.replace(/_/g, "-");
+export const paragonArt = (p) => `/paragon-art/${paragonSlug(p)}.png`;

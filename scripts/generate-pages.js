@@ -23,7 +23,7 @@
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { mkdirSync, writeFileSync, existsSync } from "node:fs";
-import { PARAGONS, DIFFICULTY_MULTIPLIERS } from "../src/constants/paragons.js";
+import { PARAGONS, DIFFICULTY_MULTIPLIERS, paragonSlug } from "../src/constants/paragons.js";
 import { getBasePrice, reverseCalculate, soloCeilingFacts } from "../src/utils/calculator.js";
 import { FAQ_ITEMS } from "../src/constants/faq.js";
 
@@ -46,7 +46,18 @@ const CATEGORY_META = {
 
 // Paragon ids contain only [a-z_], so swapping _ for - is a clean, reversible
 // slug. App.jsx reverses it (- back to _) to resolve ?paragon=<slug> deep links.
-const slugFor = (p) => p.id.replace(/_/g, "-");
+// Shared with the app via the roster so the two can never drift.
+const slugFor = paragonSlug;
+
+// These pages are static HTML with no client JS, so there is no onerror to fall
+// back on: resolve the artwork at build time and emit the emoji when a file is
+// absent. That way a missing PNG is simply the old icon, never a broken image.
+const artPath = (p) => `/paragon-art/${slugFor(p)}.png`;
+const hasArt = (p) => existsSync(path.join(ROOT, "public", "paragon-art", `${slugFor(p)}.png`));
+const paragonIcon = (p, cls, size) =>
+  hasArt(p)
+    ? `<img class="${cls}" src="${artPath(p)}" width="${size}" height="${size}" alt="" loading="lazy" decoding="async" />`
+    : `<span class="${cls}" aria-hidden="true">${p.icon}</span>`;
 
 const esc = (s) =>
   String(s)
@@ -160,8 +171,9 @@ main{padding:var(--s-10) 0 var(--s-16)}
 .p-emoji{
   flex-shrink:0;display:grid;place-items:center;width:64px;height:64px;
   font-size:32px;line-height:1;border-radius:var(--r-lg);
-  background:var(--surface);border:1px solid var(--border);
+  background:var(--surface);border:1px solid var(--border);overflow:hidden;
 }
+img.p-emoji,img.pcard-emoji{object-fit:contain;padding:var(--s-1)}
 
 .card{
   background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
@@ -202,7 +214,7 @@ main{padding:var(--s-10) 0 var(--s-16)}
 .pcard-emoji{
   display:grid;place-items:center;width:32px;height:32px;margin-bottom:var(--s-2);
   font-size:var(--fs-h3);line-height:1;border-radius:var(--r-sm);
-  background:var(--surface-sunken);border:1px solid var(--border);
+  background:var(--surface-sunken);border:1px solid var(--border);overflow:hidden;
 }
 .pcard-name{font-family:var(--font-display);font-weight:600;font-size:var(--fs-sm);line-height:var(--lh-sm)}
 .pcard-sub{font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--text-subtle)}
@@ -370,7 +382,7 @@ function breadcrumb(items) {
 function paragonCard(p) {
   const cat = CATEGORY_META[p.category];
   return `<a class="pcard" href="/paragons/${slugFor(p)}">
-      <span class="pcard-emoji" aria-hidden="true">${p.icon}</span>
+      ${paragonIcon(p, "pcard-emoji", 32)}
       <span class="pcard-name">${esc(p.name)}</span>
       <span class="pcard-sub">${esc(p.tower)} &bull; ${esc(cat.label)}</span>
       <span class="pcard-price">${money(getBasePrice(p.mediumCost, "medium"))}</span>
@@ -426,7 +438,7 @@ function paragonPage(p) {
   const main = `${crumbHtml}
 <article style="--cat:${cat.color}">
   <div class="p-hero">
-    <div class="p-emoji" aria-hidden="true">${p.icon}</div>
+    ${paragonIcon(p, "p-emoji", 64)}
     <div>
       <span class="badge" style="--cat:${cat.color}">${esc(cat.label)} &bull; ${esc(p.tower)}</span>
       <h1>${esc(p.name)}</h1>

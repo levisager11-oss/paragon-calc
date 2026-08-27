@@ -192,10 +192,14 @@
 }
 .bt-list-load:hover { background: var(--surface-hover); border-color: var(--border-strong); }
 .bt-list-name {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
   font-size: var(--fs-sm);
   line-height: var(--lh-sm);
   font-weight: 600;
 }
+.bt-list-name .paragon-icon { width: 16px; height: 16px; flex-shrink: 0; }
 .bt-list-sub {
   font-size: var(--fs-xs);
   line-height: var(--lh-xs);

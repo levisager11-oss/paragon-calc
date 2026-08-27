@@ -688,8 +688,29 @@ main {
   border-radius: var(--r-sm);
   background: var(--surface-sunken);
   border: 1px solid var(--border);
-  font-size: var(--fs-h3);
+  overflow: hidden;
+}
+
+/* Paragon artwork. Contained rather than cropped, so a non-square source is
+   letterboxed in its tile instead of losing its edges. */
+.paragon-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.paragon-icon-emoji {
+  display: grid;
+  place-items: center;
   line-height: 1;
+}
+/* Inline uses (suggestion chips, saved-build rows) size the icon themselves
+   rather than filling a tile. */
+.suggestion-chip .paragon-icon,
+.bt-list-name .paragon-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 .dropdown-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }

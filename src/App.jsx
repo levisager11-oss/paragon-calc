@@ -12,6 +12,7 @@ import {
   maxT5sFor, soloCeilingFacts, MAX_POWER,
 } from "./utils/calculator";
 import AdUnit from "./components/AdUnit";
+import ParagonIcon from "./components/ParagonIcon";
 import BuildToolbar from "./components/BuildToolbar";
 import { decodeState } from "./utils/shareState";
 
@@ -376,7 +377,9 @@ export default function App() {
                         onMouseDown={() => handleSelectParagon(p.id)}
                         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSelectParagon(p.id); } }}
                       >
-                        <span className="dropdown-icon" aria-hidden="true">{p.icon}</span>
+                        <span className="dropdown-icon">
+                          <ParagonIcon paragon={p} size={32} />
+                        </span>
                         <span className="dropdown-info">
                           <span className="dropdown-name">{p.name}</span>
                           <span className="dropdown-sub">
@@ -431,7 +434,9 @@ export default function App() {
             </div>
 
             <div className="paragon-active-chip">
-              <span className="active-chip-icon" aria-hidden="true">{activeParagon.icon}</span>
+              <span className="active-chip-icon">
+                <ParagonIcon paragon={activeParagon} size={32} />
+              </span>
               <span className="active-chip-info">
                 <span className="active-chip-name">{activeParagon.name}</span>
                 <span className="active-chip-tower">{activeParagon.tower}</span>
@@ -448,7 +453,7 @@ export default function App() {
                   className="suggestion-chip"
                   onClick={() => handleSelectParagon(p.id)}
                 >
-                  <span aria-hidden="true">{p.icon}</span>
+                  <ParagonIcon paragon={p} size={16} />
                   <span>{p.name}</span>
                 </button>
               ))}
