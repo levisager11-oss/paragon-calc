@@ -6,12 +6,13 @@
 
     <!-- Primary Meta Tags -->
     <title>BTD6 Paragon Calculator | Find Exact Degree Requirements</title>
-    <meta name="description" content="Free BTD6 Paragon Degree Calculator — find the exact degree (1-100) for all 13 Paragons. Plan pops, cash &amp; T5 sacrifices without over-sacrificing." />
+    <meta name="description" content="Free, open-source BTD6 Paragon degree calculator. Enter your sacrifices to get the exact degree (1–100) for all 13 Paragons, and see exactly what is being wasted." />
     <meta name="keywords" content="btd6 paragon calculator, bloons td 6 paragon degree, btd6 paragon degree calculator, paragon power points, apex plasma master, glaive dominus, ascended shadow, navarch of the seas, master builder, magus perfectus, goliath doomship, nautic siege core, geraldo totems, btd6 calculator, ninja kiwi, bloons paragon guide" />
     <meta name="author" content="Paragon Calculator" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="google-site-verification" content="SaTamI2kIpo5f0OCzfcUgvO0unoBJtge3sSRhG_iZnA" />
-    <meta name="theme-color" content="#070913" />
+    <meta name="theme-color" content="#0B0D12" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#F7F8FA" media="(prefers-color-scheme: light)" />
     <link rel="canonical" href="https://paragon-calc.vercel.app/" />
 
     <!-- Favicons -->
@@ -22,7 +23,7 @@
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://paragon-calc.vercel.app/" />
     <meta property="og:title" content="BTD6 Paragon Calculator | Find Exact Degree Requirements" />
-    <meta property="og:description" content="Calculate degrees 1-100 for all 13 BTD6 Paragons. Plan pops, cash &amp; tier-4/5 sacrifices mid-game without over-sacrificing. Update 54+ certified." />
+    <meta property="og:description" content="Work out the exact degree for all 13 BTD6 Paragons before you sacrifice. Covers pops, income, upgrade tiers, the cash slider, extra Tier 5s and Geraldo totems." />
     <meta property="og:image" content="https://paragon-calc.vercel.app/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -35,9 +36,45 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="https://paragon-calc.vercel.app/" />
     <meta name="twitter:title" content="BTD6 Paragon Calculator | Find Exact Degree Requirements" />
-    <meta name="twitter:description" content="Calculate degrees 1-100 for all 13 BTD6 Paragons. Plan pops, cash &amp; T5 sacrifices with the Goal Planner. Solo &amp; Co-op, Update 54+ certified." />
+    <meta name="twitter:description" content="Work out the exact degree for all 13 BTD6 Paragons, or set a target degree and let the Goal Planner solve for the cheapest inputs. Solo and co-op." />
     <meta name="twitter:image" content="https://paragon-calc.vercel.app/og-image.png" />
     <meta name="twitter:image:alt" content="BTD6 Paragon Calculator — the Paragon power caps: Pops &amp; Income 90,000, Cash 60,000, Extra Tier 5s 50,000, Upgrade Tiers 10,000" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" />
+
+    <!-- Apply the stored theme before first paint so the page never flashes the
+         wrong canvas colour while the bundle loads. -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("theme");
+          if (!t) t = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", t);
+        } catch (e) {}
+      })();
+    </script>
+
+    <!-- Critical shell: paints the canvas and a layout skeleton on the first
+         frame. React replaces #root wholesale once the bundle is ready. -->
+    <style>
+      :root { --boot-canvas: #0B0D12; --boot-surface: #12151C; --boot-sunken: #0E1116; --boot-border: rgba(255,255,255,.08); }
+      [data-theme="light"] { --boot-canvas: #F7F8FA; --boot-surface: #FFFFFF; --boot-sunken: #F1F3F6; --boot-border: rgba(16,20,28,.10); }
+      html, body { margin: 0; background: var(--boot-canvas); }
+      .boot { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+      .boot-header { display: flex; align-items: center; justify-content: space-between; height: 64px; border-bottom: 1px solid var(--boot-border); }
+      .boot-main { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; padding: 40px 0; align-items: start; }
+      .boot-block { background: var(--boot-surface); border: 1px solid var(--boot-border); border-radius: 16px; }
+      .boot-bar { background: var(--boot-sunken); border-radius: 6px; }
+      .boot-pulse { animation: boot-pulse 1.4s cubic-bezier(.2,0,0,1) infinite; }
+      @keyframes boot-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+      @media (max-width: 1024px) { .boot-main { grid-template-columns: minmax(0, 1fr); } }
+      @media (max-width: 720px) { .boot { padding: 0 16px; } }
+      @media (prefers-reduced-motion: reduce) { .boot-pulse { animation: none; } }
+    </style>
 
     <!-- Web App Manifest -->
     <link rel="manifest" href="/manifest.json" />
@@ -94,7 +131,25 @@
      crossorigin="anonymous"></script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="boot" aria-hidden="true">
+        <div class="boot-header">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="boot-bar boot-pulse" style="width:36px;height:36px;border-radius:10px"></div>
+            <div>
+              <div class="boot-bar boot-pulse" style="width:180px;height:16px"></div>
+              <div class="boot-bar boot-pulse" style="width:120px;height:12px;margin-top:8px"></div>
+            </div>
+          </div>
+          <div class="boot-bar boot-pulse" style="width:36px;height:36px;border-radius:10px"></div>
+        </div>
+        <div class="boot-main">
+          <div class="boot-block boot-pulse" style="height:640px"></div>
+          <div class="boot-block boot-pulse" style="height:420px"></div>
+        </div>
+      </div>
+      <p style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)" role="status">Loading the Paragon calculator…</p>
+    </div>
     <noscript>
       <h1>BTD6 Paragon Calculator</h1>
       <p>

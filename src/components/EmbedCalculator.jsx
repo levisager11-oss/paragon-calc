@@ -1,15 +1,16 @@
 import { useState, useMemo } from "react";
 import { PARAGONS, DIFFICULTY_MULTIPLIERS } from "../constants/paragons.js";
-import { calculateParagonData, getBasePrice } from "../utils/calculator.js";
+import { calculateParagonData, getBasePrice, MAX_POWER } from "../utils/calculator.js";
 import { decodeState, buildShareUrl } from "../utils/shareState.js";
 
-const ACCENT = { primary: "#ff5722", military: "#4caf50", magic: "#9c27b0", support: "#ffb300" };
-
+// The four capped power sources. Colour is not identity here: every bar is the
+// accent until its source hits its ceiling, which is the one thing worth
+// signalling at this size.
 const BREAKDOWN = [
-  { key: "pops", label: "Pops & Income", color: "#0ea5e9" },
-  { key: "upgrades", label: "Upgrades", color: "#22c55e" },
-  { key: "cash", label: "Cash", color: "#f59e0b" },
-  { key: "t5", label: "Extra T5s", color: "#a855f7" },
+  { key: "pops", label: "Pops & income" },
+  { key: "upgrades", label: "Upgrade tiers" },
+  { key: "cash", label: "Cash invested" },
+  { key: "t5", label: "Extra Tier 5s" },
 ];
 
 const clampNum = (v, min, max) => {
@@ -40,7 +41,6 @@ export default function EmbedCalculator() {
   const maxT5 = gameMode === "coop" ? 9 : paragonId === "apex_plasma_master" ? 1 : 0;
   const effT5 = Math.min(extraT5s, maxT5);
   const basePrice = getBasePrice(paragon.mediumCost, difficulty);
-  const accent = ACCENT[paragon.category] || "#06b6d4";
 
   const results = useMemo(
     () => calculateParagonData({
@@ -56,28 +56,38 @@ export default function EmbedCalculator() {
   );
 
   return (
-    <div className="embed" style={{ "--accent": accent }}>
+    <div className="embed">
       <div className="embed-top">
         <a className="embed-brand" href={fullUrl} target="_blank" rel="noopener noreferrer">
           <img src="/logo.png" alt="" width="22" height="22" /> BTD6 Paragon Calculator
         </a>
-        <span className="embed-deg">Degree {results.degree}</span>
+        <span className="embed-deg">Degree <strong>{results.degree}</strong></span>
       </div>
 
       <div className="embed-grid">
         <div className="embed-gauge">
-          <div className="embed-ring" style={{ "--pct": `${results.degree}%` }}>
+          <div
+            className={`embed-ring ${results.degree === 100 ? "is-complete" : ""}`}
+            style={{ "--pct": Math.min(100, (results.totalPower / MAX_POWER) * 100) }}
+            role="img"
+            aria-label={`Degree ${results.degree}. ${results.totalPower.toLocaleString()} of ${MAX_POWER.toLocaleString()} power points.`}
+          >
             <span className="embed-ring-deg">{results.degree}</span>
-            <span className="embed-ring-pow">{results.totalPower.toLocaleString()}<br />/ 200,000</span>
+            <span className="embed-ring-pow">
+              {results.totalPower.toLocaleString()}<br />/ {MAX_POWER.toLocaleString()}
+            </span>
           </div>
           <div className="embed-bars">
             {BREAKDOWN.map((b) => {
               const pb = results.powerBreakdown[b.key];
               return (
-                <div key={b.key} className="embed-bar-row">
+                <div
+                  key={b.key}
+                  className={`embed-bar-row ${pb.capped ? "is-wasting" : pb.power >= pb.max ? "is-capped" : ""}`}
+                >
                   <span className="embed-bar-label">{b.label}</span>
                   <span className="embed-bar-track">
-                    <span className="embed-bar-fill" style={{ width: `${Math.min(100, pb.pct || 0)}%`, background: b.color }} />
+                    <span className="embed-bar-fill" style={{ width: `${Math.min(100, pb.pct || 0)}%` }} />
                   </span>
                 </div>
               );
@@ -106,17 +116,17 @@ export default function EmbedCalculator() {
 
           <div className="embed-fields">
             <Field label="Pops" value={pops} onChange={(v) => setPops(clampNum(v, 0, 16200000))} />
-            <Field label="Income $" value={income} onChange={(v) => setIncome(clampNum(v, 0, 4050000))} />
-            <Field label="Upgrades" value={upgrades} onChange={(v) => setUpgrades(clampNum(v, 0, 100))} />
-            <Field label="Extra T5s" value={effT5} onChange={(v) => setExtraT5s(clampNum(v, 0, maxT5))} disabled={maxT5 === 0} />
-            <Field label="Sacrifice $" value={sacrificedTowerCash} onChange={(v) => setSacrificedTowerCash(clampNum(v, 0, 100000000))} />
-            <Field label="Slider $" value={sliderCash} onChange={(v) => setSliderCash(clampNum(v, 0, Math.round(basePrice * 3.15)))} />
+            <Field label="Income ($)" value={income} onChange={(v) => setIncome(clampNum(v, 0, 4050000))} />
+            <Field label="Upgrade tiers" value={upgrades} onChange={(v) => setUpgrades(clampNum(v, 0, 100))} />
+            <Field label="Extra Tier 5s" value={effT5} onChange={(v) => setExtraT5s(clampNum(v, 0, maxT5))} disabled={maxT5 === 0} />
+            <Field label="Sacrifice ($)" value={sacrificedTowerCash} onChange={(v) => setSacrificedTowerCash(clampNum(v, 0, 100000000))} />
+            <Field label="Slider ($)" value={sliderCash} onChange={(v) => setSliderCash(clampNum(v, 0, Math.round(basePrice * 3.15)))} />
             <Field label="Totems" value={totems} onChange={(v) => setTotems(clampNum(v, 0, 1000))} />
           </div>
         </div>
       </div>
 
-      <a className="embed-cta" href={fullUrl} target="_blank" rel="noopener noreferrer">Open full calculator ↗</a>
+      <a className="embed-cta" href={fullUrl} target="_blank" rel="noopener noreferrer">Open the full calculator</a>
     </div>
   );
 }

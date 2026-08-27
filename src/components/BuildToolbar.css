@@ -1,83 +1,96 @@
-/* Top-of-page build actions toolbar + its dialogs. Reuses the global theme
-   tokens defined in index.css. */
+/* Build actions toolbar and its dialogs.
+   Every value here comes from the token layer in index.css — the toolbar shares
+   the app's spacing scale, radii, elevation ramp and type ramp exactly. */
 
 .build-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
   flex-wrap: wrap;
-  margin-bottom: 1.25rem;
-  padding: 0.7rem 1rem;
-  background: var(--bg-panel);
-  border: 1px solid var(--border-light);
-  border-radius: 14px;
-  backdrop-filter: blur(8px);
+  gap: var(--s-4);
+  padding: var(--s-3) var(--s-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
 }
 
 .bt-label {
-  font-family: var(--font-heading);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+  color: var(--text-muted);
+}
+.bt-label strong {
+  font-family: var(--font-display);
   font-weight: 600;
-  color: var(--text-secondary);
-  font-size: 0.95rem;
+  color: var(--text);
 }
 
-.bt-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
+.bt-actions { display: flex; flex-wrap: wrap; gap: var(--s-2); }
 
+/* Secondary button — identical box to .quick-btn in the main app. */
 .bt-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem 0.85rem;
-  font-family: var(--font-body);
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-light);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: var(--transition-fast);
-  text-decoration: none;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+  font-weight: 500;
+  color: var(--text-muted);
   white-space: nowrap;
+  transition: background var(--dur-fast) var(--ease),
+              border-color var(--dur-fast) var(--ease),
+              color var(--dur-fast) var(--ease);
 }
-.bt-btn:hover { background: rgba(255, 255, 255, 0.09); border-color: rgba(255, 255, 255, 0.18); }
+.bt-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
+  color: var(--text);
+  text-decoration: none;
+}
 .bt-btn:disabled { opacity: 0.6; cursor: default; }
-.bt-btn svg { display: block; }
+.bt-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
 
 .bt-primary {
-  color: #fff;
-  background: linear-gradient(135deg, #0891b2, #06b6d4);
-  border-color: transparent;
+  background: var(--accent-fill);
+  border-color: var(--accent-fill);
+  color: var(--accent-ink);
+  font-weight: 600;
 }
-.bt-primary:hover { filter: brightness(1.08); background: linear-gradient(135deg, #0891b2, #06b6d4); }
+.bt-primary:hover {
+  background: var(--accent-fill-hover);
+  border-color: var(--accent-fill-hover);
+  color: var(--accent-ink);
+}
 
-.bt-wide { width: 100%; justify-content: center; margin-top: 0.6rem; }
+.bt-wide { width: 100%; justify-content: center; margin-top: var(--s-2); }
 
-/* ── Modal ─────────────────────────────────────────────────────────── */
+/* ── Dialog — same shell as the pop counter ──────────────────────────── */
+
 .bt-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(3, 5, 12, 0.72);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  z-index: 1000;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: var(--s-4);
+  background: rgba(5, 7, 11, 0.72);
 }
+[data-theme="light"] .bt-overlay { background: rgba(16, 20, 28, 0.44); }
 
 .bt-modal {
   width: 100%;
-  max-width: 520px;
-  background: #0c0e16;
-  border: 1px solid var(--border-light);
-  border-radius: 18px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  max-width: 480px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
   overflow: hidden;
 }
 
@@ -85,102 +98,136 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--border-light);
+  gap: var(--s-3);
+  padding: var(--s-4) var(--s-5);
+  border-bottom: 1px solid var(--border);
 }
 .bt-modal-head h3 {
-  font-family: var(--font-heading);
-  font-size: 1.1rem;
-  color: #fff;
-  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+  line-height: var(--lh-h3);
+  font-weight: 600;
+  color: var(--text);
 }
 
 .bt-close {
-  display: inline-flex;
-  padding: 0.35rem;
-  border-radius: 8px;
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-sm);
+  color: var(--text-muted);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
-.bt-close:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.bt-close:hover { background: var(--surface-hover); color: var(--text); }
+.bt-close svg { width: 14px; height: 14px; }
 
-.bt-body { padding: 1.25rem; }
-.bt-hint { color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; margin-bottom: 0.85rem; }
-.bt-empty { color: var(--text-secondary); font-size: 0.9rem; text-align: center; padding: 1.5rem 0.5rem; }
+.bt-body { padding: var(--s-5); }
+
+.bt-hint {
+  margin-bottom: var(--s-4);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+  color: var(--text-muted);
+}
+
+.bt-empty {
+  padding: var(--s-8) var(--s-4);
+  text-align: center;
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+  color: var(--text-subtle);
+}
 
 .bt-field {
   width: 100%;
-  padding: 0.6rem 0.75rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-light);
-  border-radius: 10px;
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: 0.9rem;
+  padding: var(--s-2) var(--s-3);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+  transition: border-color var(--dur-fast) var(--ease);
 }
-.bt-field:focus { outline: none; border-color: var(--accent-cyan); }
-.bt-textarea { resize: vertical; font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: 0.8rem; line-height: 1.5; }
+.bt-field:focus { outline: none; border-color: var(--accent); }
+.bt-field:focus-visible { box-shadow: var(--ring); }
+.bt-field::placeholder { color: var(--text-subtle); }
 
-.bt-copyrow { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+.bt-textarea {
+  resize: vertical;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-body);
+}
+
+.bt-copyrow { display: flex; gap: var(--s-2); margin-top: var(--s-3); }
 .bt-copyrow .bt-field { flex: 1; min-width: 0; }
 .bt-copyrow .bt-btn { flex-shrink: 0; }
 .bt-copyrow-end { justify-content: flex-end; }
 
 .bt-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  max-height: 360px;
+  gap: var(--s-2);
+  max-height: 340px;
   overflow-y: auto;
 }
-.bt-list-item { display: flex; align-items: stretch; gap: 0.5rem; }
+.bt-list-item { display: flex; align-items: stretch; gap: var(--s-2); }
+
 .bt-list-load {
   flex: 1;
-  text-align: left;
-  cursor: pointer;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.6rem 0.8rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-light);
-  border-radius: 10px;
-  color: var(--text-primary);
+  gap: var(--s-1);
+  padding: var(--s-3);
+  text-align: left;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  transition: background var(--dur-fast) var(--ease),
+              border-color var(--dur-fast) var(--ease);
 }
-.bt-list-load:hover { background: rgba(255, 255, 255, 0.09); }
-.bt-list-name { font-weight: 600; font-size: 0.92rem; }
-.bt-list-sub { font-size: 0.78rem; color: var(--text-muted); }
+.bt-list-load:hover { background: var(--surface-hover); border-color: var(--border-strong); }
+.bt-list-name {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+  font-weight: 600;
+}
+.bt-list-name .paragon-icon { width: 16px; height: 16px; flex-shrink: 0; }
+.bt-list-sub {
+  font-size: var(--fs-xs);
+  line-height: var(--lh-xs);
+  color: var(--text-subtle);
+}
+
 .bt-list-del {
   flex-shrink: 0;
-  width: 42px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 10px;
-  color: #f87171;
-  cursor: pointer;
+  width: 40px;
+  display: inline-grid;
+  place-items: center;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text-subtle);
+  transition: background var(--dur-fast) var(--ease),
+              border-color var(--dur-fast) var(--ease),
+              color var(--dur-fast) var(--ease);
 }
-.bt-list-del:hover { background: rgba(239, 68, 68, 0.18); }
-
-@media (max-width: 560px) {
-  .build-toolbar { justify-content: center; }
-  .bt-actions { width: 100%; justify-content: center; }
+.bt-list-del:hover {
+  background: var(--danger-soft);
+  border-color: var(--danger-line);
+  color: var(--danger);
 }
+.bt-list-del svg { width: 14px; height: 14px; }
 
-/* Keyboard focus: .bt-field:focus clears the outline, so restore a ring for
-   keyboard users specifically. */
-.build-toolbar button:focus-visible,
-.build-toolbar a:focus-visible,
-.bt-modal button:focus-visible,
-.bt-modal a:focus-visible,
-.bt-field:focus-visible {
-  outline: 2px solid var(--accent-cyan, #06b6d4);
-  outline-offset: 2px;
+@media (max-width: 720px) {
+  .build-toolbar { justify-content: flex-start; }
+  .bt-actions { width: 100%; }
+  .bt-btn { flex: 1; justify-content: center; }
 }
