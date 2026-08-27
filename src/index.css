@@ -271,6 +271,16 @@ kbd {
   padding: var(--s-10) 0 var(--s-16);
 }
 
+/* <main> is one child of .page, so .page's gap does nothing between the
+   sections *inside* it. Without this the dashboard, goal planner and guide
+   sit flush against each other — the collapsed ad slots between them are
+   zero-height whenever a slot goes unfilled. */
+main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-12);
+}
+
 .section-head {
   display: flex;
   align-items: flex-end;
@@ -1705,7 +1715,9 @@ input:focus-visible,
     --fs-h2:      20px;  --lh-h2:      28px;
   }
 
-  .page { gap: var(--s-10); padding: var(--s-6) 0 var(--s-12); }
+  .page,
+  main { gap: var(--s-10); }
+  .page { padding: var(--s-6) 0 var(--s-12); }
 
   .site-header { height: auto; padding: var(--s-4) 0; flex-wrap: wrap; }
   .site-nav { order: 3; width: 100%; gap: var(--s-5); }
