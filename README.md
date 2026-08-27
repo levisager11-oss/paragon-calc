@@ -85,6 +85,40 @@ are identical — change one, change all three.
 calculator, was retired: two design languages in one product is a consistency
 problem, and `vercel.json` now redirects the route to `/classic`.
 
+### Paragon artwork
+
+Drop one PNG per Paragon into `public/paragon-art/` and it is picked up
+everywhere — the search dropdown, the active build chip, the related-paragon
+chips, saved builds, the exported result card and the static Paragon pages.
+Nothing else needs editing; commit the files and redeploy.
+
+Name each file for the Paragon's slug — the same slug as its `/paragons/<slug>`
+page:
+
+```
+apex-plasma-master.png                    magus-perfectus.png
+glaive-dominus.png                        goliath-doomship.png
+ascended-shadow.png                       crucible-of-steel-and-flame.png
+navarch-of-the-seas.png                   mega-massive-munitions-factory.png
+nautic-siege-core.png                     ballistic-obliteration-missile-bunker.png
+master-builder.png                        herald-of-everfrost.png
+root-of-all-nature.png
+```
+
+**128×128 PNG, transparent, square.** That covers every size the app renders at:
+the 32px tiles at 2x, and the 64px hero on a Paragon page at 2x. Art is drawn
+with `object-fit: contain`, so a non-square source is letterboxed in its tile
+rather than cropped.
+
+Artwork is optional and resolves per Paragon, so a partial set is fine — any
+Paragon without a file keeps its emoji. `vite.config.js` reads the folder at
+build time and injects the list of slugs that have art, so the app never
+requests a file that isn't there; `scripts/generate-pages.js` does the same
+check on disk, so the static pages never emit a broken image.
+
+Bloons TD 6 artwork is Ninja Kiwi's. Whatever lands here is redistributed from a
+site that serves ads, so confirm you have the right to use it before shipping.
+
 ## Development
 
 ```bash
