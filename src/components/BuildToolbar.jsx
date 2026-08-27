@@ -105,14 +105,16 @@ export default function BuildToolbar({ state, results, paragon, onLoadState, sha
 
   return (
     <div className="build-toolbar">
-      <span className="bt-label">Degree {results.degree} build</span>
+      <span className="bt-label">This build reaches <strong>Degree {results.degree}</strong></span>
       <div className="bt-actions">
         <button className="bt-btn bt-primary" onClick={openShare}><Share2 size={16} /> Share</button>
         <button className="bt-btn" onClick={openSave}><Save size={16} /> Save</button>
         <button className="bt-btn" onClick={openLoad}><FolderOpen size={16} /> Saved</button>
         <button className="bt-btn" onClick={openEmbed}><Code2 size={16} /> Embed</button>
-        <button className="bt-btn" onClick={doExport} disabled={exporting}>
-          <ImageDown size={16} /> {exporting ? "Rendering…" : "Image"}
+        <button className="bt-btn" onClick={doExport} disabled={exporting} aria-busy={exporting}>
+          {exporting
+            ? <><span className="spinner" aria-hidden="true" /> Rendering…</>
+            : <><ImageDown size={16} /> Image</>}
         </button>
       </div>
 
@@ -131,7 +133,7 @@ export default function BuildToolbar({ state, results, paragon, onLoadState, sha
 
             {dialog === "share" && (
               <div className="bt-body">
-                <p className="bt-hint">Anyone who opens this link gets your exact paragon, difficulty, sacrifices and totems pre-loaded.</p>
+                <p className="bt-hint">The link carries every input on this page — paragon, difficulty, mode, sacrifices and totems. It opens on the same build you are looking at.</p>
                 <div className="bt-copyrow">
                   <input className="bt-field" readOnly value={shareUrl} onFocus={(e) => e.target.select()} />
                   <button className="bt-btn bt-primary" onClick={() => copy(shareUrl, "share")}>
@@ -146,10 +148,10 @@ export default function BuildToolbar({ state, results, paragon, onLoadState, sha
 
             {dialog === "embed" && (
               <div className="bt-body">
-                <p className="bt-hint">Paste this on any site or wiki. The widget is ad-free, interactive, and links back here.</p>
+                <p className="bt-hint">A self-contained iframe: interactive, ad-free, and pre-set to this build. Paste it into any page or wiki.</p>
                 <textarea className="bt-field bt-textarea" readOnly rows={4} value={embedSnippet} onFocus={(e) => e.target.select()} />
                 <div className="bt-copyrow bt-copyrow-end">
-                  <a className="bt-btn" href={embedPreview} target="_blank" rel="noopener noreferrer">Open preview ↗</a>
+                  <a className="bt-btn" href={embedPreview} target="_blank" rel="noopener noreferrer">Open preview</a>
                   <button className="bt-btn bt-primary" onClick={() => copy(embedSnippet, "embed")}>
                     {copied === "embed" ? <><Check size={16} /> Copied</> : <><Copy size={16} /> Copy</>}
                   </button>
@@ -159,7 +161,7 @@ export default function BuildToolbar({ state, results, paragon, onLoadState, sha
 
             {dialog === "save" && (
               <div className="bt-body">
-                <p className="bt-hint">Saved in this browser — reopen it any time from “Saved”.</p>
+                <p className="bt-hint">Stored in this browser only. Reopen it from “Saved”; clearing site data removes it.</p>
                 <input
                   className="bt-field"
                   autoFocus
@@ -179,7 +181,7 @@ export default function BuildToolbar({ state, results, paragon, onLoadState, sha
             {dialog === "load" && (
               <div className="bt-body">
                 {builds.length === 0 ? (
-                  <p className="bt-empty">No saved builds yet. Set up a build and hit <strong>Save</strong>.</p>
+                  <p className="bt-empty">Nothing saved yet. Build something, then choose <strong>Save</strong>.</p>
                 ) : (
                   <ul className="bt-list">
                     {builds.map((b) => {

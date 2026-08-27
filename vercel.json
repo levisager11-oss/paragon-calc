@@ -1,4 +1,8 @@
 {
+  "redirects": [
+    { "source": "/ticket", "destination": "/classic", "permanent": true },
+    { "source": "/ticket/:path*", "destination": "/classic", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/embed", "destination": "/embed.html" },
     {

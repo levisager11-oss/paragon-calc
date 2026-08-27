@@ -8,7 +8,7 @@ will get, what is being wasted, and the cheapest way to reach the next degree.
 Or work backwards: set a target degree and the Goal Planner returns the minimum
 inputs to hit it.
 
-- **Two designs** — `/classic` (dark dashboard) and `/ticket` (neo-brutalist arcade ticket)
+- **One design system** — a 4pt spacing scale, three radii and a single accent, shared by the app, the embed widget and the static pages
 - **Goal Planner** — reverse-solves a target degree under `leastCash`, `balanced` or `leastPops`
 - **Cash optimiser** — moves whole tower sacrifices off the 95%-efficient cash slider
 - **Shareable builds** — every build round-trips through the URL; save, embed or export a PNG
@@ -57,6 +57,34 @@ rather than keeping its own copy, and `test/parity.test.js` enforces that.
 Difficulty scales the base price by 0.85× (Easy), 1.00× (Medium), 1.08× (Hard)
 and 1.20× (Impoppable), rounded to the nearest $5.
 
+## Design system
+
+Every visual value lives in the token block at the top of `src/index.css`.
+Nothing below that block invents its own.
+
+| | |
+| --- | --- |
+| Spacing | 4pt scale, `--s-1` (4px) to `--s-20` (80px). Everything that separates two elements is a token; the only literals are optical icon alignment and slider-thumb geometry. |
+| Radii | `--r-sm` 6px, `--r-md` 10px, `--r-lg` 16px, plus `--r-pill` for capsules and circles |
+| Type | Space Grotesk for headings, Inter for body; seven steps, every line-height on the 4pt grid |
+| Colour | Flat `#0B0D12` canvas, three text weights, one accent (`#2E7DF6`); amber/green/red carry state only |
+| Tower classes | BTD6's Primary/Military/Magic/Support colours, used on 12px chips only |
+| Elevation | One neutral shadow, for surfaces that float (dropdowns, dialogs). Everything else separates with a border. |
+| Motion | 120ms and 200ms on one curve, on hover and focus only |
+
+Light mode flips the tokens; no component carries a light-mode override. The
+theme is applied before first paint by an inline script in `index.html`, and the
+static pages read the same `localStorage` key so they match the app.
+
+Two surfaces keep their own copy of the tokens because they build as separate
+documents: `src/components/EmbedCalculator.css` (the `/embed` widget) and the
+`BASE_CSS` block in `scripts/generate-pages.js` (the static pages). The values
+are identical — change one, change all three.
+
+`/ticket`, a second neo-brutalist design that used to live alongside the
+calculator, was retired: two design languages in one product is a consistency
+problem, and `vercel.json` now redirects the route to `/classic`.
+
 ## Development
 
 ```bash
@@ -82,8 +110,9 @@ npm run gen:images   # public/og-image.png and the PWA icons — needs Chromium 
 src/utils/calculator.js      the engine — degree curve, power caps, reverse solver
 src/constants/paragons.js    paragon roster, costs and power limits (single source of truth)
 src/constants/faq.js         FAQ copy; numbers are computed from the engine, not typed
-src/App.jsx                  classic design
-src/components/              ticket design, embed widget, build toolbar
+src/index.css                design tokens + every component style
+src/App.jsx                  the calculator
+src/components/              embed widget, build toolbar, ad slot
 api/                         serverless handlers; api/_lib/shared.js re-exports the engine
 scripts/generate-pages.js    static SEO pages + sitemap
 scripts/generate-images.js   social card + PWA icons
