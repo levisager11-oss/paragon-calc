@@ -12,7 +12,8 @@ import {
 } from "../src/utils/calculator.js";
 import { PARAGONS, POWER_LIMITS } from "../src/constants/paragons.js";
 
-const DART = PARAGONS.apex_plasma_master;   // the one paragon with a solo extra T5
+const DART = PARAGONS.apex_plasma_master;   // solo extra T5 via Master Double Cross
+const ICE = PARAGONS.herald_of_everfrost;   // solo extra T5 via a level 13+ Silas
 const NINJA = PARAGONS.ascended_shadow;     // representative "normal" paragon
 
 const build = (over = {}) => calculateParagonData({
@@ -46,9 +47,30 @@ describe("getPowerThreshold", () => {
       92: 162991,
       99: 192120,
       100: 200000,
+      // Degrees whose cubic value has a fractional part above .5. The published
+      // table rounds, so these are exactly the thresholds a floor() would put
+      // one power too low — the difference between reporting Degree 6 and
+      // Degree 5 for a build sitting on 3,407 power.
+      6: 3408,
+      7: 3808,
+      9: 4669,
+      17: 9004,
+      57: 60039,
+      97: 183474,
     };
     for (const [degree, power] of Object.entries(golden)) {
       expect(getPowerThreshold(Number(degree)), `degree ${degree}`).toBe(power);
+    }
+  });
+
+  it("rounds the cubic rather than flooring or ceiling it", () => {
+    for (let d = 2; d <= 99; d++) {
+      const exact = (50 * d ** 3 + 5025 * d ** 2 + 168324 * d + 843000) / 600;
+      expect(getPowerThreshold(d), `degree ${d}`).toBe(Math.round(exact));
+      // The cubic never lands on a whole number or on exactly .5, so rounding
+      // is unambiguous and always differs from one of floor/ceil.
+      expect(Number.isInteger(exact), `degree ${d}`).toBe(false);
+      expect(exact % 1, `degree ${d}`).not.toBe(0.5);
     }
   });
 
@@ -108,6 +130,16 @@ describe("documented BTD6 anchor points", () => {
     expect(calculateDegreeFromPower(166000)).toBe(92);
   });
 
+  it("caps a maxed solo Ice Monkey (Silas 13+) at 166,000 power = Degree 92", () => {
+    expect(powerCeilingWithoutTotems(ICE, "solo")).toBe(166000);
+  });
+
+  it("caps a maxed two-player co-op Paragon at Degree 95 (3 extra Tier 5s)", () => {
+    const power = powerCeilingWithoutTotems(NINJA, "coop", 2);
+    expect(power).toBe(178000);
+    expect(calculateDegreeFromPower(power)).toBe(95);
+  });
+
   it("needs exactly 20 totems to take a maxed solo Paragon to Degree 100", () => {
     const gap = MAX_POWER - powerCeilingWithoutTotems(NINJA, "solo");
     expect(Math.ceil(gap / 2000)).toBe(20);
@@ -126,18 +158,37 @@ describe("documented BTD6 anchor points", () => {
 // ─── Extra T5 rules ───────────────────────────────────────────────────────────
 
 describe("maxT5sFor", () => {
-  it("allows 9 extra T5s in co-op for every paragon", () => {
+  // Every player fields three Tier 5s of the tower and the Paragon eats three,
+  // so the limit is 3 x players - 3. The documented degree table pins the
+  // two-player case: co-op with 3 extra Tier 5s tops out at Degree 95.
+  it("scales the co-op limit with the number of players", () => {
+    expect(maxT5sFor(NINJA, "coop", 2)).toBe(3);
+    expect(maxT5sFor(NINJA, "coop", 3)).toBe(6);
+    expect(maxT5sFor(NINJA, "coop", 4)).toBe(9);
+  });
+
+  it("assumes a full four-player lobby when no player count is given", () => {
     for (const p of Object.values(PARAGONS)) {
-      expect(maxT5sFor(p, "coop"), p.id).toBe(9);
+      const duplicate = p.soloExtraT5Source ? 1 : 0;
+      expect(maxT5sFor(p, "coop"), p.id).toBe(9 + duplicate);
     }
   });
 
-  it("allows exactly 1 extra T5 for a solo Dart Monkey and none for anyone else", () => {
+  it("clamps a nonsensical co-op player count into the 2-4 range", () => {
+    expect(maxT5sFor(NINJA, "coop", 1)).toBe(3);
+    expect(maxT5sFor(NINJA, "coop", 99)).toBe(9);
+    expect(maxT5sFor(NINJA, "coop", "not a number")).toBe(9);
+  });
+
+  it("allows exactly 1 extra T5 solo for the two towers that may duplicate one", () => {
+    // Dart Monkey via Master Double Cross, Ice Monkey via a level 13+ Silas.
     expect(maxT5sFor(DART, "solo")).toBe(1);
+    expect(maxT5sFor(ICE, "solo")).toBe(1);
     for (const p of Object.values(PARAGONS)) {
-      if (p.id === "apex_plasma_master") continue;
+      if (p.soloExtraT5Source) continue;
       expect(maxT5sFor(p, "solo"), p.id).toBe(0);
     }
+    expect(Object.values(PARAGONS).filter((p) => p.soloExtraT5Source)).toHaveLength(2);
   });
 });
 
@@ -316,9 +367,11 @@ describe("reverseCalculate", () => {
     expect(r.totemsNeeded).toBe(17);
   });
 
-  it("allows 9 extra T5s in co-op", () => {
+  it("allows 9 extra T5s in a full co-op lobby, and fewer with fewer players", () => {
     expect(plan({ gameMode: "coop" }).maxT5s).toBe(9);
-    expect(plan({ paragon: DART, gameMode: "coop" }).maxT5s).toBe(9);
+    expect(plan({ gameMode: "coop", playerCount: 2 }).maxT5s).toBe(3);
+    expect(plan({ gameMode: "coop", playerCount: 3 }).maxT5s).toBe(6);
+    expect(plan({ paragon: DART, gameMode: "coop", playerCount: 4 }).maxT5s).toBe(10);
   });
 
   it("reports a target as unachievable when every source is switched off", () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { splitIntoSacrificeTowers, getBasePrice } from "../src/utils/calculator.js";
+import { splitIntoSacrificeTowers, getMaxT4Cost } from "../src/utils/calculator.js";
 import { PARAGONS } from "../src/constants/paragons.js";
 
 // ─── splitIntoSacrificeTowers ──────────────────────────────────────────────────
@@ -49,11 +49,22 @@ describe("splitIntoSacrificeTowers", () => {
 // ─── Paragon T4 cost data integrity ─────────────────────────────────────────────
 
 describe("paragon maxT4 data", () => {
-  it("every paragon defines a positive maxT4MediumCost and a crosspath build", () => {
+  const DIFFICULTIES = ["easy", "medium", "hard", "impoppable"];
+
+  it("every paragon prices its priciest T4 sacrifice on all four difficulties", () => {
     for (const p of Object.values(PARAGONS)) {
-      expect(p.maxT4MediumCost, p.id).toBeTypeOf("number");
-      expect(p.maxT4MediumCost, p.id).toBeGreaterThan(0);
       expect(p.maxT4Build, p.id).toMatch(/^\d-\d-\d$/);
+      for (const d of DIFFICULTIES) {
+        expect(p.maxT4Cost[d], `${p.id} ${d}`).toBeTypeOf("number");
+        expect(p.maxT4Cost[d], `${p.id} ${d}`).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("names a legal non-Tier-5 build: one path at 4, at most one other at 2", () => {
+    for (const p of Object.values(PARAGONS)) {
+      const tiers = p.maxT4Build.split("-").map(Number).sort((a, b) => b - a);
+      expect(tiers, p.id).toEqual([4, 2, 0]);
     }
   });
 
@@ -61,14 +72,33 @@ describe("paragon maxT4 data", () => {
     // Sanity: the most expensive sacrifice tower should be a fraction of the
     // full paragon, otherwise the data is almost certainly wrong.
     for (const p of Object.values(PARAGONS)) {
-      expect(p.maxT4MediumCost, p.id).toBeLessThan(p.mediumCost);
+      expect(p.maxT4Cost.medium, p.id).toBeLessThan(p.mediumCost);
     }
   });
 
-  it("scales the T4 cost by difficulty just like the base price", () => {
+  it("rises monotonically with difficulty", () => {
+    for (const p of Object.values(PARAGONS)) {
+      const [easy, medium, hard, impoppable] = DIFFICULTIES.map((d) => p.maxT4Cost[d]);
+      expect(easy, p.id).toBeLessThan(medium);
+      expect(medium, p.id).toBeLessThan(hard);
+      expect(hard, p.id).toBeLessThan(impoppable);
+    }
+  });
+
+  it("reads the per-difficulty price rather than scaling the medium one", () => {
+    // BTD6 applies the difficulty multiplier to each upgrade and rounds it
+    // individually, so scaling the total lands off by a few dollars: a 2-4-0
+    // Dart Monkey is $7,205 on Easy, not the $7,210 that 8,480 x 0.85 suggests.
     const p = PARAGONS.apex_plasma_master;
-    expect(getBasePrice(p.maxT4MediumCost, "medium")).toBe(9300);
-    expect(getBasePrice(p.maxT4MediumCost, "hard")).toBeGreaterThan(9300);
-    expect(getBasePrice(p.maxT4MediumCost, "easy")).toBeLessThan(9300);
+    expect(getMaxT4Cost(p, "easy")).toBe(7205);
+    expect(getMaxT4Cost(p, "medium")).toBe(8480);
+    expect(getMaxT4Cost(p, "hard")).toBe(9155);
+    expect(getMaxT4Cost(p, "impoppable")).toBe(10180);
+    expect(getMaxT4Cost(p, "easy")).not.toBe(Math.round((8480 * 0.85) / 5) * 5);
+  });
+
+  it("falls back to no tower cost when the paragon has no T4 data", () => {
+    expect(getMaxT4Cost(undefined, "medium")).toBe(0);
+    expect(getMaxT4Cost({}, "medium")).toBe(0);
   });
 });

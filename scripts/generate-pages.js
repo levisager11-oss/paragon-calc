@@ -24,7 +24,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { PARAGONS, DIFFICULTY_MULTIPLIERS, paragonSlug } from "../src/constants/paragons.js";
-import { getBasePrice, reverseCalculate, soloCeilingFacts } from "../src/utils/calculator.js";
+import { getBasePrice, getMaxT4Cost, reverseCalculate, soloCeilingFacts } from "../src/utils/calculator.js";
 import { FAQ_ITEMS } from "../src/constants/faq.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -398,7 +398,7 @@ function paragonPage(p) {
     label: DIFFICULTY_MULTIPLIERS[key].name,
     price: getBasePrice(p.mediumCost, key),
   }));
-  const maxT4 = p.maxT4MediumCost ? getBasePrice(p.maxT4MediumCost, "medium") : 0;
+  const maxT4 = getMaxT4Cost(p, "medium");
 
   const soloFacts = soloCeilingFacts(p);
 
@@ -473,7 +473,7 @@ function paragonPage(p) {
     <ul class="reqs">
       <li><strong>${num(solo.popsNeeded)}</strong> equivalent pops/damage (income counts as 4 pops per $1)</li>
       <li><strong>${solo.upgradesNeeded}</strong> sacrificed upgrade tiers</li>
-      ${solo.t5sNeeded ? `<li><strong>${solo.t5sNeeded}</strong> extra Tier 5 sacrifice (Master Double Cross)</li>` : ""}
+      ${solo.t5sNeeded ? `<li><strong>${solo.t5sNeeded}</strong> extra Tier 5 sacrifice (via ${esc(p.soloExtraT5Source)})</li>` : ""}
       ${solo.sacrificeCashNeeded ? `<li><strong>${money(solo.sacrificeCashNeeded)}</strong> spent on sacrificed towers</li>` : ""}
       <li><strong>${solo.totemsNeeded}</strong> Geraldo Paragon Power Totems</li>
     </ul>

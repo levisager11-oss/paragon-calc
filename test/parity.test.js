@@ -45,6 +45,14 @@ describe("API / web engine parity", () => {
       label: "slider-only build on easy",
       body: { tower: "Druid", difficulty: "easy", slider_cash: 900_000, geraldo_totems: 5 },
     },
+    {
+      label: "two-player co-op asking for more T5s than two players can field",
+      body: { tower: "Ninja Monkey", player_count: 2, tier5_count: 9, pops: 16_200_000, upgrade_count: 100 },
+    },
+    {
+      label: "three-player co-op with a solo-duplicate paragon",
+      body: { tower: "Ice Monkey", player_count: 3, tier5_count: 7, cash_spent: 900_000 },
+    },
   ];
 
   for (const { label, body } of CASES) {
@@ -62,6 +70,7 @@ describe("API / web engine parity", () => {
         paragon,
         difficulty: body.difficulty ?? "medium",
         gameMode: (body.player_count ?? 1) >= 2 ? "coop" : "solo",
+        playerCount: body.player_count ?? 1,
         pops: body.pops ?? 0,
         income: body.income ?? 0,
         upgrades: body.upgrade_count ?? 0,
@@ -85,6 +94,25 @@ describe("API / web engine parity", () => {
       expect(api.breakdown.totems.power).toBe(web.powerBreakdown.totems.power);
     });
   }
+
+  // player_count is documented as 1-4 and the lobby size decides how many extra
+  // Tier 5s exist, so the API must not collapse every co-op game to four players.
+  it("honours player_count rather than treating all co-op as four players", () => {
+    const degreeFor = (player_count) => {
+      _resetRateLimitForTesting();
+      const { req, res } = makeReqRes({
+        body: { tower: "Ninja Monkey", player_count, tier5_count: 9, pops: 16_200_000, upgrade_count: 100, cash_spent: 1_500_000 },
+      });
+      handler(req, res);
+      return res._body.result;
+    };
+
+    expect(degreeFor(2).breakdown.extra_t5s.power).toBe(3 * POWER_LIMITS.t5.pointsPerExtra);
+    expect(degreeFor(3).breakdown.extra_t5s.power).toBe(6 * POWER_LIMITS.t5.pointsPerExtra);
+    expect(degreeFor(4).breakdown.extra_t5s.power).toBe(POWER_LIMITS.t5.maxPower);
+    expect(degreeFor(2).degree).toBeLessThan(degreeFor(4).degree);
+    expect(degreeFor(2).warnings.map((w) => w.type)).toContain("invalid_extra_t5s_coop");
+  });
 
   it("returns whole-number power for every documented case", () => {
     for (const { body } of CASES) {

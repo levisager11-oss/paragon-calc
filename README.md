@@ -28,34 +28,54 @@ Degree 100.
 | Extra Tier 5s | 6,000 power each, beyond the three the Paragon consumes | 50,000 |
 | Geraldo's Paragon Power Totems | 2,000 power each | uncapped |
 
-Extra Tier 5s are limited by game mode: **9** in co-op (four players × three T5s,
-minus the three consumed), **0** in solo — except the Dart Monkey, which may add
-one via the *Master Double Cross* Monkey Knowledge.
+Extra Tier 5s are limited by lobby size. Every player fields three Tier 5s of
+the tower and the Paragon consumes three, so the ceiling is **3 × players − 3**:
+0 solo, 3 in two-player co-op, 6 in three-player and 9 in a full four-player
+game. Two Paragons get one more on top, because their tower is allowed a
+duplicate of a Tier 5 upgrade — the Dart Monkey via the *Master Double Cross*
+Monkey Knowledge, and the Ice Monkey via a level 13+ *Silas*. Both are declared
+as `soloExtraT5Source` on the paragon, not hardcoded in the engine.
 
 Degrees 2–99 sit on the community-documented cubic:
 
 ```
-power(D) = floor((50·D³ + 5025·D² + 168324·D + 843000) / 600)
+power(D) = round((50·D³ + 5025·D² + 168324·D + 843000) / 600)
 ```
+
+It has to be `round`: the cubic never lands on a whole number, and on 48 of the
+98 degrees its fractional part is above .5, so flooring puts the threshold one
+power below the published table (Degree 6 is 3,408, not 3,407) — enough to
+report the wrong degree for a build sitting exactly on a boundary.
 
 Degree 1 is 0 power and Degree 100 is a flat 200,000 — the cubic only reaches
 196,542 at D=100, so the last step is larger than the curve implies. That is
-real in-game behaviour, and `test/calculator.test.js` pins it against four
-independently documented values:
+real in-game behaviour, and `test/calculator.test.js` pins it against the
+documented values:
 
 | Fact | Value |
 | --- | --- |
 | Maxed solo Paragon | 160,000 power → **Degree 91** |
-| Maxed solo Dart Monkey (Master Double Cross) | 166,000 power → **Degree 92** |
+| Maxed solo Dart Monkey (Master Double Cross) or Ice Monkey (Silas 13+) | 166,000 power → **Degree 92** |
+| Maxed two-player co-op Paragon (3 extra Tier 5s) | 178,000 power → **Degree 95** |
 | Totems to take a maxed solo Paragon to Degree 100 | **20** |
 | Totems to take a maxed solo Dart Monkey to Degree 100 | **17** |
 
-If a balance patch moves any of these, that test file is the place to start —
-and `src/utils/calculator.js` is the single implementation. The API imports it
+The whole 100-row threshold table is reproduced exactly, not just these anchors.
+If a balance patch moves any of it, that test file is the place to start — and
+`src/utils/calculator.js` is the single implementation. The API imports it
 rather than keeping its own copy, and `test/parity.test.js` enforces that.
 
 Difficulty scales the base price by 0.85× (Easy), 1.00× (Medium), 1.08× (Hard)
-and 1.20× (Impoppable), rounded to the nearest $5.
+and 1.20× (Impoppable). Every Paragon's scaled price is already a whole $5, so
+the rounding in `getBasePrice` never has to correct anything.
+
+Tower prices are the exception: BTD6 applies the difficulty multiplier to each
+upgrade and rounds each one, so scaling a tower's total instead lands up to $5
+off. The priciest legal non-Tier-5 sacrifice — a Tier 4 with a +2 crosspath, the
+largest chunk the cash optimiser can move off the slider — is therefore stored
+per difficulty as `maxT4Cost`, not derived.
+
+Prices and the Paragon roster are current as of BTD6 **v56.1**.
 
 ## Design system
 
@@ -163,6 +183,11 @@ curl -X POST https://paragon-calc.vercel.app/api/paragon/calculate \
 `tower` accepts a tower name, a Paragon name or a Paragon id. Everything else is
 optional: `pops`, `income`, `cash_spent`, `slider_cash`, `tier5_count`,
 `upgrade_count`, `geraldo_totems`, `player_count` (1–4), `difficulty`.
+
+`player_count` sizes the lobby, and therefore the extra-Tier-5 ceiling: a
+two-player game allows 3, not the 9 a four-player game does. The web UI's
+solo/co-op toggle describes a full four-player lobby, so it is the `player_count:
+4` case.
 
 The response carries the degree, total power, a per-source breakdown with cap
 flags, warnings for anything wasted or disallowed, and the rate-limit state.

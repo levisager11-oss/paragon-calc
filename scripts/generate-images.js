@@ -137,7 +137,7 @@ ${fontCss}
 </style></head>
 <body>
   <div>
-    <div class="eyebrow">Bloons TD 6 &bull; Update 54+</div>
+    <div class="eyebrow">Bloons TD 6 &bull; Update 56+</div>
     <h1>BTD6 Paragon Calculator</h1>
     <p class="lede">Enter what you plan to sacrifice and get the exact <b>Degree 1&ndash;100</b> for any of the 13 Paragons &mdash; plus what is being wasted.</p>
   </div>

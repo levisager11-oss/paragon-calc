@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { PARAGONS, DIFFICULTY_MULTIPLIERS } from "../constants/paragons.js";
-import { calculateParagonData, getBasePrice, MAX_POWER } from "../utils/calculator.js";
+import { calculateParagonData, getBasePrice, maxT5sFor, MAX_POWER } from "../utils/calculator.js";
 import { decodeState, buildShareUrl } from "../utils/shareState.js";
 
 // The four capped power sources. Colour is not identity here: every bar is the
@@ -38,7 +38,7 @@ export default function EmbedCalculator() {
   const [totems, setTotems] = useState(initial.totems);
 
   const paragon = PARAGONS[paragonId] || PARAGONS.apex_plasma_master;
-  const maxT5 = gameMode === "coop" ? 9 : paragonId === "apex_plasma_master" ? 1 : 0;
+  const maxT5 = maxT5sFor(paragon, gameMode);
   const effT5 = Math.min(extraT5s, maxT5);
   const basePrice = getBasePrice(paragon.mediumCost, difficulty);
 

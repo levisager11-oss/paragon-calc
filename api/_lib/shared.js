@@ -25,8 +25,9 @@ export {
 import { PARAGONS } from "../../src/constants/paragons.js";
 
 export const API_VERSION      = "1.2";
-export const FORMULA_VERSION  = "1.1";
-export const FORMULA_REVISION = "2026-08";
+export const FORMULA_VERSION  = "1.2";
+// Tracks the BTD6 balance patch the roster, prices and rules are drawn from.
+export const FORMULA_REVISION = "btd6-v56.1";
 
 export const VALID_DIFFICULTIES = ["easy", "medium", "hard", "impoppable"];
 

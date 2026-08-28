@@ -9,7 +9,11 @@ export const MAX_POWER = 200000;
  * Degree thresholds, precomputed once at module load.
  *
  * Degrees 2-99 follow the community-documented cubic
- *   P(D) = floor((50·D³ + 5025·D² + 168324·D + 843000) / 600)
+ *   P(D) = round((50·D³ + 5025·D² + 168324·D + 843000) / 600)
+ * The cubic never lands on a whole number and never lands on exactly .5, so the
+ * rounding is unambiguous — and it has to be round, not floor: flooring puts 48
+ * of the 98 thresholds one power below the documented table (Degree 6 is 3,408,
+ * not 3,407), which is enough to report the wrong degree on an exact boundary.
  * Degree 1 is the starting degree (0 power) and Degree 100 is a flat 200,000 —
  * the cubic itself only reaches 196,542 at D=100, so the final step is larger
  * than the curve suggests. That is the real in-game behaviour, not a rounding
@@ -23,7 +27,7 @@ export const MAX_POWER = 200000;
 export const DEGREE_THRESHOLDS = (() => {
   const table = new Array(101).fill(0);
   for (let d = 2; d <= 99; d++) {
-    table[d] = Math.floor(
+    table[d] = Math.round(
       (50 * d ** 3 + 5025 * d ** 2 + 168324 * d + 843000) / 600
     );
   }
@@ -34,31 +38,52 @@ export const DEGREE_THRESHOLDS = (() => {
 /**
  * How many Tier 5s can be sacrificed *beyond* the three the Paragon requires.
  *
- * Co-op: four players contribute three T5s each, so 12 total − 3 required = 9.
- * Solo: none, except the Dart Monkey, whose "Master Double Cross" Monkey
- * Knowledge allows a second Crossbow Master.
+ * Every player can field three Tier 5s of one tower type, and the Paragon
+ * consumes three of them, so the limit scales with the number of players:
+ * 3 × players − 3. That is 0 solo, 3 in two-player co-op, 6 in three-player and
+ * 9 in a full four-player game. (The wiki's degree table pins the middle case:
+ * two-player co-op tops out at Degree 95, which is exactly 3 extra Tier 5s.)
+ *
+ * On top of that, two Paragons can absorb one *additional* Tier 5 because their
+ * tower is allowed a duplicate of one Tier 5 upgrade — the Dart Monkey via the
+ * Master Double Cross Monkey Knowledge, and the Ice Monkey via a level 13+
+ * Silas. Both are declared as `soloExtraT5Source` on the paragon itself rather
+ * than hardcoded here.
  *
  * Shared by the forward calculator, the Goal Planner and both UIs so the limit
  * can never be stated differently in one place than it is applied in another.
  */
-export function maxT5sFor(paragon, gameMode) {
-  if (gameMode === "coop") return 9;
-  if (paragon?.id === "apex_plasma_master") return 1;
-  return 0;
+export function maxT5sFor(paragon, gameMode, playerCount) {
+  const players = gameMode === "coop" ? clampPlayers(playerCount) : 1;
+  const fromPlayers = players * 3 - 3;
+  const duplicate = paragon?.soloExtraT5Source ? 1 : 0;
+  return fromPlayers + duplicate;
+}
+
+/**
+ * Co-op means "more than one player"; the UI only offers a solo/co-op toggle, so
+ * an unspecified co-op game is the full four-player lobby it describes.
+ */
+function clampPlayers(playerCount) {
+  if (playerCount === undefined || playerCount === null) return 4;
+  const n = Math.floor(Number(playerCount));
+  if (!Number.isFinite(n)) return 4;
+  return Math.min(4, Math.max(2, n));
 }
 
 /**
  * Highest total power reachable without Geraldo totems, for a given game mode.
- * Solo non-Dart = 160,000 (Degree 91); solo Dart = 166,000 (Degree 92).
+ * Solo with no duplicate Tier 5 = 160,000 (Degree 91); solo Dart Monkey or Ice
+ * Monkey = 166,000 (Degree 92).
  */
-export function powerCeilingWithoutTotems(paragon, gameMode) {
+export function powerCeilingWithoutTotems(paragon, gameMode, playerCount) {
   return (
     POWER_LIMITS.pops.maxPower +
     POWER_LIMITS.upgrades.maxPower +
     POWER_LIMITS.cash.maxPower +
     Math.min(
       POWER_LIMITS.t5.maxPower,
-      maxT5sFor(paragon, gameMode) * POWER_LIMITS.t5.pointsPerExtra
+      maxT5sFor(paragon, gameMode, playerCount) * POWER_LIMITS.t5.pointsPerExtra
     )
   );
 }
@@ -69,8 +94,8 @@ export function powerCeilingWithoutTotems(paragon, gameMode) {
  * the power ceiling reachable without totems, the degree that lands on, and how
  * many Geraldo totems close the remaining gap to Degree 100.
  *
- * Non-Dart paragon: 160,000 power / Degree 91 / 20 totems.
- * Dart Monkey (Master Double Cross): 166,000 power / Degree 92 / 17 totems.
+ * Paragon with no duplicate Tier 5: 160,000 power / Degree 91 / 20 totems.
+ * Dart Monkey (Master Double Cross) or Ice Monkey (Silas 13+): 166,000 / 92 / 17.
  */
 export function soloCeilingFacts(paragon) {
   const power = powerCeilingWithoutTotems(paragon, "solo");
@@ -95,6 +120,7 @@ export function reverseCalculate({
   paragon,
   difficulty,
   gameMode,
+  playerCount,
   targetDegree,
   useExtraT5s      = true,
   useUpgrades      = true,
@@ -108,7 +134,7 @@ export function reverseCalculate({
   const sacrificePowerRate = 20000 / basePrice;
   const sliderPowerRate    = 20000 / (basePrice * 1.05);
 
-  const maxT5s = useExtraT5s ? maxT5sFor(paragon, gameMode) : 0;
+  const maxT5s = useExtraT5s ? maxT5sFor(paragon, gameMode, playerCount) : 0;
   const maxT5Power = Math.min(
     POWER_LIMITS.t5.maxPower,
     maxT5s * POWER_LIMITS.t5.pointsPerExtra
@@ -261,6 +287,21 @@ export function getBasePrice(mediumCost, difficulty) {
 }
 
 /**
+ * Cost of the priciest legal non-Tier-5 sacrifice for a Paragon's tower — a
+ * Tier 4 with a +2 crosspath — on the given difficulty.
+ *
+ * These are read from a per-difficulty table rather than derived from the Medium
+ * price, because BTD6 applies the difficulty multiplier to each upgrade and
+ * rounds it individually. Scaling the total instead lands up to $5 off (a 2-4-0
+ * Dart Monkey is $7,205 on Easy, not the $7,210 the multiplier suggests).
+ */
+export function getMaxT4Cost(paragon, difficulty) {
+  const costs = paragon?.maxT4Cost;
+  if (!costs) return 0;
+  return costs[difficulty] ?? costs.medium ?? 0;
+}
+
+/**
  * Returns the exact power threshold required to unlock a specific degree.
  */
 export function getPowerThreshold(degree) {
@@ -290,6 +331,7 @@ export function calculateParagonData({
   paragon, // Object from PARAGONS
   difficulty, // "easy", "medium", "hard", "impoppable"
   gameMode, // "solo", "coop"
+  playerCount, // 2-4 in co-op; ignored solo. Defaults to a full four-player lobby.
   pops, // number of pops
   income, // cash generated
   upgrades, // number of upgrade tiers on sacrificed non-T5 towers
@@ -301,10 +343,11 @@ export function calculateParagonData({
   const basePrice = getBasePrice(paragon.mediumCost, difficulty);
 
   // 1. Extra T5s Power
-  // Only count T5s the game actually allows for this mode/paragon — solo play
-  // permits none, except the Dart Monkey's Master Double Cross. (The API does
-  // the same, so both surfaces agree for identical inputs.)
-  const allowedT5s = maxT5sFor(paragon, gameMode);
+  // Only count T5s the game actually allows for this mode/paragon: 3 per player
+  // beyond the three the Paragon eats, plus one for the Paragons whose tower may
+  // hold a duplicate Tier 5. (The API does the same, so both surfaces agree for
+  // identical inputs.)
+  const allowedT5s = maxT5sFor(paragon, gameMode, playerCount);
   const effectiveExtraT5s = Math.min(extraT5s, allowedT5s);
   const rawT5Power = effectiveExtraT5s * POWER_LIMITS.t5.pointsPerExtra;
   const t5Power = Math.min(POWER_LIMITS.t5.maxPower, rawT5Power);
@@ -470,15 +513,17 @@ export function calculateParagonData({
     const wastedT5s = Math.floor((rawT5Power - POWER_LIMITS.t5.maxPower) / POWER_LIMITS.t5.pointsPerExtra);
     warnings.push({
       type: "t5",
-      text: `Extra T5 power is fully maxed (50,000 pts). ${wastedT5s} extra T5${wastedT5s === 1 ? "" : "s"} provide no benefit.`
+      text: `Extra T5 power is fully maxed (50,000 pts). ${wastedT5s} extra T5${wastedT5s === 1 ? " provides" : "s provide"} no benefit.`
     });
   }
   if (extraT5s > allowedT5s) {
+    const ignoredT5s = extraT5s - allowedT5s;
+    const coopPlayers = (allowedT5s - (paragon.soloExtraT5Source ? 1 : 0)) / 3 + 1;
     warnings.push({
       type: "mode_restriction",
       text: gameMode === "solo"
-        ? `In Single Player (Solo), only the Dart Monkey can sacrifice an extra T5 (using Master Double Cross). ${extraT5s - allowedT5s} extra T5${extraT5s - allowedT5s === 1 ? " was" : "s were"} ignored — switch to Co-op if this is a multiplayer game.`
-        : `Co-op allows at most 9 extra T5s (four players × three T5s, minus the three the Paragon consumes). ${extraT5s - allowedT5s} extra T5${extraT5s - allowedT5s === 1 ? " was" : "s were"} ignored.`
+        ? `In Single Player (Solo) the Paragon consumes all three of your Tier 5s${paragon.soloExtraT5Source ? `, and only one more is possible — via ${paragon.soloExtraT5Source}` : ", so no extra Tier 5 is possible"}. ${ignoredT5s} extra T5${ignoredT5s === 1 ? " was" : "s were"} ignored — switch to Co-op if this is a multiplayer game.`
+        : `A ${coopPlayers}-player game allows at most ${allowedT5s} extra T5${allowedT5s === 1 ? "" : "s"} (${coopPlayers} × three T5s, minus the three the Paragon consumes${paragon.soloExtraT5Source ? ", plus one duplicate" : ""}). ${ignoredT5s} extra T5${ignoredT5s === 1 ? " was" : "s were"} ignored.`
     });
   }
 
