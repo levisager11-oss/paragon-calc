@@ -13,9 +13,15 @@ import { PARAGONS, POWER_LIMITS } from "./paragons.js";
 
 const TOTEM_POWER = 2000;
 
-// A representative non-Dart paragon: solo play grants it no extra Tier 5s.
+// A representative paragon whose tower has no duplicate-T5 route: solo play
+// grants it no extra Tier 5s at all.
 const STANDARD = PARAGONS.ascended_shadow;
 const DART = PARAGONS.apex_plasma_master;
+
+// The Paragons that can absorb one extra Tier 5 in solo play, listed from the
+// roster so a new one is picked up without editing this copy.
+const DUPLICATE_T5 = Object.values(PARAGONS).filter((p) => p.soloExtraT5Source);
+const duplicateT5Towers = DUPLICATE_T5.map((p) => p.tower).join(" and the ");
 
 export const SOLO_CEILING = soloCeilingFacts(STANDARD);  // 160,000 power · Degree 91 · 20 totems
 export const DART_CEILING = soloCeilingFacts(DART);      // 166,000 power · Degree 92 · 17 totems
@@ -35,7 +41,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "How do I get a Degree 100 Paragon in solo play?",
-    a: `In a solo game the standard categories top out at ${n(SOLO_CEILING.power)} power, which is Degree ${SOLO_CEILING.degree}, because you normally can't sacrifice extra Tier 5s. The Dart Monkey is the exception — Master Double Cross lets it add one extra Tier 5 for ${n(DART_CEILING.power)} power, or Degree ${DART_CEILING.degree}. To reach the full ${n(MAX_POWER)} (Degree 100) solo you must absorb Geraldo's Paragon Power Totems, which add ${n(TOTEM_POWER)} uncapped power each: ${SOLO_CEILING.totems} of them after maxing everything else, or ${DART_CEILING.totems} for a Dart Monkey.`,
+    a: `In a solo game the standard categories top out at ${n(SOLO_CEILING.power)} power, which is Degree ${SOLO_CEILING.degree}, because you normally can't sacrifice extra Tier 5s. The ${duplicateT5Towers} are the exceptions — Master Double Cross and a level 13+ Silas each let one duplicate Tier 5 be absorbed, worth ${n(DART_CEILING.power)} power in total, or Degree ${DART_CEILING.degree}. To reach the full ${n(MAX_POWER)} (Degree 100) solo you must absorb Geraldo's Paragon Power Totems, which add ${n(TOTEM_POWER)} uncapped power each: ${SOLO_CEILING.totems} of them after maxing everything else, or ${DART_CEILING.totems} with that duplicate Tier 5.`,
   },
   {
     q: "What is the cash slider and is it worth using?",
@@ -43,7 +49,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "How many Paragons are in Bloons TD 6?",
-    a: `As of Update 54+ there are ${PARAGON_COUNT} Paragons: ${Object.values(PARAGONS).map(paragonSummary).join(", ")}.`,
+    a: `As of Update 56+ there are ${PARAGON_COUNT} Paragons: ${Object.values(PARAGONS).map(paragonSummary).join(", ")}.`,
   },
   {
     q: "Which Paragon is the cheapest and which is the most expensive?",
@@ -51,7 +57,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "Do extra Tier 5 sacrifices increase a Paragon's degree?",
-    a: `Yes. Each Tier 5 sacrificed beyond the three required adds ${n(POWER_LIMITS.t5.pointsPerExtra)} power, up to a ${n(POWER_LIMITS.t5.maxPower)} cap. In solo you usually can't place more than the base three — the Dart Monkey can add one via Master Double Cross — but in co-op four players contribute three Tier 5s each, so up to 9 extra can be sacrificed. That is why co-op reaches high degrees far more cheaply, and why co-op can hit Degree 100 with no totems at all.`,
+    a: `Yes. Each Tier 5 sacrificed beyond the three required adds ${n(POWER_LIMITS.t5.pointsPerExtra)} power, up to a ${n(POWER_LIMITS.t5.maxPower)} cap. In solo you usually can't place more than the base three — the ${duplicateT5Towers} can each add one, via Master Double Cross and a level 13+ Silas — but in co-op every player contributes three Tier 5s, so a two-player game allows 3 extra and a full four-player game allows 9. That is why co-op reaches high degrees far more cheaply, and why co-op can hit Degree 100 with no totems at all.`,
   },
   {
     q: "What are Geraldo's Paragon Power Totems?",
@@ -67,6 +73,6 @@ export const FAQ_ITEMS = [
   },
   {
     q: "Is this calculator accurate and up to date?",
-    a: "It models the current Update 54+ Paragon formula, including the cash slider and Geraldo totems, and is open-source so the math can be checked. The degree curve is pinned by a regression test against the documented in-game values. Use the Goal Planner to work backwards from a target degree, or enter your sacrifices directly to see the exact degree you will get.",
+    a: "It models the current Update 56+ Paragon formula, including the cash slider and Geraldo totems, and is open-source so the math can be checked. The degree curve is pinned by a regression test against the documented in-game values. Use the Goal Planner to work backwards from a target degree, or enter your sacrifices directly to see the exact degree you will get.",
   },
 ];

@@ -39,7 +39,7 @@ import { randomUUID } from "node:crypto";
 import {
   API_VERSION, FORMULA_VERSION, FORMULA_REVISION,
   VALID_DIFFICULTIES, PARAGONS, POWER_LIMITS,
-  calculateParagonData,
+  calculateParagonData, maxT5sFor,
 } from "../_lib/shared.js";
 
 // ─── Calculator ──────────────────────────────────────────────────────────────
@@ -49,12 +49,12 @@ import {
 // layer only reshapes the engine's result into the documented JSON contract.
 
 function runCalculation({
-  paragon, difficulty, gameMode,
+  paragon, difficulty, gameMode, playerCount,
   pops, income, upgrades, extraT5s,
   sacrificedTowerCash, sliderCash, totems,
 }) {
   const calc = calculateParagonData({
-    paragon, difficulty, gameMode,
+    paragon, difficulty, gameMode, playerCount,
     pops, income, upgrades, extraT5s,
     sacrificedTowerCash, sliderCash, totems,
   });
@@ -66,27 +66,31 @@ function runCalculation({
 
   const warnings = [];
 
+  const allowedT5s = maxT5sFor(paragon, gameMode, playerCount);
+
   if (calc.ignoredExtraT5s > 0 && gameMode === "solo") {
     warnings.push({
       type: "invalid_extra_t5s_solo",
-      message:
-        "In solo play, only Dart Monkey can sacrifice an extra T5 (via Master Double Cross). " +
-        "Extra T5s were ignored for this calculation.",
+      message: paragon.soloExtraT5Source
+        ? `In solo play this Paragon can absorb at most 1 extra T5, via ${paragon.soloExtraT5Source}. ` +
+          "The surplus was ignored for this calculation."
+        : "In solo play the Paragon consumes all three of your T5s, so no extra T5 is possible. " +
+          "Extra T5s were ignored for this calculation.",
     });
   }
   if (calc.ignoredExtraT5s > 0 && gameMode === "coop") {
     warnings.push({
       type: "invalid_extra_t5s_coop",
       message:
-        "Co-op allows at most 9 extra T5s (four players with three T5s each, minus the three " +
-        "the Paragon consumes). The surplus was ignored for this calculation.",
+        `A ${playerCount}-player game allows at most ${allowedT5s} extra T5s (three per player, minus the ` +
+        "three the Paragon consumes). The surplus was ignored for this calculation.",
     });
   }
   if (bd.t5.capped) {
     // 9 extra T5s are worth 54,000 raw power against a 50,000 cap, so the
     // overflow is reported as power rather than as a whole number of towers.
     const wastedPower =
-      Math.min(extraT5s, 9) * POWER_LIMITS.t5.pointsPerExtra - POWER_LIMITS.t5.maxPower;
+      Math.min(extraT5s, allowedT5s) * POWER_LIMITS.t5.pointsPerExtra - POWER_LIMITS.t5.maxPower;
     warnings.push({
       type: "extra_t5s_capped",
       message: `Extra-T5 power is capped at 50,000. ${wastedPower.toLocaleString()} power from extra T5s is wasted.`,
@@ -439,6 +443,7 @@ export default function handler(req, res) {
     paragon,
     difficulty,
     gameMode,
+    playerCount,
     pops,
     income,
     upgrades:            upgradeCount,
@@ -458,10 +463,10 @@ export default function handler(req, res) {
       game:  "BTD6",
       notes: [
         "Degree = calculateDegreeFromPower(totalPower) where totalPower = sum of all power sources.",
-        "Power threshold for degrees 2-99: floor((50D³ + 5025D² + 168324D + 843000) / 600).",
+        "Power threshold for degrees 2-99: round((50D³ + 5025D² + 168324D + 843000) / 600).",
         "Degree 1 = 0 power; Degree 100 = a flat 200,000 (the cubic only reaches 196,542 at D=100).",
         "Power caps: pops 90k | upgrades 10k | cash 60k | extra T5s 50k | totems uncapped.",
-        "Extra T5s are clamped to what the mode allows: 9 in co-op, 0 solo (1 for Dart Monkey via Master Double Cross).",
+        "Extra T5s are clamped to what the lobby allows: 3 × player_count − 3, plus 1 for the Dart Monkey (Master Double Cross) and the Ice Monkey (Silas 13+).",
       ],
     },
     result: {

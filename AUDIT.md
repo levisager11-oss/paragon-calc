@@ -135,3 +135,125 @@ deployment. All pass:
 The API results confirm Vercel's dependency tracing follows `api/_lib/shared.js`
 into `src/constants/paragons.js` and `src/utils/calculator.js`, so the
 de-duplication in item 26 is safe in production and not just under test.
+
+---
+
+# Follow-up audit — the maths and the prices
+
+A second pass over the calculation engine and every price in the roster,
+checked line by line against [Blooncyclopedia](https://www.bloonswiki.com)
+(reachable from this environment, unlike the Fandom wiki) as of BTD6 **v56.1**.
+
+**Headline:** the previous audit's conclusion that "no change was needed to the
+maths" was wrong on one point, and the price data was wrong on thirteen. The
+four anchor values it checked all still hold — but they are four points on a
+100-row curve, and the four of them happen to sit on degrees where the rounding
+error does not show. The engine's *structure* (caps, rates, the cubic itself)
+was and is correct.
+
+## Formula
+
+| Constant | Implemented | Verdict |
+| --- | --- | --- |
+| Degree 100 total | 200,000 power | correct |
+| Pops/damage | 1 power / 180, cap 90,000 | correct |
+| Income | $45 = 1 power ($1 = 4 pops) | correct |
+| Upgrade tiers | 100 power/tier, cap 10,000 | correct |
+| Cash | 20,000 power per base price, cap 60,000 | correct |
+| Cash slider | 5% premium, max 3.15× base price | correct |
+| Extra T5s | 6,000 each, cap 50,000 | correct |
+| Extra T5 ceiling | flat 9 in co-op, 1 for Dart solo | **wrong — fixed** |
+| Geraldo totem | 2,000 power, uncapped | correct |
+| Difficulty | 0.85 / 1.00 / 1.08 / 1.20 | correct |
+| Degree curve | cubic, floored | **wrong rounding — fixed** |
+| Paragon roster | 13, newest Root of all Nature (U54) | current |
+
+The cash constants were verified against a source that states them
+independently rather than restating the formula: a Glaive Dominus at $375,000
+is documented as costing $18.75 per power via sacrifices and $19.6875 via the
+slider, with the slider capped at $1,181,250 — exactly `basePrice / 20000`,
+`× 1.05`, and `× 3.15`.
+
+### 1. The degree curve was floored; it rounds
+
+`P(D) = (50D³ + 5025D² + 168324D + 843000) / 600` never lands on a whole number.
+On 48 of the 98 degrees in range its fractional part is above .5, so `floor`
+produced a threshold one power below the published table — Degree 6 read 3,407
+where the game wants 3,408. A build sitting exactly on such a boundary was
+reported one degree too high, and the Goal Planner asked for exactly one power
+too little. Switched to `Math.round`; the engine now reproduces all 100 rows of
+the documented table, which is asserted directly rather than by four samples.
+
+### 2. Extra Tier 5s ignored the lobby size
+
+The ceiling is `3 × players − 3`, so two-player co-op allows 3 extra Tier 5s and
+three-player allows 6. The engine returned 9 for any co-op game. The public API
+documents `player_count` as 1–4 and validated it, then discarded everything but
+"is it ≥ 2" — a two-player build was scored as if it had four players' towers.
+The wiki's own degree table pins the case that was wrong: two-player co-op tops
+out at Degree 95, which the engine now reproduces.
+
+### 3. The solo duplicate-Tier-5 rule missed Silas
+
+`Master Double Cross` is no longer the only route to a fourth Tier 5 in solo:
+Silas at level 13+ lets one player hold two Ice Monkeys with the same Tier 5
+upgrade, so the Herald of Everfrost also reaches 166,000 power / Degree 92 solo
+on 17 totems, not 160,000 / Degree 91 on 20. The rule now lives on the paragon
+as `soloExtraT5Source` instead of an `id === "apex_plasma_master"` check, so the
+engine, both UIs, the API warnings and the FAQ copy all read the same field.
+
+### 4. Six of thirteen Paragon prices were wrong
+
+| Paragon | Was | Correct (Medium) |
+| --- | --- | --- |
+| Glaive Dominus | $275,000 | **$375,000** |
+| Ascended Shadow | $600,000 | **$500,000** |
+| Nautic Siege Core | $500,000 | **$400,000** |
+| Master Builder | $650,000 | **$600,000** |
+| Magus Perfectus | $750,000 | **$800,000** |
+| B.O.M.B. | $600,000 | **$650,000** |
+
+Four of these came from commit `936e26a`, "Update Paragon prices for latest
+balance patch", which moved five prices and got four of them wrong — Glaive
+Dominus, Ascended Shadow, Nautic Siege Core and Magus Perfectus were all changed
+away from their correct values. The other two are the v55.0 balance patch, which
+swapped the pair that is easiest to confuse: B.O.M.B. went $600,000 → $650,000
+in the same update that took Master Builder $650,000 → $600,000, and neither
+landed here.
+
+Base price is the denominator of the cash-per-power rate, so these were not
+cosmetic: a Glaive Dominus build was scored at $13.75 per power instead of
+$18.75, inflating its cash contribution by 36%.
+
+All 13 medium prices and all 52 difficulty-scaled prices are now pinned in
+`test/version.test.js`.
+
+### 5. Seven of thirteen max-T4 sacrifice costs were wrong
+
+`maxT4MediumCost` — the priciest legal non-Tier-5 sacrifice, which the cash
+optimiser uses to decide how much can come off the slider — was wrong for seven
+Paragons, by as much as $1,100 (Navarch of the Seas: $12,400 → $13,500). The
+Herald of Everfrost carried the Druid's number. The `maxT4Build` crosspaths were
+all correct.
+
+The other three difficulties were also being derived by multiplying the Medium
+total. BTD6 applies the multiplier to each upgrade and rounds it individually,
+so the derived figure is up to $5 off (a 2-4-0 Dart Monkey is $7,205 on Easy,
+not $7,210). The field is now `maxT4Cost`, a stored value per difficulty, read
+through `getMaxT4Cost`.
+
+### 6. The embed widget had re-grown its own copy of the T5 rule
+
+`EmbedCalculator.jsx` computed `gameMode === "coop" ? 9 : paragonId ===
+"apex_plasma_master" ? 1 : 0` inline — the exact duplication item 26 removed
+from the API. It calls `maxT5sFor` now.
+
+## Not changed
+
+- **The cubic itself, and every power constant and cap.** They verify against
+  the published table and the per-source rates.
+- **"Pops" as the input label.** The wiki now describes this source as damage
+  dealt rather than pops, but it is the same counter and the same divisor, and
+  "pops" is what the community calls it.
+- **The API's warning `type` codes.** Their conditions changed; the documented
+  strings did not.

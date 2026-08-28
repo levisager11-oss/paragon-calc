@@ -8,8 +8,8 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { PARAGONS, DIFFICULTY_MULTIPLIERS } from "./constants/paragons";
 import {
-  calculateParagonData, reverseCalculate, getBasePrice, splitIntoSacrificeTowers,
-  maxT5sFor, soloCeilingFacts, MAX_POWER,
+  calculateParagonData, reverseCalculate, getBasePrice, getMaxT4Cost,
+  splitIntoSacrificeTowers, maxT5sFor, soloCeilingFacts, MAX_POWER,
 } from "./utils/calculator";
 import AdUnit from "./components/AdUnit";
 import ParagonIcon from "./components/ParagonIcon";
@@ -175,10 +175,10 @@ export default function App() {
   // Cost of the most expensive non-T5 tower you can sacrifice (a Tier-4 with a
   // +2 crosspath), scaled to the selected difficulty. This is the largest cash
   // chunk a single sacrifice tower can absorb at 100% efficiency.
-  const maxT4Cost = useMemo(() => {
-    if (!activeParagon.maxT4MediumCost) return 0;
-    return getBasePrice(activeParagon.maxT4MediumCost, difficulty);
-  }, [activeParagon, difficulty]);
+  const maxT4Cost = useMemo(
+    () => getMaxT4Cost(activeParagon, difficulty),
+    [activeParagon, difficulty]
+  );
 
   // How much of the current slider cash could be re-routed into whole sacrifice
   // towers (100% efficient) instead of staying on the 95%-efficient slider.
@@ -317,7 +317,7 @@ export default function App() {
             </span>
             <div className="logo-text">
               <h1>BTD6 Paragon Calculator</h1>
-              <p>Bloons TD 6 · Update 54+</p>
+              <p>Bloons TD 6 · Update 56+</p>
             </div>
           </div>
 
@@ -621,13 +621,13 @@ export default function App() {
                     <div className="control-row">
                       <p className="input-note input-note-tight">
                         {gameMode === "solo" ? (
-                          selectedParagonId === "apex_plasma_master" ? (
-                            "Solo, the Dart Monkey can sacrifice one extra T5: the Master Double Cross Monkey Knowledge allows a second Crossbow Master."
+                          activeParagon.soloExtraT5Source ? (
+                            `Solo, the ${activeParagon.tower} can sacrifice one extra T5 — ${activeParagon.soloExtraT5Source} allows a second copy of one Tier 5 upgrade.`
                           ) : (
                             `Solo, you cannot field a fourth ${activeParagon.tower} Tier 5 — the Paragon consumes all three. Switch to Co-op to plan multiplayer sacrifices.`
                           )
                         ) : (
-                          "Co-op, each of the four players can place their own Tier 5s. Three go into the Paragon, leaving up to 9 extra."
+                          `Co-op, each of the four players can place three Tier 5s of their own. Three go into the Paragon, leaving up to ${allowedT5s} extra${activeParagon.soloExtraT5Source ? ` — nine, plus one duplicate from ${activeParagon.soloExtraT5Source}` : ""}.`
                         )}
                       </p>
                       <div>
@@ -646,8 +646,8 @@ export default function App() {
                     {gameMode === "coop" && (
                       <div className="quick-buttons">
                         <button className="quick-btn" onClick={() => setExtraT5s(0)}>None</button>
-                        <button className="quick-btn" onClick={() => setExtraT5s(4)}>4 extra</button>
-                        <button className="quick-btn" onClick={() => setExtraT5s(9)}>Max (9 extra)</button>
+                        <button className="quick-btn" onClick={() => setExtraT5s(Math.floor(allowedT5s / 2))}>{Math.floor(allowedT5s / 2)} extra</button>
+                        <button className="quick-btn" onClick={() => setExtraT5s(allowedT5s)}>Max ({allowedT5s} extra)</button>
                       </div>
                     )}
                   </div>
@@ -777,7 +777,7 @@ export default function App() {
                       <p className="input-note input-note-tight">
                         Paragon Power Totems from Geraldo&rsquo;s shop add flat power that ignores every cap.
                         Solo, they are the only route to Degree 100: {SOLO.totems} totems on top of an
-                        otherwise maxed build, or {SOLO_DART.totems} for a Dart Monkey.
+                        otherwise maxed build, or {SOLO_DART.totems} for a Dart Monkey or Ice Monkey.
                       </p>
                       <div>
                         <input
@@ -794,7 +794,7 @@ export default function App() {
                     <div className="quick-buttons">
                       <button className="quick-btn" onClick={() => setTotems(0)}>None</button>
                       <button className="quick-btn" onClick={() => setTotems(10)}>10</button>
-                      <button className="quick-btn" onClick={() => setTotems(SOLO_DART.totems)}>{SOLO_DART.totems} (solo Dart)</button>
+                      <button className="quick-btn" onClick={() => setTotems(SOLO_DART.totems)}>{SOLO_DART.totems} (solo, duplicate T5)</button>
                       <button className="quick-btn" onClick={() => setTotems(SOLO.totems)}>{SOLO.totems} (solo, any other)</button>
                     </div>
                   </div>
@@ -1125,7 +1125,7 @@ export default function App() {
               <p className="section-lede">
                 A Paragon&rsquo;s degree comes from Paragon Power Points, which top out at{" "}
                 {MAX_POWER.toLocaleString()} at Degree 100. Four categories each have their own ceiling;
-                Geraldo&rsquo;s totems sit outside all of them. These are the Update 54+ rates.
+                Geraldo&rsquo;s totems sit outside all of them. These are the Update 56+ rates.
               </p>
 
               <div className="guide-grid">
@@ -1167,8 +1167,8 @@ export default function App() {
                   <p>Each Paragon Power Totem adds a flat 2,000 power.</p>
                   <ul className="guide-list">
                     <li>Solo, the four categories stop at <strong>{SOLO.power.toLocaleString()} power</strong> — Degree {SOLO.degree}.</li>
-                    <li>A solo Dart Monkey reaches <strong>{SOLO_DART.power.toLocaleString()}</strong> — Degree {SOLO_DART.degree}.</li>
-                    <li>Closing the gap takes <strong>{SOLO.totems} totems</strong>, or <strong>{SOLO_DART.totems}</strong> for a Dart Monkey.</li>
+                    <li>A solo Dart Monkey or Ice Monkey reaches <strong>{SOLO_DART.power.toLocaleString()}</strong> — Degree {SOLO_DART.degree}.</li>
+                    <li>Closing the gap takes <strong>{SOLO.totems} totems</strong>, or <strong>{SOLO_DART.totems}</strong> with that extra Tier 5.</li>
                     <li>In co-op, four players&rsquo; Tier 5s reach Degree 100 with no totems at all.</li>
                   </ul>
                 </div>
