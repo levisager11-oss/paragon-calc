@@ -10,7 +10,8 @@
  *   pops           {number}  Total pops across all sacrificed towers       (default: 0)
  *   cash_spent     {number}  Cash spent on non-T5 towers before sacrifice  (default: 0)
  *   tier5_count    {number}  Extra T5s sacrificed BEYOND the 3 required    (default: 0, integer)
- *   upgrade_count  {number}  Total upgrade tiers on sacrificed non-T5s     (default: 0, integer)
+ *   upgrade_count  {number}  Accepted for older clients; ignored since BTD6 v57.0 removed
+ *                            upgrade-tier power (a warning is returned when it is > 0)
  *   geraldo_totems {number}  Geraldo Paragon Power Totems absorbed          (default: 0, integer)
  *   player_count   {number}  1 = solo, 2–4 = co-op                         (default: 1, integer 1–4)
  *   difficulty     {string}  "easy"|"medium"|"hard"|"impoppable"            (default: "medium")
@@ -39,8 +40,11 @@ import { randomUUID } from "node:crypto";
 import {
   API_VERSION, FORMULA_VERSION, FORMULA_REVISION,
   VALID_DIFFICULTIES, PARAGONS, POWER_LIMITS,
+  CASH_POWER_PER_BASE_PRICE, SLIDER_PREMIUM, MAX_EQUIVALENT_POPS, CASH_CAP_MULTIPLE,
   calculateParagonData, maxT5sFor,
 } from "../_lib/shared.js";
+
+const fmt = (n) => n.toLocaleString("en-US");
 
 // ─── Calculator ──────────────────────────────────────────────────────────────
 //
@@ -55,13 +59,13 @@ function runCalculation({
 }) {
   const calc = calculateParagonData({
     paragon, difficulty, gameMode, playerCount,
-    pops, income, upgrades, extraT5s,
+    pops, income, extraT5s,
     sacrificedTowerCash, sliderCash, totems,
   });
 
   const basePrice           = calc.basePrice;
-  const sacrificePowerRatio = 20000 / basePrice;
-  const sliderPowerRatio    = 20000 / (basePrice * 1.05);
+  const sacrificePowerRatio = CASH_POWER_PER_BASE_PRICE / basePrice;
+  const sliderPowerRatio    = CASH_POWER_PER_BASE_PRICE / (basePrice * SLIDER_PREMIUM);
   const bd                  = calc.powerBreakdown;
 
   const warnings = [];
@@ -93,26 +97,27 @@ function runCalculation({
       Math.min(extraT5s, allowedT5s) * POWER_LIMITS.t5.pointsPerExtra - POWER_LIMITS.t5.maxPower;
     warnings.push({
       type: "extra_t5s_capped",
-      message: `Extra-T5 power is capped at 50,000. ${wastedPower.toLocaleString()} power from extra T5s is wasted.`,
+      message: `Extra-T5 power is capped at ${fmt(POWER_LIMITS.t5.maxPower)}. ${fmt(wastedPower)} power from extra T5s is wasted.`,
     });
   }
-  if (bd.upgrades.capped) {
+  if (upgrades > 0) {
     warnings.push({
-      type: "upgrades_capped",
-      message: `Upgrade power is capped at 10,000. ${upgrades - 100} upgrade tier(s) are wasted.`,
+      type: "upgrades_ignored",
+      message: "Upgrade tiers on sacrificed towers no longer give Paragon power (removed in BTD6 v57.0). " +
+        "upgrade_count was ignored; the cash those towers cost still counts through cash_spent.",
     });
   }
   if (bd.pops.capped) {
-    const wastedPops = Math.round(pops + income * 4 - 16200000);
+    const wastedPops = Math.round(pops + income * 4 - MAX_EQUIVALENT_POPS);
     warnings.push({
       type: "pops_capped",
-      message: `Pops/income power is capped at 90,000. ${wastedPops.toLocaleString()} equivalent pop(s) are wasted.`,
+      message: `Pops/income power is capped at ${fmt(POWER_LIMITS.pops.maxPower)}. ${fmt(wastedPops)} equivalent pop(s) are wasted.`,
     });
   }
   if (bd.cash.capped && calc.wastedCash > 0) {
     warnings.push({
       type: "cash_capped",
-      message: `Cash power is capped at 60,000. $${calc.wastedCash.toLocaleString()} is wasted — reduce cash sacrifice or slider input.`,
+      message: `Cash power is capped at ${fmt(POWER_LIMITS.cash.maxPower)}. $${fmt(calc.wastedCash)} is wasted — reduce cash sacrifice or slider input.`,
     });
   }
 
@@ -130,12 +135,14 @@ function runCalculation({
         fill_pct:  round2(bd.pops.pct),
         note:      "1 power per 180 pops (equivalent: $45 income = 180 pops)",
       },
+      // Kept as a fixed zero entry so clients written before v57.0 that read
+      // breakdown.upgrades keep working.
       upgrades: {
-        power:     bd.upgrades.power,
-        max_power: bd.upgrades.max,
-        capped:    bd.upgrades.capped,
-        fill_pct:  round2(bd.upgrades.pct),
-        note:      "100 power per upgrade tier on sacrificed non-T5 towers (max 100 tiers = 10,000 power)",
+        power:     0,
+        max_power: 0,
+        capped:    false,
+        fill_pct:  null,
+        note:      "Removed in BTD6 v57.0: upgrade tiers on sacrificed towers no longer give power",
       },
       cash: {
         power:     bd.cash.power,
@@ -465,7 +472,7 @@ export default function handler(req, res) {
         "Degree = calculateDegreeFromPower(totalPower) where totalPower = sum of all power sources.",
         "Power threshold for degrees 2-99: round((50D³ + 5025D² + 168324D + 843000) / 600).",
         "Degree 1 = 0 power; Degree 100 = a flat 200,000 (the cubic only reaches 196,542 at D=100).",
-        "Power caps: pops 90k | upgrades 10k | cash 60k | extra T5s 50k | totems uncapped.",
+        `Power caps: pops ${POWER_LIMITS.pops.maxPower / 1000}k | cash ${POWER_LIMITS.cash.maxPower / 1000}k (${CASH_CAP_MULTIPLE}× base price) | extra T5s ${POWER_LIMITS.t5.maxPower / 1000}k | totems uncapped. Upgrade tiers no longer count (v57.0).`,
         "Extra T5s are clamped to what the lobby allows: 3 × player_count − 3, plus 1 for the Dart Monkey (Master Double Cross) and the Ice Monkey (Silas 13+).",
       ],
     },

@@ -168,7 +168,6 @@ export async function exportResultImage({ paragon, difficulty, gameMode, results
   const bw = W - bx - 64;
   const bars = [
     { label: "Pops & income", key: "pops" },
-    { label: "Upgrade tiers", key: "upgrades" },
     { label: "Cash invested", key: "cash" },
     { label: "Extra Tier 5s", key: "t5" },
   ];

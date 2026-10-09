@@ -4,7 +4,7 @@
  * Emits real, crawlable HTML for the SEO content pages that the single-page
  * calculator app can't serve well on its own:
  *
- *   /paragons                       — hub listing all 13 Paragons
+ *   /paragons                       — hub listing every Paragon
  *   /paragons/<slug>                — one landing page per Paragon
  *   /faq                            — FAQ page (matches the FAQPage JSON-LD)
  *   /sitemap.xml                    — full sitemap including the above
@@ -23,7 +23,7 @@
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { mkdirSync, writeFileSync, existsSync } from "node:fs";
-import { PARAGONS, DIFFICULTY_MULTIPLIERS, paragonSlug } from "../src/constants/paragons.js";
+import { PARAGONS, DIFFICULTY_MULTIPLIERS, GAME_VERSION, paragonSlug } from "../src/constants/paragons.js";
 import { getBasePrice, getMaxT4Cost, reverseCalculate, soloCeilingFacts } from "../src/utils/calculator.js";
 import { FAQ_ITEMS } from "../src/constants/faq.js";
 
@@ -408,7 +408,6 @@ function paragonPage(p) {
     gameMode: "solo",
     targetDegree: 100,
     useExtraT5s: true,
-    useUpgrades: true,
     useSacrificeCash: true,
     useSliderCash: false,
     useTotems: true,
@@ -465,19 +464,18 @@ function paragonPage(p) {
 
   <section class="card">
     <h2>How to reach Degree 100 (solo)</h2>
-    <p>In solo play the four standard power categories top out at <strong>${num(
+    <p>Since Update ${esc(GAME_VERSION)}, maxed pops and cash alone come to <strong>${num(
       soloFacts.power
-    )} power</strong> &mdash; Degree ${soloFacts.degree} &mdash; so a maxed ${esc(
+    )} power</strong> &mdash; Degree ${soloFacts.degree} &mdash; so a solo ${esc(
       p.name
-    )} needs <strong>${soloFacts.totems} Geraldo Paragon Power Totems</strong> to close the gap to Degree 100. The most cash-efficient solo path on Medium difficulty:</p>
+    )} needs no Geraldo totems to max out. The most cash-efficient solo path on Medium difficulty:</p>
     <ul class="reqs">
       <li><strong>${num(solo.popsNeeded)}</strong> equivalent pops/damage (income counts as 4 pops per $1)</li>
-      <li><strong>${solo.upgradesNeeded}</strong> sacrificed upgrade tiers</li>
       ${solo.t5sNeeded ? `<li><strong>${solo.t5sNeeded}</strong> extra Tier 5 sacrifice (via ${esc(p.soloExtraT5Source)})</li>` : ""}
       ${solo.sacrificeCashNeeded ? `<li><strong>${money(solo.sacrificeCashNeeded)}</strong> spent on sacrificed towers</li>` : ""}
-      <li><strong>${solo.totemsNeeded}</strong> Geraldo Paragon Power Totems</li>
+      ${solo.totemsNeeded ? `<li><strong>${solo.totemsNeeded}</strong> Geraldo Paragon Power Totems</li>` : ""}
     </ul>
-    <p class="muted">Co-op is cheaper: each player can sacrifice extra Tier 5s, which cuts the totems you need. Adjust the target degree, difficulty and game mode in the calculator.</p>
+    <p class="muted">Short on pops? Each Geraldo totem replaces 360,000 of them, and in co-op every extra Tier 5 replaces 1.08M. Adjust the target degree, difficulty and game mode in the calculator.</p>
   </section>
 
   <section class="card">
@@ -492,7 +490,7 @@ function paragonPage(p) {
     <div class="grid">
       ${related.map((o) => paragonCard(o)).join("\n      ")}
     </div>
-    <p style="margin-top:1rem"><a class="textlink" href="/paragons">See all 13 Paragons &rarr;</a></p>
+    <p style="margin-top:1rem"><a class="textlink" href="/paragons">See all ${Object.keys(PARAGONS).length} Paragons &rarr;</a></p>
   </section>
 </article>`;
 
@@ -528,9 +526,9 @@ function paragonsIndexPage() {
     { name: "Paragons", path: "/paragons" },
   ]);
 
-  const title = "All 13 BTD6 Paragons — Costs, Stats & Degree Requirements";
+  const title = `All ${all.length} BTD6 Paragons — Costs, Stats & Degree Requirements`;
   const description =
-    "Every Bloons TD 6 Paragon in one place: base costs, tower class and Degree 100 requirements for all 13 Paragons. Pick one to open it in the free Paragon calculator.";
+    `Every Bloons TD 6 Paragon in one place: base costs, tower class and Degree 100 requirements for all ${all.length} Paragons. Pick one to open it in the free Paragon calculator.`;
 
   const itemListLd = {
     "@context": "https://schema.org",
@@ -545,7 +543,7 @@ function paragonsIndexPage() {
 
   const main = `${crumbHtml}
 <header class="page-head">
-  <h1>All 13 BTD6 Paragons</h1>
+  <h1>All ${all.length} BTD6 Paragons</h1>
   <p class="lede">Bloons TD 6 has ${all.length} Paragons &mdash; one ultimate upgrade per tower path family. Browse costs and classes below, then jump into the calculator to plan your exact degree.</p>
   <a class="cta" href="/classic">Open the Paragon Calculator &rarr;</a>
 </header>

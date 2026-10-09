@@ -9,8 +9,11 @@ import {
   maxT5sFor,
   powerCeilingWithoutTotems,
   reverseCalculate,
+  soloCeilingFacts,
 } from "../src/utils/calculator.js";
-import { PARAGONS, POWER_LIMITS } from "../src/constants/paragons.js";
+import {
+  PARAGONS, POWER_LIMITS, MAX_EQUIVALENT_POPS, CASH_CAP_MULTIPLE, SLIDER_CAP_MULTIPLE,
+} from "../src/constants/paragons.js";
 
 const DART = PARAGONS.apex_plasma_master;   // solo extra T5 via Master Double Cross
 const ICE = PARAGONS.herald_of_everfrost;   // solo extra T5 via a level 13+ Silas
@@ -20,7 +23,7 @@ const build = (over = {}) => calculateParagonData({
   paragon: NINJA,
   difficulty: "medium",
   gameMode: "solo",
-  pops: 0, income: 0, upgrades: 0, extraT5s: 0,
+  pops: 0, income: 0, extraT5s: 0,
   sacrificedTowerCash: 0, sliderCash: 0, totems: 0,
   ...over,
 });
@@ -115,39 +118,58 @@ describe("calculateDegreeFromPower", () => {
 
 // ─── Documented in-game anchor points ─────────────────────────────────────────
 //
-// These four facts are independently documented by the BTD6 community and are
-// what validate the whole threshold curve. If any of them breaks, the formula
-// (not the test) is wrong.
+// These facts are independently documented by the BTD6 community and are what
+// validate the threshold curve and the v57.0 power caps. If any of them breaks,
+// the formula (not the test) is wrong.
 
 describe("documented BTD6 anchor points", () => {
-  it("caps a maxed solo Paragon at 160,000 power = Degree 91", () => {
-    expect(powerCeilingWithoutTotems(NINJA, "solo")).toBe(160000);
+  it("still lands the pre-v57 solo ceilings on their documented degrees", () => {
+    // The curve did not change in v57.0, only the caps feeding it, so the old
+    // maxed-build totals remain good checks of the thresholds themselves.
     expect(calculateDegreeFromPower(160000)).toBe(91);
-  });
-
-  it("caps a maxed solo Dart Monkey (Master Double Cross) at 166,000 power = Degree 92", () => {
-    expect(powerCeilingWithoutTotems(DART, "solo")).toBe(166000);
     expect(calculateDegreeFromPower(166000)).toBe(92);
+    expect(calculateDegreeFromPower(178000)).toBe(95);
   });
 
-  it("caps a maxed solo Ice Monkey (Silas 13+) at 166,000 power = Degree 92", () => {
-    expect(powerCeilingWithoutTotems(ICE, "solo")).toBe(166000);
+  it("caps cash investment alone at Degree 65", () => {
+    expect(POWER_LIMITS.cash.maxPower).toBe(80000);
+    expect(calculateDegreeFromPower(POWER_LIMITS.cash.maxPower)).toBe(65);
   });
 
-  it("caps a maxed two-player co-op Paragon at Degree 95 (3 extra Tier 5s)", () => {
-    const power = powerCeilingWithoutTotems(NINJA, "coop", 2);
-    expect(power).toBe(178000);
-    expect(calculateDegreeFromPower(power)).toBe(95);
+  it("caps damage and income alone at Degree 81 (22.5M equivalent pops)", () => {
+    expect(MAX_EQUIVALENT_POPS).toBe(22500000);
+    expect(POWER_LIMITS.pops.maxPower).toBe(125000);
+    expect(calculateDegreeFromPower(POWER_LIMITS.pops.maxPower)).toBe(81);
   });
 
-  it("needs exactly 20 totems to take a maxed solo Paragon to Degree 100", () => {
-    const gap = MAX_POWER - powerCeilingWithoutTotems(NINJA, "solo");
-    expect(Math.ceil(gap / 2000)).toBe(20);
+  it("puts the cash cap at 4x the base price and the slider limit at 4.2x", () => {
+    expect(CASH_CAP_MULTIPLE).toBe(4);
+    expect(SLIDER_CAP_MULTIPLE).toBe(4.2);
+    expect(build({ sacrificedTowerCash: NINJA.mediumCost * 4 }).powerBreakdown.cash.power).toBe(80000);
+    expect(build().maxSliderAllowed).toBe(Math.round(NINJA.mediumCost * 4.2));
   });
 
-  it("needs exactly 17 totems to take a maxed solo Dart Monkey to Degree 100", () => {
-    const gap = MAX_POWER - powerCeilingWithoutTotems(DART, "solo");
-    expect(Math.ceil(gap / 2000)).toBe(17);
+  it("reaches Degree 100 solo with no totems and no extra Tier 5", () => {
+    expect(powerCeilingWithoutTotems(NINJA, "solo")).toBe(205000);
+    expect(soloCeilingFacts(NINJA)).toEqual({ power: 205000, degree: 100, totems: 0 });
+    expect(soloCeilingFacts(DART)).toEqual({ power: 211000, degree: 100, totems: 0 });
+    expect(soloCeilingFacts(ICE).totems).toBe(0);
+  });
+
+  it("needs 21.6M damage for Degree 100 with cash maxed, or 3.75x the cost with damage maxed", () => {
+    const withMaxCash = build({ pops: 21600000, sacrificedTowerCash: NINJA.mediumCost * 4 });
+    expect(withMaxCash.degree).toBe(100);
+    expect(build({ pops: 21600000 - 180, sacrificedTowerCash: NINJA.mediumCost * 4 }).degree).toBe(99);
+
+    const withMaxPops = build({ pops: 22500000, sacrificedTowerCash: NINJA.mediumCost * 3.75 });
+    expect(withMaxPops.degree).toBe(100);
+  });
+
+  it("no longer counts upgrade tiers as a power source", () => {
+    expect(POWER_LIMITS.upgrades).toBeUndefined();
+    const r = build({ upgrades: 100 });
+    expect(r.totalPower).toBe(0);
+    expect(r.powerBreakdown.upgrades).toBeUndefined();
   });
 
   it("reaches Degree 100 in co-op without any totems", () => {
@@ -223,15 +245,15 @@ describe("calculateParagonData — power totals", () => {
     }
   });
 
-  it("awards 60,000 cash power for exactly 3x the base price in sacrifices", () => {
+  it("awards 80,000 cash power for exactly 4x the base price in sacrifices", () => {
     const basePrice = getBasePrice(NINJA.mediumCost, "medium");
-    const r = build({ sacrificedTowerCash: basePrice * 3 });
+    const r = build({ sacrificedTowerCash: basePrice * 4 });
     expect(r.powerBreakdown.cash.power).toBe(POWER_LIMITS.cash.maxPower);
   });
 
   it("charges the slider a 5% premium for the same power", () => {
     const basePrice = getBasePrice(NINJA.mediumCost, "medium");
-    const viaSlider = build({ sliderCash: basePrice * 3 });
+    const viaSlider = build({ sliderCash: basePrice * 4 });
     expect(viaSlider.powerBreakdown.cash.power).toBe(
       Math.floor(POWER_LIMITS.cash.maxPower / 1.05)
     );
@@ -249,23 +271,19 @@ describe("calculateParagonData — power totals", () => {
     expect(r.totalPower).toBe(50000);
   });
 
-  it("reaches Degree 100 from a fully maxed solo build plus 20 totems", () => {
+  it("reaches Degree 100 from a fully maxed solo build with no totems", () => {
     const basePrice = getBasePrice(NINJA.mediumCost, "medium");
-    const r = build({
-      pops: 16200000,
-      upgrades: 100,
-      sacrificedTowerCash: basePrice * 3,
-      totems: 20,
-    });
-    expect(r.totalPower).toBe(MAX_POWER);
+    const r = build({ pops: MAX_EQUIVALENT_POPS, sacrificedTowerCash: basePrice * 4 });
+    expect(r.totalPower).toBe(205000);
     expect(r.degree).toBe(100);
   });
 
-  it("reaches Degree 91 from a fully maxed solo build with no totems", () => {
+  it("reaches Degree 100 from maxed cash plus totems standing in for pops", () => {
+    // 80,000 cash + 60 totems (120,000) is exactly the 200,000 Degree 100 needs.
     const basePrice = getBasePrice(NINJA.mediumCost, "medium");
-    const r = build({ pops: 16200000, upgrades: 100, sacrificedTowerCash: basePrice * 3 });
-    expect(r.totalPower).toBe(160000);
-    expect(r.degree).toBe(91);
+    const r = build({ sacrificedTowerCash: basePrice * 4, totems: 60 });
+    expect(r.totalPower).toBe(MAX_POWER);
+    expect(r.degree).toBe(100);
   });
 });
 
@@ -286,56 +304,51 @@ describe("calculateParagonData — recommendations", () => {
     const pops = r.recommendations.find((x) => x.type === "pops");
     expect(pops.value).toBe(r.powerGap * POWER_LIMITS.pops.popDivisor);
 
-    const upgrades = r.recommendations.find((x) => x.type === "upgrades");
-    expect(upgrades.value).toBe(Math.ceil(r.powerGap / POWER_LIMITS.upgrades.pointsPerUpgrade));
+    expect(r.recommendations.map((x) => x.type)).not.toContain("upgrades");
 
     const totems = r.recommendations.find((x) => x.type === "totems");
     expect(totems.value).toBe(Math.ceil(r.powerGap / 2000));
   });
 
   it("each single-source recommendation actually reaches the next degree", () => {
-    const r = build({ pops: 900000, upgrades: 12, totems: 3 });
+    const r = build({ pops: 900000, totems: 3 });
     const nextThreshold = getPowerThreshold(r.nextDegree);
 
     const pops = r.recommendations.find((x) => x.type === "pops");
-    const withPops = build({ pops: 900000 + pops.value, upgrades: 12, totems: 3 });
+    const withPops = build({ pops: 900000 + pops.value, totems: 3 });
     expect(withPops.totalPower).toBeGreaterThanOrEqual(nextThreshold);
     expect(withPops.degree).toBe(r.nextDegree);
 
-    // Upgrades (100 power each) and totems (2,000 each) are chunky, so the
-    // smallest whole number that closes the gap may overshoot a degree or two.
-    const upgrades = r.recommendations.find((x) => x.type === "upgrades");
-    const withUpgrades = build({ pops: 900000, upgrades: 12 + upgrades.value, totems: 3 });
-    expect(withUpgrades.degree).toBeGreaterThanOrEqual(r.nextDegree);
-
     const sac = r.recommendations.find((x) => x.type === "cash_sacrifice");
-    const withCash = build({ pops: 900000, upgrades: 12, totems: 3, sacrificedTowerCash: sac.value });
+    const withCash = build({ pops: 900000, totems: 3, sacrificedTowerCash: sac.value });
     expect(withCash.degree).toBeGreaterThanOrEqual(r.nextDegree);
 
+    // Totems (2,000 power each) are chunky, so the smallest whole number that
+    // closes the gap may overshoot a degree or two.
     const totems = r.recommendations.find((x) => x.type === "totems");
-    const withTotems = build({ pops: 900000, upgrades: 12, totems: 3 + totems.value });
+    const withTotems = build({ pops: 900000, totems: 3 + totems.value });
     expect(withTotems.degree).toBeGreaterThanOrEqual(r.nextDegree);
   });
 
   it("omits a source that is already maxed out", () => {
-    const r = build({ pops: 16200000, upgrades: 100, totems: 5 });
+    const r = build({ pops: MAX_EQUIVALENT_POPS, totems: 5 });
     const types = r.recommendations.map((x) => x.type);
     expect(types).not.toContain("pops");
-    expect(types).not.toContain("upgrades");
+    expect(types).toContain("cash_sacrifice");
     expect(types).toContain("totems");
   });
 
   it("flags when a capped source cannot close the gap on its own", () => {
-    // Nothing invested: closing a 2,000-power gap from upgrades alone is fine,
-    // but from a near-full category it is not. Upgrades cap at 10,000 power, so
-    // aiming at Degree 100 from scratch leaves a shortfall note.
-    const r = build({ totems: 90 }); // 180,000 power → Degree 95-ish, gap < 10k
-    const upgrades = r.recommendations.find((x) => x.type === "upgrades");
-    expect(upgrades.text).not.toMatch(/leaves/);
+    // Cash is nearly maxed, so it has far less headroom than the gap to the next
+    // degree and the hint must say so; pops still has plenty of room.
+    const basePrice = getBasePrice(NINJA.mediumCost, "medium");
+    const r = build({ sacrificedTowerCash: basePrice * 4 - 5000, totems: 50 });
+    expect(r.recommendations.find((x) => x.type === "cash_sacrifice").text).toMatch(/leaves/);
+    expect(r.recommendations.find((x) => x.type === "pops").text).not.toMatch(/leaves/);
 
     const low = build({ pops: 100 });
-    const lowUpgrades = low.recommendations.find((x) => x.type === "upgrades");
-    expect(lowUpgrades.text).not.toMatch(/leaves/); // early degrees are cheap
+    const lowCash = low.recommendations.find((x) => x.type === "cash_sacrifice");
+    expect(lowCash.text).not.toMatch(/leaves/); // early degrees are cheap
   });
 
   it("produces no recommendations at Degree 100", () => {
@@ -353,18 +366,26 @@ describe("reverseCalculate", () => {
     paragon: NINJA, difficulty: "medium", gameMode: "solo", targetDegree: 100, ...over,
   });
 
-  it("plans a solo Degree 100 as maxed categories plus 20 totems", () => {
+  it("plans a solo Degree 100 as maxed pops plus 3.75x the price in cash, no totems", () => {
     const r = plan();
     expect(r.achievable).toBe(true);
-    expect(r.popsNeeded).toBe(16200000);
-    expect(r.upgradesNeeded).toBe(100);
-    expect(r.totemsNeeded).toBe(20);
+    expect(r.popsNeeded).toBe(MAX_EQUIVALENT_POPS);
+    expect(r.sacrificeCashNeeded).toBe(NINJA.mediumCost * 3.75);
+    expect(r.totemsNeeded).toBe(0);
   });
 
-  it("plans a solo Dart Monkey Degree 100 with one extra T5 and 17 totems", () => {
+  it("plans a solo Dart Monkey Degree 100 with one extra T5 and less cash", () => {
     const r = plan({ paragon: DART });
     expect(r.t5sNeeded).toBe(1);
-    expect(r.totemsNeeded).toBe(17);
+    expect(r.sacrificeCashNeeded).toBe(Math.ceil(69000 * DART.mediumCost / 20000));
+    expect(r.totemsNeeded).toBe(0);
+  });
+
+  it("needs totems for Degree 100 only when cash is switched off", () => {
+    // Pops cap at 125,000, so the other 75,000 comes from 38 totems.
+    const r = plan({ useSacrificeCash: false, useSliderCash: false });
+    expect(r.achievable).toBe(true);
+    expect(r.totemsNeeded).toBe(38);
   });
 
   it("allows 9 extra T5s in a full co-op lobby, and fewer with fewer players", () => {
@@ -376,7 +397,7 @@ describe("reverseCalculate", () => {
 
   it("reports a target as unachievable when every source is switched off", () => {
     const r = plan({
-      useExtraT5s: false, useUpgrades: false,
+      useExtraT5s: false,
       useSacrificeCash: false, useSliderCash: false, useTotems: false,
     });
     expect(r.achievable).toBe(false);
@@ -388,7 +409,6 @@ describe("reverseCalculate", () => {
       const r = plan({ targetDegree });
       const forward = build({
         pops: r.popsNeeded,
-        upgrades: r.upgradesNeeded,
         sacrificedTowerCash: r.sacrificeCashNeeded,
         sliderCash: r.sliderCashNeeded,
         totems: r.totemsNeeded,

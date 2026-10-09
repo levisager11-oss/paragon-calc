@@ -1,14 +1,13 @@
 import { useState, useMemo } from "react";
-import { PARAGONS, DIFFICULTY_MULTIPLIERS } from "../constants/paragons.js";
+import { PARAGONS, DIFFICULTY_MULTIPLIERS, MAX_EQUIVALENT_POPS, SLIDER_CAP_MULTIPLE } from "../constants/paragons.js";
 import { calculateParagonData, getBasePrice, maxT5sFor, MAX_POWER } from "../utils/calculator.js";
 import { decodeState, buildShareUrl } from "../utils/shareState.js";
 
-// The four capped power sources. Colour is not identity here: every bar is the
+// The three capped power sources. Colour is not identity here: every bar is the
 // accent until its source hits its ceiling, which is the one thing worth
 // signalling at this size.
 const BREAKDOWN = [
   { key: "pops", label: "Pops & income" },
-  { key: "upgrades", label: "Upgrade tiers" },
   { key: "cash", label: "Cash invested" },
   { key: "t5", label: "Extra Tier 5s" },
 ];
@@ -31,7 +30,6 @@ export default function EmbedCalculator() {
   const [gameMode, setGameMode] = useState(initial.gameMode);
   const [pops, setPops] = useState(initial.pops);
   const [income, setIncome] = useState(initial.income);
-  const [upgrades, setUpgrades] = useState(initial.upgrades);
   const [extraT5s, setExtraT5s] = useState(initial.extraT5s);
   const [sacrificedTowerCash, setSacrificedTowerCash] = useState(initial.sacrificedTowerCash);
   const [sliderCash, setSliderCash] = useState(initial.sliderCash);
@@ -44,14 +42,14 @@ export default function EmbedCalculator() {
 
   const results = useMemo(
     () => calculateParagonData({
-      paragon, difficulty, gameMode, pops, income, upgrades,
+      paragon, difficulty, gameMode, pops, income,
       extraT5s: effT5, sacrificedTowerCash, sliderCash, totems,
     }),
-    [paragon, difficulty, gameMode, pops, income, upgrades, effT5, sacrificedTowerCash, sliderCash, totems]
+    [paragon, difficulty, gameMode, pops, income, effT5, sacrificedTowerCash, sliderCash, totems]
   );
 
   const fullUrl = buildShareUrl(
-    { paragon: paragonId, difficulty, gameMode, pops, income, upgrades, extraT5s: effT5, sacrificedTowerCash, sliderCash, totems },
+    { paragon: paragonId, difficulty, gameMode, pops, income, extraT5s: effT5, sacrificedTowerCash, sliderCash, totems },
     { path: "/classic" }
   );
 
@@ -115,12 +113,11 @@ export default function EmbedCalculator() {
           </div>
 
           <div className="embed-fields">
-            <Field label="Pops" value={pops} onChange={(v) => setPops(clampNum(v, 0, 16200000))} />
-            <Field label="Income ($)" value={income} onChange={(v) => setIncome(clampNum(v, 0, 4050000))} />
-            <Field label="Upgrade tiers" value={upgrades} onChange={(v) => setUpgrades(clampNum(v, 0, 100))} />
+            <Field label="Pops" value={pops} onChange={(v) => setPops(clampNum(v, 0, MAX_EQUIVALENT_POPS))} />
+            <Field label="Income ($)" value={income} onChange={(v) => setIncome(clampNum(v, 0, MAX_EQUIVALENT_POPS / 4))} />
             <Field label="Extra Tier 5s" value={effT5} onChange={(v) => setExtraT5s(clampNum(v, 0, maxT5))} disabled={maxT5 === 0} />
             <Field label="Sacrifice ($)" value={sacrificedTowerCash} onChange={(v) => setSacrificedTowerCash(clampNum(v, 0, 100000000))} />
-            <Field label="Slider ($)" value={sliderCash} onChange={(v) => setSliderCash(clampNum(v, 0, Math.round(basePrice * 3.15)))} />
+            <Field label="Slider ($)" value={sliderCash} onChange={(v) => setSliderCash(clampNum(v, 0, Math.round(basePrice * SLIDER_CAP_MULTIPLE)))} />
             <Field label="Totems" value={totems} onChange={(v) => setTotems(clampNum(v, 0, 1000))} />
           </div>
         </div>

@@ -30,12 +30,12 @@ describe("GET /api/paragon/version", () => {
     expect(res._body.status).toBe("ok");
   });
 
-  it("includes valid_towers array with 13 entries each having id, tower, paragon", () => {
+  it("includes valid_towers array with 14 entries each having id, tower, paragon", () => {
     const { req, res } = makeReqRes({ method: "GET" });
     versionHandler(req, res);
     const towers = res._body.valid_towers;
     expect(Array.isArray(towers)).toBe(true);
-    expect(towers.length).toBe(13);
+    expect(towers.length).toBe(14);
     for (const t of towers) {
       expect(t).toHaveProperty("id");
       expect(t).toHaveProperty("tower");
@@ -43,9 +43,10 @@ describe("GET /api/paragon/version", () => {
     }
   });
 
-  // Medium Paragon upgrade costs as of BTD6 v56.1. Version 55.0 swapped the two
-  // that used to be easy to mix up: B.O.M.B. went $600,000 -> $650,000 and
-  // Master Builder went $650,000 -> $600,000.
+  // Medium Paragon upgrade costs as of BTD6 v57.0, which added the Sniper
+  // Monkey's S.P.I.D.E.R. Monkey at $800,000. Version 55.0 swapped the two that
+  // used to be easy to mix up: B.O.M.B. went $600,000 -> $650,000 and Master
+  // Builder went $650,000 -> $600,000.
   it("uses the current medium Paragon prices", () => {
     const prices = {
       apex_plasma_master: 150000,
@@ -61,6 +62,7 @@ describe("GET /api/paragon/version", () => {
       ballistic_obliteration_missile_bunker: 650000,
       herald_of_everfrost: 300000,
       root_of_all_nature: 475000,
+      spider_monkey: 800000,
     };
 
     expect(Object.keys(prices).sort()).toEqual(Object.keys(UI_PARAGONS).sort());
@@ -90,6 +92,7 @@ describe("GET /api/paragon/version", () => {
       ballistic_obliteration_missile_bunker: [552500, 650000, 702000, 780000],
       herald_of_everfrost:                   [255000, 300000, 324000, 360000],
       root_of_all_nature:                    [403750, 475000, 513000, 570000],
+      spider_monkey:                         [680000, 800000, 864000, 960000],
     };
 
     for (const [id, prices] of Object.entries(byDifficulty)) {

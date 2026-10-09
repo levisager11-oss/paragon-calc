@@ -14,7 +14,6 @@ describe("shareState encode/decode", () => {
       gameMode: "coop",
       pops: 1234567,
       income: 5000,
-      upgrades: 42,
       extraT5s: 3,
       sacrificedTowerCash: 250000,
       sliderCash: 10000,
@@ -44,6 +43,14 @@ describe("shareState encode/decode", () => {
     expect(bad.gameMode).toBe("solo");
     expect(bad.pops).toBe(0); // negative clamped up to min
     expect(bad.extraT5s).toBe(9); // clamped down to max
+  });
+
+  it("still opens links made before v57.0 that carry an upgrade-tier count", () => {
+    const old = decodeState("?paragon=spider-monkey&pops=1000&upg=40");
+    expect(old.paragon).toBe("spider_monkey");
+    expect(old.pops).toBe(1000);
+    expect(old).not.toHaveProperty("upgrades");
+    expect(encodeState(old)).not.toContain("upg=");
   });
 
   it("accepts a query string with or without a leading '?'", () => {
