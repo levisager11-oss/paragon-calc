@@ -25,7 +25,7 @@ import { existsSync, mkdtempSync, writeFileSync, readFileSync, rmSync, copyFileS
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { POWER_LIMITS } from "../src/constants/paragons.js";
+import { PARAGONS, POWER_LIMITS, GAME_VERSION } from "../src/constants/paragons.js";
 import { MAX_POWER } from "../src/utils/calculator.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -96,12 +96,11 @@ async function inlineFonts() {
 }
 
 // Bar width encodes each ceiling's share of the largest one, so the row reads as
-// a comparison rather than four decorative stripes in four arbitrary colours.
+// a comparison rather than three decorative stripes in four arbitrary colours.
 const CAPS = [
   { label: "Pops & income", value: POWER_LIMITS.pops.maxPower },
   { label: "Cash invested", value: POWER_LIMITS.cash.maxPower },
   { label: "Extra Tier 5s", value: POWER_LIMITS.t5.maxPower },
-  { label: "Upgrade tiers", value: POWER_LIMITS.upgrades.maxPower },
 ];
 const CAP_MAX = Math.max(...CAPS.map((c) => c.value));
 
@@ -137,9 +136,9 @@ ${fontCss}
 </style></head>
 <body>
   <div>
-    <div class="eyebrow">Bloons TD 6 &bull; Update 56+</div>
+    <div class="eyebrow">Bloons TD 6 &bull; Update ${GAME_VERSION}</div>
     <h1>BTD6 Paragon Calculator</h1>
-    <p class="lede">Enter what you plan to sacrifice and get the exact <b>Degree 1&ndash;100</b> for any of the 13 Paragons &mdash; plus what is being wasted.</p>
+    <p class="lede">Enter what you plan to sacrifice and get the exact <b>Degree 1&ndash;100</b> for any of the ${Object.keys(PARAGONS).length} Paragons &mdash; plus what is being wasted.</p>
   </div>
 
   <div class="caps">

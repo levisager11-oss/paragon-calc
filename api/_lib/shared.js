@@ -11,6 +11,11 @@ export {
   PARAGONS,
   POWER_LIMITS,
   DIFFICULTY_MULTIPLIERS,
+  CASH_POWER_PER_BASE_PRICE,
+  SLIDER_PREMIUM,
+  MAX_EQUIVALENT_POPS,
+  CASH_CAP_MULTIPLE,
+  GAME_VERSION,
 } from "../../src/constants/paragons.js";
 
 export {
@@ -22,12 +27,13 @@ export {
   maxT5sFor,
 } from "../../src/utils/calculator.js";
 
-import { PARAGONS } from "../../src/constants/paragons.js";
+import { PARAGONS, GAME_VERSION } from "../../src/constants/paragons.js";
 
 export const API_VERSION      = "1.2";
-export const FORMULA_VERSION  = "1.2";
+// 2.0: BTD6 v57.0 removed upgrade-tier power and raised the pops and cash caps.
+export const FORMULA_VERSION  = "2.0";
 // Tracks the BTD6 balance patch the roster, prices and rules are drawn from.
-export const FORMULA_REVISION = "btd6-v56.1";
+export const FORMULA_REVISION = `btd6-v${GAME_VERSION}`;
 
 export const VALID_DIFFICULTIES = ["easy", "medium", "hard", "impoppable"];
 

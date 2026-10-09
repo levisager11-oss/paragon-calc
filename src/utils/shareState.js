@@ -5,7 +5,7 @@
 // shape and encode it the same way. Keys are short but readable so shared URLs
 // stay legible (e.g. /classic?paragon=ascended-shadow&diff=hard&pops=1200000).
 
-import { PARAGONS, DIFFICULTY_MULTIPLIERS } from "../constants/paragons.js";
+import { PARAGONS, DIFFICULTY_MULTIPLIERS, MAX_EQUIVALENT_POPS } from "../constants/paragons.js";
 
 export const DEFAULT_STATE = {
   paragon: "apex_plasma_master",
@@ -13,7 +13,6 @@ export const DEFAULT_STATE = {
   gameMode: "solo",
   pops: 0,
   income: 0,
-  upgrades: 0,
   extraT5s: 0,
   sacrificedTowerCash: 0,
   sliderCash: 0,
@@ -35,10 +34,11 @@ const clampInt = (v, min, max) => {
 };
 
 // [stateKey, urlParam, min, max]
+// (Links from before BTD6 v57.0 may still carry "upg", the old upgrade-tier
+// count. That source no longer gives power, so the parameter is ignored.)
 const NUM_FIELDS = [
-  ["pops", "pops", 0, 16200000],
-  ["income", "income", 0, 4050000],
-  ["upgrades", "upg", 0, 100],
+  ["pops", "pops", 0, MAX_EQUIVALENT_POPS],
+  ["income", "income", 0, MAX_EQUIVALENT_POPS / 4],
   ["extraT5s", "t5", 0, 9],
   ["sacrificedTowerCash", "sac", 0, 100000000],
   ["sliderCash", "slider", 0, 100000000],

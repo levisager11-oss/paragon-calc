@@ -142,7 +142,7 @@ describe("validation errors", () => {
     expect(res.statusCode).toBe(400);
     expect(res._body.error.code).toBe("UNKNOWN_TOWER");
     expect(Array.isArray(res._body.error.valid_towers)).toBe(true);
-    expect(res._body.error.valid_towers.length).toBe(13);
+    expect(res._body.error.valid_towers.length).toBe(14);
     expect(res._body.error.valid_towers[0]).toHaveProperty("id");
     expect(res._body.error.valid_towers[0]).toHaveProperty("tower");
     expect(res._body.error.valid_towers[0]).toHaveProperty("paragon");

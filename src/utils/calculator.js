@@ -1,4 +1,10 @@
-import { POWER_LIMITS } from "../constants/paragons.js";
+import {
+  POWER_LIMITS,
+  CASH_POWER_PER_BASE_PRICE,
+  SLIDER_PREMIUM,
+  MAX_EQUIVALENT_POPS,
+  SLIDER_CAP_MULTIPLE,
+} from "../constants/paragons.js";
 
 /**
  * Total Paragon Power that corresponds to Degree 100 — the hard ceiling in game.
@@ -17,10 +23,9 @@ export const MAX_POWER = 200000;
  * Degree 1 is the starting degree (0 power) and Degree 100 is a flat 200,000 —
  * the cubic itself only reaches 196,542 at D=100, so the final step is larger
  * than the curve suggests. That is the real in-game behaviour, not a rounding
- * artefact: it is what makes a fully-maxed solo Paragon (160,000 power,
- * Degree 91) need exactly 20 Geraldo totems to reach Degree 100, and a solo
- * Dart Monkey with Master Double Cross (166,000 power, Degree 92) need 17 —
- * both of which match the documented in-game minimums.
+ * artefact: before v57.0 it is what made a fully-maxed solo Paragon (160,000
+ * power, Degree 91) need exactly 20 Geraldo totems to reach Degree 100, matching
+ * the documented in-game minimum.
  *
  * Index i holds the power required for degree i; index 0 is unused.
  */
@@ -73,13 +78,12 @@ function clampPlayers(playerCount) {
 
 /**
  * Highest total power reachable without Geraldo totems, for a given game mode.
- * Solo with no duplicate Tier 5 = 160,000 (Degree 91); solo Dart Monkey or Ice
- * Monkey = 166,000 (Degree 92).
+ * Since v57.0 a solo Paragon with no duplicate Tier 5 reaches 205,000 (pops &
+ * income 125,000 + cash 80,000), already past the 200,000 that Degree 100 needs.
  */
 export function powerCeilingWithoutTotems(paragon, gameMode, playerCount) {
   return (
     POWER_LIMITS.pops.maxPower +
-    POWER_LIMITS.upgrades.maxPower +
     POWER_LIMITS.cash.maxPower +
     Math.min(
       POWER_LIMITS.t5.maxPower,
@@ -94,15 +98,15 @@ export function powerCeilingWithoutTotems(paragon, gameMode, playerCount) {
  * the power ceiling reachable without totems, the degree that lands on, and how
  * many Geraldo totems close the remaining gap to Degree 100.
  *
- * Paragon with no duplicate Tier 5: 160,000 power / Degree 91 / 20 totems.
- * Dart Monkey (Master Double Cross) or Ice Monkey (Silas 13+): 166,000 / 92 / 17.
+ * As of v57.0 every Paragon reaches Degree 100 solo with no totems at all:
+ * 205,000 power (211,000 with a duplicate Tier 5) against a 200,000 cap.
  */
 export function soloCeilingFacts(paragon) {
   const power = powerCeilingWithoutTotems(paragon, "solo");
   return {
     power,
     degree: calculateDegreeFromPower(power),
-    totems: Math.ceil((MAX_POWER - power) / 2000),
+    totems: Math.max(0, Math.ceil((MAX_POWER - power) / 2000)),
   };
 }
 
@@ -110,9 +114,9 @@ export function soloCeilingFacts(paragon) {
  * Reverse calculator: given a target degree, returns the minimum inputs
  * needed based on the chosen strategy.
  *
- * strategy = 'leastCash'  → fill Pops → Upgrades → T5s → Cash → Totems
- * strategy = 'leastPops'  → fill Upgrades → T5s → Cash → Totems → Pops
- * strategy = 'balanced'   → fill Upgrades → T5s → (Pops + Cash split proportionally) → Totems
+ * strategy = 'leastCash'  → fill Pops → T5s → Cash → Totems
+ * strategy = 'leastPops'  → fill T5s → Cash → Totems → Pops
+ * strategy = 'balanced'   → fill T5s → (Pops + Cash split proportionally) → Totems
  *
  * Within cash: Sacrifice is always preferred over Slider (more efficient per $).
  */
@@ -123,7 +127,6 @@ export function reverseCalculate({
   playerCount,
   targetDegree,
   useExtraT5s      = true,
-  useUpgrades      = true,
   useSacrificeCash = true,
   useSliderCash    = false,
   useTotems        = true,
@@ -131,51 +134,46 @@ export function reverseCalculate({
 }) {
   const basePrice          = getBasePrice(paragon.mediumCost, difficulty);
   const targetPower        = getPowerThreshold(targetDegree);
-  const sacrificePowerRate = 20000 / basePrice;
-  const sliderPowerRate    = 20000 / (basePrice * 1.05);
+  const sacrificePowerRate = CASH_POWER_PER_BASE_PRICE / basePrice;
+  const sliderPowerRate    = CASH_POWER_PER_BASE_PRICE / (basePrice * SLIDER_PREMIUM);
 
   const maxT5s = useExtraT5s ? maxT5sFor(paragon, gameMode, playerCount) : 0;
   const maxT5Power = Math.min(
     POWER_LIMITS.t5.maxPower,
     maxT5s * POWER_LIMITS.t5.pointsPerExtra
   );
-  const maxPopsPower    = POWER_LIMITS.pops.maxPower;                               // 90 000
-  const maxUpgradePower = useUpgrades ? POWER_LIMITS.upgrades.maxPower : 0;          // 10 000 or 0
-  const maxCashPower    = POWER_LIMITS.cash.maxPower;                                // 60 000
+  const maxPopsPower    = POWER_LIMITS.pops.maxPower;                               // 125 000
+  const maxCashPower    = POWER_LIMITS.cash.maxPower;                                // 80 000
   const cashEnabled     = useSacrificeCash || useSliderCash;
 
   // ── helpers ──────────────────────────────────────────────────────────
-  const takePops     = (r) => Math.min(maxPopsPower,    r);
-  const takeUpgrades = (r) => Math.min(maxUpgradePower, r);
-  const takeT5s      = (r) => Math.min(maxT5Power,      r);
-  const takeCash     = (r) => cashEnabled ? Math.min(maxCashPower, r) : 0;
-  const takeTotems   = (r) => useTotems && r > 0 ? Math.ceil(r / 2000) * 2000 : 0;
+  const takePops   = (r) => Math.min(maxPopsPower, r);
+  const takeT5s    = (r) => Math.min(maxT5Power,   r);
+  const takeCash   = (r) => cashEnabled ? Math.min(maxCashPower, r) : 0;
+  const takeTotems = (r) => useTotems && r > 0 ? Math.ceil(r / 2000) * 2000 : 0;
 
   // ── strategy dispatch ─────────────────────────────────────────────────
   let popsPow = 0, cashPow = 0;
-  let upgPow, t5Pow, totemPow;
+  let t5Pow, totemPow;
   let rem = targetPower;
 
   if (strategy === 'leastCash') {
     // Minimise cash → use pops first
-    popsPow  = takePops(rem);     rem -= popsPow;
-    upgPow   = takeUpgrades(rem); rem -= upgPow;
-    t5Pow    = takeT5s(rem);      rem -= t5Pow;
-    cashPow  = takeCash(rem);     rem -= cashPow;
-    totemPow = takeTotems(rem);   rem -= totemPow;
+    popsPow  = takePops(rem);   rem -= popsPow;
+    t5Pow    = takeT5s(rem);    rem -= t5Pow;
+    cashPow  = takeCash(rem);   rem -= cashPow;
+    totemPow = takeTotems(rem); rem -= totemPow;
 
   } else if (strategy === 'leastPops') {
     // Minimise pops → use everything else first
-    upgPow   = takeUpgrades(rem); rem -= upgPow;
-    t5Pow    = takeT5s(rem);      rem -= t5Pow;
-    cashPow  = takeCash(rem);     rem -= cashPow;
-    totemPow = takeTotems(rem);   rem -= totemPow;
-    popsPow  = takePops(rem);     rem -= popsPow;
+    t5Pow    = takeT5s(rem);    rem -= t5Pow;
+    cashPow  = takeCash(rem);   rem -= cashPow;
+    totemPow = takeTotems(rem); rem -= totemPow;
+    popsPow  = takePops(rem);   rem -= popsPow;
 
   } else {
     // Balanced → free sources first, then split pops / cash proportionally
-    upgPow = takeUpgrades(rem); rem -= upgPow;
-    t5Pow  = takeT5s(rem);      rem -= t5Pow;
+    t5Pow = takeT5s(rem); rem -= t5Pow;
 
     if (rem > 0) {
       const availCash = cashEnabled ? maxCashPower : 0;
@@ -184,7 +182,7 @@ export function reverseCalculate({
       if (!cashEnabled) {
         popsPow = takePops(rem); rem -= popsPow;
       } else {
-        // Proportional split: pops gets 90/(90+60)=60%, cash gets 40%
+        // Proportional split by cap: pops gets 125/(125+80) ≈ 61%, cash ≈ 39%
         const popsFrac = maxPopsPower / total;
         let tPops = Math.round(rem * popsFrac);
         let tCash = rem - tPops;
@@ -204,8 +202,6 @@ export function reverseCalculate({
   // ── derive human-readable outputs ────────────────────────────────────
   const popsNeeded     = Math.round(popsPow * POWER_LIMITS.pops.popDivisor);
   const popsMaxed      = popsPow  >= maxPopsPower;
-  const upgradesNeeded = Math.ceil(upgPow  / POWER_LIMITS.upgrades.pointsPerUpgrade);
-  const upgradesMaxed  = upgPow   >= maxUpgradePower;
   const t5sNeeded      = t5Pow  > 0 ? Math.ceil(t5Pow / POWER_LIMITS.t5.pointsPerExtra) : 0;
   const t5sMaxed       = maxT5Power > 0 && t5Pow >= maxT5Power;
   const totemsNeeded   = totemPow > 0 ? Math.round(totemPow / 2000) : 0;
@@ -234,8 +230,6 @@ export function reverseCalculate({
     remainingPower:      Math.max(0, Math.round(remaining)),
     popsNeeded,
     popsMaxed,
-    upgradesNeeded,
-    upgradesMaxed,
     t5sNeeded,
     t5sMaxed,
     maxT5s,
@@ -334,7 +328,6 @@ export function calculateParagonData({
   playerCount, // 2-4 in co-op; ignored solo. Defaults to a full four-player lobby.
   pops, // number of pops
   income, // cash generated
-  upgrades, // number of upgrade tiers on sacrificed non-T5 towers
   extraT5s, // number of additional T5s sacrificed (excluding the initial 3)
   sacrificedTowerCash, // cash spent on non-T5 towers
   sliderCash, // cash injected via the slider
@@ -353,25 +346,21 @@ export function calculateParagonData({
   const t5Power = Math.min(POWER_LIMITS.t5.maxPower, rawT5Power);
   const t5Capped = rawT5Power > POWER_LIMITS.t5.maxPower;
 
-  // 2. Non-T5 Upgrades Power
-  // Max upgrades power is 10,000 (100 power per upgrade)
-  const rawUpgradesPower = upgrades * POWER_LIMITS.upgrades.pointsPerUpgrade;
-  const upgradesPower = Math.min(POWER_LIMITS.upgrades.maxPower, rawUpgradesPower);
-  const upgradesCapped = rawUpgradesPower > POWER_LIMITS.upgrades.maxPower;
+  // (Upgrade tiers on sacrificed towers stopped counting in v57.0.)
 
-  // 3. Pops / Income Power
-  // Max pops power is 90,000 (1 power per 180 pops OR $45 income, which is 4 pop equivalents per $1)
+  // 2. Pops / Income Power
+  // Max pops power is 125,000 (1 power per 180 pops OR $45 income, which is 4 pop equivalents per $1)
   const equivalentPops = pops + (income * 4);
   const rawPopsPower = Math.floor(equivalentPops / POWER_LIMITS.pops.popDivisor);
   const popsPower = Math.min(POWER_LIMITS.pops.maxPower, rawPopsPower);
   const popsCapped = rawPopsPower > POWER_LIMITS.pops.maxPower;
 
-  // 4. Cash Investment Power
-  // Max cash power is 60,000.
+  // 3. Cash Investment Power
+  // Max cash power is 80,000 (4x the base price).
   // Sacrifice cash: 1 power per (basePrice / 20000) spent.
   // Slider cash: 1 power per (basePrice * 1.05 / 20000) spent (5% premium).
-  const sacrificePowerRatio = 20000 / basePrice;
-  const sliderPowerRatio = 20000 / (basePrice * 1.05);
+  const sacrificePowerRatio = CASH_POWER_PER_BASE_PRICE / basePrice;
+  const sliderPowerRatio = CASH_POWER_PER_BASE_PRICE / (basePrice * SLIDER_PREMIUM);
 
   const rawSacrificeCashPower = sacrificedTowerCash * sacrificePowerRatio;
   const rawSliderCashPower = sliderCash * sliderPowerRatio;
@@ -392,7 +381,7 @@ export function calculateParagonData({
       wastedCash = (sacrificedTowerCash - neededSacrificeCash) + sliderCash;
     } else {
       // Sacrifice cash didn't cap it, but combined with slider it did.
-      // The remaining power needed is 60,000 - rawSacrificeCashPower.
+      // The remaining power needed is the cap minus rawSacrificeCashPower.
       const remainingPowerNeeded = POWER_LIMITS.cash.maxPower - rawSacrificeCashPower;
       const neededSliderCash = remainingPowerNeeded / sliderPowerRatio;
       wastedCash = sliderCash - neededSliderCash;
@@ -401,12 +390,12 @@ export function calculateParagonData({
     wastedCash = Math.max(0, Math.round(wastedCash));
   }
 
-  // 5. Geraldo's Totems Power
+  // 4. Geraldo's Totems Power
   // 2,000 power per totem, uncapped
   const totemsPower = totems * 2000;
 
   // Total Power
-  const totalPower = t5Power + upgradesPower + popsPower + cashPower + totemsPower;
+  const totalPower = t5Power + popsPower + cashPower + totemsPower;
   const degree = calculateDegreeFromPower(totalPower);
 
   // Next Degree calculations
@@ -414,8 +403,8 @@ export function calculateParagonData({
   const nextDegreeThreshold = getPowerThreshold(nextDegree);
   const powerGap = nextDegree === degree ? 0 : nextDegreeThreshold - totalPower;
 
-  // Max Slider allowed in-game (3.15x base price)
-  const maxSliderAllowed = Math.round(basePrice * 3.15);
+  // Max Slider allowed in-game (4.2x base price: the 4x cash cap plus the 5% premium)
+  const maxSliderAllowed = Math.round(basePrice * SLIDER_CAP_MULTIPLE);
 
   // Recommendations for bridging the power gap (if degree < 100).
   //
@@ -445,18 +434,6 @@ export function calculateParagonData({
         type: "pops",
         text: `Accumulate ${extraPopsNeeded.toLocaleString()} more pops (or $${Math.ceil(extraPopsNeeded / 4).toLocaleString()} more income) across sacrificed towers.${shortfallNote(popsPowerNeeded)}`,
         value: extraPopsNeeded
-      });
-    }
-
-    // How many more upgrade tiers are needed
-    const upgradesHeadroom = POWER_LIMITS.upgrades.maxPower - upgradesPower;
-    if (upgradesHeadroom > 0) {
-      const upgradesPowerNeeded = Math.min(upgradesHeadroom, powerGap);
-      const extraUpgrades = Math.ceil(upgradesPowerNeeded / POWER_LIMITS.upgrades.pointsPerUpgrade);
-      recommendations.push({
-        type: "upgrades",
-        text: `Sacrifice ${extraUpgrades} more upgrade tier${extraUpgrades === 1 ? "" : "s"} on non-T5 towers (a 0-2-4 tower is worth 6 tiers).${shortfallNote(upgradesPowerNeeded)}`,
-        value: extraUpgrades
       });
     }
 
@@ -494,19 +471,13 @@ export function calculateParagonData({
   if (popsCapped) {
     warnings.push({
       type: "pops",
-      text: `Pops & Income power is fully maxed (90,000 pts). The extra ${Math.round(equivalentPops - 16200000).toLocaleString()} equivalent pops are wasted.`
-    });
-  }
-  if (upgradesCapped) {
-    warnings.push({
-      type: "upgrades",
-      text: `Upgrade tiers contribution is fully maxed (10,000 pts). The extra ${upgrades - 100} upgrades are wasted.`
+      text: `Pops & Income power is fully maxed (${POWER_LIMITS.pops.maxPower.toLocaleString()} pts). The extra ${Math.round(equivalentPops - MAX_EQUIVALENT_POPS).toLocaleString()} equivalent pops are wasted.`
     });
   }
   if (cashCapped && wastedCash > 0) {
     warnings.push({
       type: "cash",
-      text: `Cash investment is fully maxed (60,000 pts). You are wasting $${wastedCash.toLocaleString()} which provides zero benefit! Reduce your cash slider or sacrifice less.`
+      text: `Cash investment is fully maxed (${POWER_LIMITS.cash.maxPower.toLocaleString()} pts). You are wasting $${wastedCash.toLocaleString()} which provides zero benefit! Reduce your cash slider or sacrifice less.`
     });
   }
   if (t5Capped) {
@@ -534,7 +505,6 @@ export function calculateParagonData({
     degree,
     powerBreakdown: {
       t5:       { power: t5Power,       max: POWER_LIMITS.t5.maxPower,       pct: (t5Power / POWER_LIMITS.t5.maxPower) * 100,             capped: t5Capped },
-      upgrades: { power: upgradesPower, max: POWER_LIMITS.upgrades.maxPower, pct: (upgradesPower / POWER_LIMITS.upgrades.maxPower) * 100, capped: upgradesCapped },
       pops:     { power: popsPower,     max: POWER_LIMITS.pops.maxPower,     pct: (popsPower / POWER_LIMITS.pops.maxPower) * 100,         capped: popsCapped },
       cash:     { power: cashPower,     max: POWER_LIMITS.cash.maxPower,     pct: (cashPower / POWER_LIMITS.cash.maxPower) * 100,         capped: cashCapped },
       totems:   { power: totemsPower,   max: null,                           pct: null,                                                   capped: false }

@@ -230,6 +230,24 @@ export const PARAGONS = {
       "Periodically spawns Storm Trees that act as cash farms and blow back MOAB-class Bloons.",
       "Toggleable ability 'Primordial Wrath' that grants immense combat power in exchange for draining cash."
     ]
+  },
+  spider_monkey: {
+    id: "spider_monkey",
+    name: "S.P.I.D.E.R. Monkey",
+    tower: "Sniper Monkey",
+    mediumCost: 800000,
+    maxT4Cost: { easy: 10550, medium: 12400, hard: 13400, impoppable: 14880 },
+    maxT4Build: "2-4-0",
+    category: "military",
+    description: "Watches over the whole battlefield from an elevated platform. Combines the crippling shots of Cripple MOAB, the cash drops of Elite Sniper and the escalating fire rate of Elite Defender.",
+    icon: "🕷️",
+    color: "#607d8b",
+    abilities: [
+      "Heavy-calibre shots that bounce to a second target and burst into seeking, stunning shrapnel.",
+      "Sees the entire map through any line-of-sight blocker, and other Snipers can share its target.",
+      "Fires faster as Bloons advance, when lives are lost, and while it stays on the same target.",
+      "Drops $20,000 of cash crates every round; Ammo Swap and Single Out abilities."
+    ]
   }
 };
 
@@ -240,12 +258,30 @@ export const DIFFICULTY_MULTIPLIERS = {
   impoppable: { name: "Impoppable", value: 1.20 }
 };
 
+// Paragon Power caps as of BTD6 v57.0, which removed the old Upgrade Tiers
+// category (100 power per tier, up to 10,000) and raised the other two caps:
+// cash from 3x to 4x the Paragon's price (60,000 -> 80,000 power), and pops &
+// income from 16.2M to 22.5M equivalent pops (90,000 -> 125,000 power).
 export const POWER_LIMITS = {
   t5: { maxPower: 50000, pointsPerExtra: 6000 },
-  upgrades: { maxPower: 10000, pointsPerUpgrade: 100 },
-  pops: { maxPower: 90000, popDivisor: 180, incomeDivisor: 45 },
-  cash: { maxPower: 60000 }
+  pops: { maxPower: 125000, popDivisor: 180, incomeDivisor: 45 },
+  cash: { maxPower: 80000 }
 };
+
+// Every base price spent on sacrifices is worth 20,000 power; the slider charges
+// a 5% premium on the same power.
+export const CASH_POWER_PER_BASE_PRICE = 20000;
+export const SLIDER_PREMIUM = 1.05;
+
+// Equivalent pops ($1 income = 4 pops) that fill the Pops & Income category.
+export const MAX_EQUIVALENT_POPS = POWER_LIMITS.pops.maxPower * POWER_LIMITS.pops.popDivisor;
+// Cash investment caps at this multiple of the base price (4x), so the in-game
+// slider stops at that multiple plus its premium (4.2x).
+export const CASH_CAP_MULTIPLE = POWER_LIMITS.cash.maxPower / CASH_POWER_PER_BASE_PRICE;
+export const SLIDER_CAP_MULTIPLE = Math.round(CASH_CAP_MULTIPLE * SLIDER_PREMIUM * 100) / 100;
+
+// The game version the roster, prices and power rules above were verified against.
+export const GAME_VERSION = "57.0";
 
 // Paragon artwork lives in public/paragon-art/<slug>.png, keyed by the same
 // slug the /paragons/<slug> routes use so the two never drift. Files are

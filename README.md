@@ -22,11 +22,17 @@ Degree 100.
 
 | Source | Rate | Cap |
 | --- | --- | --- |
-| Pops & Income | 1 power per 180 pops; $1 income = 4 pops (so $45 = 1 power) | 90,000 |
-| Sacrificed upgrade tiers | 100 power per tier on non-T5 sacrifices | 10,000 |
-| Cash invested | 20,000 power per base price spent (slider costs 5% more) | 60,000 |
+| Pops & Income | 1 power per 180 pops; $1 income = 4 pops (so $45 = 1 power) | 125,000 (22.5M pops) |
+| Cash invested | 20,000 power per base price spent (slider costs 5% more) | 80,000 (4× base price) |
 | Extra Tier 5s | 6,000 power each, beyond the three the Paragon consumes | 50,000 |
 | Geraldo's Paragon Power Totems | 2,000 power each | uncapped |
+
+Version 57.0 reworked these. It removed the old **Sacrificed upgrade tiers**
+source (100 power per tier, capped at 10,000) and raised the Pops & Income cap
+from 90,000 to 125,000 and the Cash cap from 60,000 (3× the price) to 80,000 (4×).
+The cash slider's limit therefore moved from 3.15× to 4.2× the base price. All
+of these live in `POWER_LIMITS` and its derived constants in
+`src/constants/paragons.js`; nothing else types them.
 
 Extra Tier 5s are limited by lobby size. Every player fields three Tier 5s of
 the tower and the Paragon consumes three, so the ceiling is **3 × players − 3**:
@@ -52,13 +58,16 @@ Degree 1 is 0 power and Degree 100 is a flat 200,000 — the cubic only reaches
 real in-game behaviour, and `test/calculator.test.js` pins it against the
 documented values:
 
-| Fact | Value |
+| Fact (v57.0) | Value |
 | --- | --- |
-| Maxed solo Paragon | 160,000 power → **Degree 91** |
-| Maxed solo Dart Monkey (Master Double Cross) or Ice Monkey (Silas 13+) | 166,000 power → **Degree 92** |
-| Maxed two-player co-op Paragon (3 extra Tier 5s) | 178,000 power → **Degree 95** |
-| Totems to take a maxed solo Paragon to Degree 100 | **20** |
-| Totems to take a maxed solo Dart Monkey to Degree 100 | **17** |
+| Cash investment alone, maxed | 80,000 power → **Degree 65** |
+| Damage & income alone, maxed | 125,000 power → **Degree 81** |
+| Maxed solo Paragon, no totems | 205,000 power → **Degree 100** |
+| Damage needed for Degree 100 with cash maxed | **21,600,000** |
+| Cash needed for Degree 100 with damage maxed | **3.75×** the base price |
+
+The pre-v57 solo ceilings (160,000 → Degree 91, 166,000 → Degree 92, 178,000 →
+Degree 95) are kept as checks on the curve itself, which v57.0 did not change.
 
 The whole 100-row threshold table is reproduced exactly, not just these anchors.
 If a balance patch moves any of it, that test file is the place to start — and
@@ -75,7 +84,8 @@ off. The priciest legal non-Tier-5 sacrifice — a Tier 4 with a +2 crosspath, t
 largest chunk the cash optimiser can move off the slider — is therefore stored
 per difficulty as `maxT4Cost`, not derived.
 
-Prices and the Paragon roster are current as of BTD6 **v56.1**.
+Prices, power caps and the Paragon roster are current as of BTD6 **v57.0**, which
+added the Sniper Monkey's S.P.I.D.E.R. Monkey ($800,000 on Medium).
 
 ## Design system
 
@@ -122,7 +132,7 @@ ascended-shadow.png                       crucible-of-steel-and-flame.png
 navarch-of-the-seas.png                   mega-massive-munitions-factory.png
 nautic-siege-core.png                     ballistic-obliteration-missile-bunker.png
 master-builder.png                        herald-of-everfrost.png
-root-of-all-nature.png
+root-of-all-nature.png                    spider-monkey.png
 ```
 
 **128×128 PNG, transparent, square.** That covers every size the app renders at:
@@ -177,12 +187,17 @@ scripts/generate-images.js   social card + PWA icons
 ```bash
 curl -X POST https://paragon-calc.vercel.app/api/paragon/calculate \
   -H 'Content-Type: application/json' \
-  -d '{"tower":"Ninja Monkey","pops":2400000,"upgrade_count":34,"cash_spent":420000}'
+  -d '{"tower":"Ninja Monkey","pops":2400000,"cash_spent":420000}'
 ```
 
 `tower` accepts a tower name, a Paragon name or a Paragon id. Everything else is
 optional: `pops`, `income`, `cash_spent`, `slider_cash`, `tier5_count`,
-`upgrade_count`, `geraldo_totems`, `player_count` (1–4), `difficulty`.
+`geraldo_totems`, `player_count` (1–4), `difficulty`.
+
+`upgrade_count` is still accepted so older clients keep working, but since v57.0
+it contributes nothing and the response carries an `upgrades_ignored` warning;
+`breakdown.upgrades` stays in the response as a fixed zero. `formula_version` is
+`2.0` and `formula_revision` is `btd6-v57.0`.
 
 `player_count` sizes the lobby, and therefore the extra-Tier-5 ceiling: a
 two-player game allows 3, not the 9 a four-player game does. The web UI's

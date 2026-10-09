@@ -1,12 +1,15 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
-  User, Users, Wrench, Target, Star, Crown, DollarSign, Gem,
+  User, Users, Wrench, Target, Crown, DollarSign, Gem,
   RotateCcw, BarChart3, AlertTriangle, Lightbulb, ArrowRight,
   Trophy, BookOpen, Search, X, Plus, Calculator, Sun, Moon, CircleCheck,
 } from "lucide-react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
-import { PARAGONS, DIFFICULTY_MULTIPLIERS } from "./constants/paragons";
+import {
+  PARAGONS, DIFFICULTY_MULTIPLIERS, POWER_LIMITS, GAME_VERSION,
+  MAX_EQUIVALENT_POPS, CASH_CAP_MULTIPLE, SLIDER_CAP_MULTIPLE,
+} from "./constants/paragons";
 import {
   calculateParagonData, reverseCalculate, getBasePrice, getMaxT4Cost,
   splitIntoSacrificeTowers, maxT5sFor, soloCeilingFacts, MAX_POWER,
@@ -19,10 +22,14 @@ import { decodeState } from "./utils/shareState";
 // Slider track fill, as a CSS percentage string for the --pct custom property.
 const pct = (val, min, max) => `${Math.round(((val - min) / (max - min)) * 100)}%`;
 
-// Solo ceilings quoted in the guide, derived from the engine so the prose can
+// Solo ceiling quoted in the guide, derived from the engine so the prose can
 // never contradict the calculator on the same page.
 const SOLO = soloCeilingFacts(PARAGONS.ascended_shadow);
-const SOLO_DART = soloCeilingFacts(PARAGONS.apex_plasma_master);
+
+// Every cap shown in the UI is read from POWER_LIMITS, never typed.
+const n = (v) => v.toLocaleString("en-US");
+const MAX_INCOME = MAX_EQUIVALENT_POPS / 4;
+const compact = (v) => `${+(v / 1e6).toFixed(3)}M`;
 
 const ICON_SM = 14;
 const ICON_MD = 16;
@@ -63,7 +70,6 @@ export default function App() {
   // Goal Planner state
   const [targetDegree, setTargetDegree]       = useState(100);
   const [goalUseExtraT5s, setGoalUseExtraT5s] = useState(true);
-  const [goalUseUpgrades, setGoalUseUpgrades] = useState(true);
   const [goalCashMode, setGoalCashMode]       = useState("sacrifice"); // "none" | "sacrifice" | "slider" | "both"
   const [goalUseTotems, setGoalUseTotems]     = useState(true);
   const [goalStrategy, setGoalStrategy]       = useState("leastCash");
@@ -71,7 +77,6 @@ export default function App() {
   // 2. Input Fields State (seeded from the URL build, if present)
   const [pops, setPops] = useState(() => initialBuild.pops);
   const [income, setIncome] = useState(() => initialBuild.income);
-  const [upgrades, setUpgrades] = useState(() => initialBuild.upgrades);
   const [extraT5s, setExtraT5s] = useState(() => initialBuild.extraT5s);
   const [sacrificedTowerCash, setSacrificedTowerCash] = useState(() => initialBuild.sacrificedTowerCash);
   const [sliderCash, setSliderCash] = useState(() => initialBuild.sliderCash);
@@ -79,9 +84,9 @@ export default function App() {
 
   // Snapshot of the current build for the share / save / embed / export toolbar.
   const currentState = useMemo(() => ({
-    paragon: selectedParagonId, difficulty, gameMode, pops, income, upgrades,
+    paragon: selectedParagonId, difficulty, gameMode, pops, income,
     extraT5s, sacrificedTowerCash, sliderCash, totems,
-  }), [selectedParagonId, difficulty, gameMode, pops, income, upgrades,
+  }), [selectedParagonId, difficulty, gameMode, pops, income,
        extraT5s, sacrificedTowerCash, sliderCash, totems]);
 
   // Apply a saved or shared build (from the toolbar) to every input at once.
@@ -91,7 +96,6 @@ export default function App() {
     setGameMode(s.gameMode);
     setPops(s.pops);
     setIncome(s.income);
-    setUpgrades(s.upgrades);
     setExtraT5s(s.extraT5s);
     setSacrificedTowerCash(s.sacrificedTowerCash);
     setSliderCash(s.sliderCash);
@@ -169,7 +173,7 @@ export default function App() {
   }, [activeParagon, difficulty]);
 
   const maxSliderLimit = useMemo(() => {
-    return Math.round(currentBasePrice * 3.15);
+    return Math.round(currentBasePrice * SLIDER_CAP_MULTIPLE);
   }, [currentBasePrice]);
 
   // Cost of the most expensive non-T5 tower you can sacrifice (a Tier-4 with a
@@ -212,13 +216,12 @@ export default function App() {
     gameMode,
     targetDegree,
     useExtraT5s:      goalUseExtraT5s,
-    useUpgrades:      goalUseUpgrades,
     useSacrificeCash: goalCashMode === "sacrifice" || goalCashMode === "both",
     useSliderCash:    goalCashMode === "slider"    || goalCashMode === "both",
     useTotems:        goalUseTotems,
     strategy:         goalStrategy,
   }), [activeParagon, difficulty, gameMode, targetDegree,
-       goalUseExtraT5s, goalUseUpgrades, goalCashMode, goalUseTotems, goalStrategy]);
+       goalUseExtraT5s, goalCashMode, goalUseTotems, goalStrategy]);
 
   const handleSelectParagon = (id) => {
     setSelectedParagonId(id);
@@ -242,22 +245,20 @@ export default function App() {
       gameMode,
       pops,
       income,
-      upgrades,
       extraT5s,
       sacrificedTowerCash,
       sliderCash,
       totems
     });
-  }, [activeParagon, difficulty, gameMode, pops, income, upgrades, extraT5s, sacrificedTowerCash, sliderCash, totems]);
+  }, [activeParagon, difficulty, gameMode, pops, income, extraT5s, sacrificedTowerCash, sliderCash, totems]);
 
   // 6. Helper Actions
-  const setMaxPops = () => setPops(16200000);
-  const setMaxIncome = () => setIncome(4050000);
-  const setMaxUpgrades = () => setUpgrades(100);
+  const setMaxPops = () => setPops(MAX_EQUIVALENT_POPS);
+  const setMaxIncome = () => setIncome(MAX_INCOME);
+  const maxSacrificeCash = currentBasePrice * CASH_CAP_MULTIPLE;
   const resetInputs = () => {
     setPops(0);
     setIncome(0);
-    setUpgrades(0);
     setExtraT5s(0);
     setSacrificedTowerCash(0);
     setSliderCash(0);
@@ -296,11 +297,13 @@ export default function App() {
 
   const gaugePct = Math.min(100, (results.totalPower / MAX_POWER) * 100);
 
-  // The four capped power sources, rendered as one list so every row shares the
+  // Totems still needed on top of everything entered to reach Degree 100.
+  const totemsToMax = Math.max(0, Math.ceil((MAX_POWER - results.totalPower) / 2000));
+
+  // The three capped power sources, rendered as one list so every row shares the
   // same markup, bar and cap treatment.
   const breakdownRows = [
     { key: "pops",     label: "Pops & income",   Icon: Target },
-    { key: "upgrades", label: "Upgrade tiers",   Icon: Star },
     { key: "cash",     label: "Cash invested",   Icon: DollarSign },
     { key: "t5",       label: "Extra Tier 5s",   Icon: Crown },
   ];
@@ -317,7 +320,7 @@ export default function App() {
             </span>
             <div className="logo-text">
               <h1>BTD6 Paragon Calculator</h1>
-              <p>Bloons TD 6 · Update 56+</p>
+              <p>Bloons TD 6 · Update {GAME_VERSION}</p>
             </div>
           </div>
 
@@ -493,7 +496,7 @@ export default function App() {
                     <span className="input-label">
                       <Target size={ICON_MD} className="input-icon" aria-hidden="true" /> Pops &amp; income
                     </span>
-                    <span className="input-badge">Caps at 90,000 power</span>
+                    <span className="input-badge">Caps at {n(POWER_LIMITS.pops.maxPower)} power</span>
                   </div>
                   <div className="input-controls">
                     <div className="control-row">
@@ -505,11 +508,11 @@ export default function App() {
                           type="range"
                           min="0"
                           id="pops-range"
-                          max="16200000"
+                          max={MAX_EQUIVALENT_POPS}
                           step="50000"
                           className="range-slider"
                           value={pops}
-                          style={{ '--pct': pct(pops, 0, 16200000) }}
+                          style={{ '--pct': pct(pops, 0, MAX_EQUIVALENT_POPS) }}
                           onChange={(e) => setPops(parseInt(e.target.value))}
                         />
                       </div>
@@ -532,11 +535,11 @@ export default function App() {
                           type="range"
                           min="0"
                           id="income-range"
-                          max="4050000"
-                          step="10000"
+                          max={MAX_INCOME}
+                          step="5000"
                           className="range-slider"
                           value={income}
-                          style={{ '--pct': pct(income, 0, 4050000) }}
+                          style={{ '--pct': pct(income, 0, MAX_INCOME) }}
                           onChange={(e) => setIncome(parseInt(e.target.value))}
                         />
                       </div>
@@ -551,60 +554,17 @@ export default function App() {
                     </div>
 
                     <p className="input-note">
-                      $1 of income counts as 4 pops, so 16,200,000 equivalent pops fills this category.
+                      $1 of income counts as 4 pops, so {n(MAX_EQUIVALENT_POPS)} equivalent pops fills this category.
                     </p>
 
                     <div className="quick-buttons">
                       <button className="quick-btn" onClick={() => setPops(0)}>Clear pops</button>
-                      <button className="quick-btn" onClick={setMaxPops}>Max pops (16.2M)</button>
+                      <button className="quick-btn" onClick={setMaxPops}>Max pops ({compact(MAX_EQUIVALENT_POPS)})</button>
                       <button className="quick-btn" onClick={() => setIncome(0)}>Clear income</button>
-                      <button className="quick-btn" onClick={setMaxIncome}>Max income ($4.05M)</button>
+                      <button className="quick-btn" onClick={setMaxIncome}>Max income (${compact(MAX_INCOME)})</button>
                       <button className="quick-btn" ref={popAdderTriggerRef} onClick={openPopAdder}>
                         <Calculator size={ICON_SM} aria-hidden="true" /> Add up tower pops
                       </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Upgrades */}
-                <div className="input-section">
-                  <div className="input-header">
-                    <span className="input-label">
-                      <Star size={ICON_MD} className="input-icon" aria-hidden="true" /> Sacrificed upgrade tiers
-                    </span>
-                    <span className="input-badge">Caps at 10,000 power</span>
-                  </div>
-                  <div className="input-controls">
-                    <div className="control-row">
-                      <div>
-                        <label className="control-label" htmlFor="upgrades-range">
-                          Count every tier on non-T5 sacrifices — four 0-2-4 towers is 24 tiers
-                        </label>
-                        <input
-                          type="range"
-                          id="upgrades-range"
-                          min="0"
-                          max="100"
-                          className="range-slider"
-                          value={upgrades}
-                          style={{ '--pct': pct(upgrades, 0, 100) }}
-                          onChange={(e) => setUpgrades(parseInt(e.target.value))}
-                        />
-                      </div>
-                      <input
-                        type="number"
-                        className="number-input"
-                        aria-label="Total sacrificed upgrade tiers"
-                        min="0"
-                        max="100"
-                        value={upgrades}
-                        onChange={(e) => setUpgrades(Math.max(0, parseInt(e.target.value) || 0))}
-                      />
-                    </div>
-                    <div className="quick-buttons">
-                      <button className="quick-btn" onClick={() => setUpgrades(0)}>None</button>
-                      <button className="quick-btn" onClick={() => setUpgrades(50)}>50 tiers</button>
-                      <button className="quick-btn" onClick={setMaxUpgrades}>Max (100 tiers)</button>
                     </div>
                   </div>
                 </div>
@@ -615,7 +575,7 @@ export default function App() {
                     <span className="input-label">
                       <Crown size={ICON_MD} className="input-icon" aria-hidden="true" /> Extra Tier 5s
                     </span>
-                    <span className="input-badge">Caps at 50,000 power</span>
+                    <span className="input-badge">Caps at {n(POWER_LIMITS.t5.maxPower)} power</span>
                   </div>
                   <div className="input-controls">
                     <div className="control-row">
@@ -659,7 +619,7 @@ export default function App() {
                     <span className="input-label">
                       <DollarSign size={ICON_MD} className="input-icon" aria-hidden="true" /> Cash invested
                     </span>
-                    <span className="input-badge">Caps at 60,000 power</span>
+                    <span className="input-badge">Caps at {n(POWER_LIMITS.cash.maxPower)} power</span>
                   </div>
                   <div className="input-controls">
                     <div className="control-row">
@@ -671,11 +631,11 @@ export default function App() {
                           type="range"
                           min="0"
                           id="sacrifice-cash-range"
-                          max={currentBasePrice * 3}
+                          max={maxSacrificeCash}
                           step="5000"
                           className="range-slider"
                           value={sacrificedTowerCash}
-                          style={{ '--pct': pct(sacrificedTowerCash, 0, currentBasePrice * 3) }}
+                          style={{ '--pct': pct(sacrificedTowerCash, 0, maxSacrificeCash) }}
                           onChange={(e) => setSacrificedTowerCash(parseInt(e.target.value))}
                         />
                       </div>
@@ -717,7 +677,7 @@ export default function App() {
                     </div>
 
                     <p className="input-note">
-                      The in-game slider stops at 3.15× the base price — <strong>${maxSliderLimit.toLocaleString()}</strong> for this build.
+                      The in-game slider stops at {SLIDER_CAP_MULTIPLE}× the base price — <strong>${maxSliderLimit.toLocaleString()}</strong> for this build.
                     </p>
 
                     {maxT4Cost > 0 && (
@@ -744,9 +704,9 @@ export default function App() {
                     <div className="quick-buttons">
                       <button
                         className="quick-btn"
-                        onClick={() => { setSacrificedTowerCash(currentBasePrice * 3); setSliderCash(0); }}
+                        onClick={() => { setSacrificedTowerCash(maxSacrificeCash); setSliderCash(0); }}
                       >
-                        Max via sacrifices (${(currentBasePrice * 3).toLocaleString()})
+                        Max via sacrifices (${maxSacrificeCash.toLocaleString()})
                       </button>
                       <button
                         className="quick-btn"
@@ -776,8 +736,9 @@ export default function App() {
                     <div className="control-row">
                       <p className="input-note input-note-tight">
                         Paragon Power Totems from Geraldo&rsquo;s shop add flat power that ignores every cap.
-                        Solo, they are the only route to Degree 100: {SOLO.totems} totems on top of an
-                        otherwise maxed build, or {SOLO_DART.totems} for a Dart Monkey or Ice Monkey.
+                        {totemsToMax > 0
+                          ? `${totemsToMax} more would take this build to Degree 100.`
+                          : "This build reaches Degree 100 without any more."}
                       </p>
                       <div>
                         <input
@@ -794,8 +755,11 @@ export default function App() {
                     <div className="quick-buttons">
                       <button className="quick-btn" onClick={() => setTotems(0)}>None</button>
                       <button className="quick-btn" onClick={() => setTotems(10)}>10</button>
-                      <button className="quick-btn" onClick={() => setTotems(SOLO_DART.totems)}>{SOLO_DART.totems} (solo, duplicate T5)</button>
-                      <button className="quick-btn" onClick={() => setTotems(SOLO.totems)}>{SOLO.totems} (solo, any other)</button>
+                      {totemsToMax > 0 && (
+                        <button className="quick-btn" onClick={() => setTotems(totems + totemsToMax)}>
+                          +{totemsToMax} (to Degree 100)
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -999,7 +963,6 @@ export default function App() {
                     <div className="goal-toggles">
                       {[
                         { id: "t5s",      label: "Extra Tier 5s",   sub: `up to ${allowedT5s} in ${gameMode === "coop" ? "co-op" : "solo"}`, state: goalUseExtraT5s, set: setGoalUseExtraT5s },
-                        { id: "upgrades", label: "Upgrade tiers",   sub: "up to 100 tiers, 10,000 power",  state: goalUseUpgrades, set: setGoalUseUpgrades },
                         { id: "totems",   label: "Geraldo totems",  sub: "2,000 power each, uncapped",     state: goalUseTotems,   set: setGoalUseTotems },
                       ].map(({ id, label, sub, state, set }) => (
                         <div key={id} className="goal-toggle-row">
@@ -1072,13 +1035,6 @@ export default function App() {
                         <span className="goal-row-value">{goalResults.popsNeeded.toLocaleString()}</span>
                         {goalResults.popsMaxed && <span className="goal-row-badge maxed">At cap</span>}
                       </div>
-                      <div className={`goal-row ${!goalUseUpgrades ? "goal-row-disabled" : ""}`}>
-                        <Star size={ICON_SM} className="goal-row-icon" aria-hidden="true" />
-                        <span className="goal-row-label">Upgrade tiers</span>
-                        <span className="goal-row-value">{goalResults.upgradesNeeded}</span>
-                        {goalResults.upgradesMaxed && <span className="goal-row-badge maxed">At cap</span>}
-                        {!goalUseUpgrades && <span className="goal-row-badge off">Off</span>}
-                      </div>
                       <div className={`goal-row ${!goalUseExtraT5s ? "goal-row-disabled" : ""}`}>
                         <Crown size={ICON_SM} className="goal-row-icon" aria-hidden="true" />
                         <span className="goal-row-label">Extra Tier 5s</span>
@@ -1124,41 +1080,42 @@ export default function App() {
               </h2>
               <p className="section-lede">
                 A Paragon&rsquo;s degree comes from Paragon Power Points, which top out at{" "}
-                {MAX_POWER.toLocaleString()} at Degree 100. Four categories each have their own ceiling;
-                Geraldo&rsquo;s totems sit outside all of them. These are the Update 56+ rates.
+                {MAX_POWER.toLocaleString()} at Degree 100. Three categories each have their own ceiling;
+                Geraldo&rsquo;s totems sit outside all of them. These are the Update {GAME_VERSION} rates —
+                upgrade tiers on sacrificed towers stopped counting in that update.
               </p>
 
               <div className="guide-grid">
                 <div className="guide-column">
-                  <h4><Target size={ICON_MD} aria-hidden="true" />Pops &amp; income — 90,000 max</h4>
+                  <h4><Target size={ICON_MD} aria-hidden="true" />Pops &amp; income — {n(POWER_LIMITS.pops.maxPower)} max</h4>
                   <p>Damage dealt and cash earned by the towers you feed in.</p>
                   <ul className="guide-list">
                     <li>1 power per <strong>180 pops</strong>.</li>
                     <li>1 power per <strong>$45 of cash generated</strong>.</li>
                     <li>$1 of income counts as 4 pops.</li>
-                    <li><strong>16,200,000 equivalent pops</strong> fills the category.</li>
+                    <li><strong>{n(MAX_EQUIVALENT_POPS)} equivalent pops</strong> fills the category.</li>
                   </ul>
                 </div>
 
                 <div className="guide-column">
-                  <h4><Star size={ICON_MD} aria-hidden="true" />Upgrade tiers — 10,000 max</h4>
-                  <p>Every tier bought on a sacrificed non-T5 tower.</p>
+                  <h4><Crown size={ICON_MD} aria-hidden="true" />Extra Tier 5s — {n(POWER_LIMITS.t5.maxPower)} max</h4>
+                  <p>Tier 5s absorbed beyond the three the Paragon is built from.</p>
                   <ul className="guide-list">
-                    <li>100 power per <strong>upgrade tier</strong>.</li>
-                    <li>A 0-2-4 monkey is 6 tiers.</li>
-                    <li><strong>100 tiers</strong> fills the category.</li>
-                    <li>The three T5s the Paragon consumes do not count.</li>
+                    <li>{n(POWER_LIMITS.t5.pointsPerExtra)} power per <strong>extra Tier 5</strong>.</li>
+                    <li>Solo, none — except the Dart Monkey and Ice Monkey, which get one.</li>
+                    <li>Co-op allows <strong>three per extra player</strong>: 9 in a four-player game.</li>
+                    <li>The cash spent on any Tier 5 does not count as cash invested.</li>
                   </ul>
                 </div>
 
                 <div className="guide-column">
-                  <h4><DollarSign size={ICON_MD} aria-hidden="true" />Cash invested — 60,000 max</h4>
+                  <h4><DollarSign size={ICON_MD} aria-hidden="true" />Cash invested — {n(POWER_LIMITS.cash.maxPower)} max</h4>
                   <p>Money spent on sacrifices, or pushed in on the slider.</p>
                   <ul className="guide-list">
                     <li>Sacrificed towers: 20,000 power per base price spent — <strong>100% efficient</strong>.</li>
                     <li>Cash slider: the same power costs 5% more — <strong>95% efficient</strong>.</li>
-                    <li><strong>3.0× base price</strong> in sacrifices fills the category.</li>
-                    <li><strong>3.15× base price</strong> is the slider&rsquo;s hard limit.</li>
+                    <li><strong>{CASH_CAP_MULTIPLE}× base price</strong> in sacrifices fills the category.</li>
+                    <li><strong>{SLIDER_CAP_MULTIPLE}× base price</strong> is the slider&rsquo;s hard limit.</li>
                   </ul>
                 </div>
 
@@ -1166,10 +1123,9 @@ export default function App() {
                   <h4><Gem size={ICON_MD} aria-hidden="true" />Geraldo&rsquo;s totems — uncapped</h4>
                   <p>Each Paragon Power Totem adds a flat 2,000 power.</p>
                   <ul className="guide-list">
-                    <li>Solo, the four categories stop at <strong>{SOLO.power.toLocaleString()} power</strong> — Degree {SOLO.degree}.</li>
-                    <li>A solo Dart Monkey or Ice Monkey reaches <strong>{SOLO_DART.power.toLocaleString()}</strong> — Degree {SOLO_DART.degree}.</li>
-                    <li>Closing the gap takes <strong>{SOLO.totems} totems</strong>, or <strong>{SOLO_DART.totems}</strong> with that extra Tier 5.</li>
-                    <li>In co-op, four players&rsquo; Tier 5s reach Degree 100 with no totems at all.</li>
+                    <li>Maxed pops and cash alone reach <strong>{SOLO.power.toLocaleString()} power</strong> — Degree {SOLO.degree}, solo, with no totems.</li>
+                    <li>Each totem stands in for <strong>360,000 pops</strong> or 2,000 power of cash you have not spent.</li>
+                    <li>They are the quickest way to a higher degree before the late rounds.</li>
                   </ul>
                 </div>
               </div>
@@ -1223,7 +1179,7 @@ export default function App() {
 
         <footer className="site-footer">
           <nav className="footer-nav" aria-label="Footer">
-            <a href="/paragons">All 13 Paragons</a>
+            <a href="/paragons">All {Object.keys(PARAGONS).length} Paragons</a>
             <span className="footer-sep" aria-hidden="true">·</span>
             <a href="/faq">FAQ</a>
             <span className="footer-sep" aria-hidden="true">·</span>

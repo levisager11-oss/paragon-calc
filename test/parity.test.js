@@ -50,6 +50,10 @@ describe("API / web engine parity", () => {
       body: { tower: "Ninja Monkey", player_count: 2, tier5_count: 9, pops: 16_200_000, upgrade_count: 100 },
     },
     {
+      label: "maxed solo Sniper build that reaches Degree 100 without totems",
+      body: { tower: "Sniper Monkey", pops: 22_500_000, cash_spent: 3_200_000 },
+    },
+    {
       label: "three-player co-op with a solo-duplicate paragon",
       body: { tower: "Ice Monkey", player_count: 3, tier5_count: 7, cash_spent: 900_000 },
     },
@@ -73,7 +77,6 @@ describe("API / web engine parity", () => {
         playerCount: body.player_count ?? 1,
         pops: body.pops ?? 0,
         income: body.income ?? 0,
-        upgrades: body.upgrade_count ?? 0,
         extraT5s: body.tier5_count ?? 0,
         sacrificedTowerCash: body.cash_spent ?? 0,
         sliderCash: body.slider_cash ?? 0,
@@ -88,7 +91,9 @@ describe("API / web engine parity", () => {
       expect(api.paragon.base_price).toBe(web.basePrice);
 
       expect(api.breakdown.pops.power).toBe(web.powerBreakdown.pops.power);
-      expect(api.breakdown.upgrades.power).toBe(web.powerBreakdown.upgrades.power);
+      // Upgrade tiers stopped counting in v57.0; the API keeps a zero entry for
+      // older clients and ignores upgrade_count.
+      expect(api.breakdown.upgrades.power).toBe(0);
       expect(api.breakdown.cash.power).toBe(web.powerBreakdown.cash.power);
       expect(api.breakdown.extra_t5s.power).toBe(web.powerBreakdown.t5.power);
       expect(api.breakdown.totems.power).toBe(web.powerBreakdown.totems.power);
@@ -112,6 +117,20 @@ describe("API / web engine parity", () => {
     expect(degreeFor(4).breakdown.extra_t5s.power).toBe(POWER_LIMITS.t5.maxPower);
     expect(degreeFor(2).degree).toBeLessThan(degreeFor(4).degree);
     expect(degreeFor(2).warnings.map((w) => w.type)).toContain("invalid_extra_t5s_coop");
+  });
+
+  it("accepts upgrade_count from older clients but ignores it, with a warning", () => {
+    const run = (body) => {
+      _resetRateLimitForTesting();
+      const { req, res } = makeReqRes({ body });
+      handler(req, res);
+      return res._body.result;
+    };
+    const withTiers = run({ tower: "Ninja Monkey", pops: 2_400_000, upgrade_count: 100 });
+    const without = run({ tower: "Ninja Monkey", pops: 2_400_000 });
+    expect(withTiers.total_power).toBe(without.total_power);
+    expect(withTiers.warnings.map((w) => w.type)).toContain("upgrades_ignored");
+    expect(without.warnings.map((w) => w.type)).not.toContain("upgrades_ignored");
   });
 
   it("returns whole-number power for every documented case", () => {
