@@ -1584,6 +1584,19 @@ main {
 .ad-container[hidden] { display: none; }
 .ad-container ins { width: 100%; }
 
+.more-games {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+.itch-embed {
+  display: block;
+  width: 100%;
+  max-width: 552px;
+  height: 167px;
+  border: 0;
+}
+
 .site-footer {
   border-top: 1px solid var(--border);
   padding: var(--s-8) 0 var(--s-10);
