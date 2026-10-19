@@ -1138,7 +1138,7 @@ export default function App() {
           <section className="privacy-policy-section" id="privacy-policy" aria-label="Privacy policy">
             <h2 className="paragon-selector-title">Privacy policy</h2>
             <div className="privacy-content">
-              <p><strong>Last updated:</strong> May 27, 2026</p>
+              <p><strong>Last updated:</strong> October 19, 2026</p>
 
               <h3>What we collect</h3>
               <p>
@@ -1153,6 +1153,13 @@ export default function App() {
                 <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer">Google Ads Settings</a>,
                 and read how Google uses this data in{" "}
                 <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer">Google&rsquo;s Privacy &amp; Terms</a>.
+              </p>
+
+              <h3>Embedded content</h3>
+              <p>
+                The &ldquo;More from the developer&rdquo; section embeds a widget from{" "}
+                <a href="https://itch.io/docs/legal/privacy-policy" target="_blank" rel="noopener noreferrer">itch.io</a>,
+                which loads from itch.io&rsquo;s servers and is subject to its privacy policy.
               </p>
 
               <h3>Analytics</h3>
@@ -1176,6 +1183,21 @@ export default function App() {
             </div>
           </section>
         </div>
+
+        {/* ── MORE FROM THE DEVELOPER ── */}
+        <section className="more-games" aria-labelledby="more-games-title">
+          <h2 id="more-games-title" className="paragon-selector-title">More from the developer</h2>
+          <iframe
+            className="itch-embed"
+            src="https://itch.io/embed/5114290?linkback=true&bg_color=0b1a20&fg_color=cbdcd7&link_color=72e5b0&border_color=353d42"
+            width="552"
+            height="167"
+            loading="lazy"
+            title="DEEPSUB on itch.io"
+          >
+            <a href="https://levisager11-oss.itch.io/deepsub">DEEPSUB by levisager11-oss</a>
+          </iframe>
+        </section>
 
         <footer className="site-footer">
           <nav className="footer-nav" aria-label="Footer">
