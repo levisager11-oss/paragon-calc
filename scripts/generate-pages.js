@@ -615,7 +615,6 @@ function canonical(p) {
 function sitemap() {
   const entries = [
     { loc: "/", priority: "1.0", changefreq: "weekly" },
-    { loc: "/classic", priority: "0.9", changefreq: "weekly" },
     { loc: "/paragons", priority: "0.9", changefreq: "weekly" },
     { loc: "/faq", priority: "0.7", changefreq: "monthly" },
     ...Object.values(PARAGONS).map((p) => ({
