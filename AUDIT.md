@@ -1,3 +1,9 @@
+> **Historical document.** This is the record of two audits from earlier
+> versions of the site. Much of it no longer describes the product: there is
+> one calculator at `/` (the `/classic` and `/ticket` designs it mentions are
+> gone), 14 Paragons, and the Update 57 power rules. See `README.md` for the
+> current state.
+
 # Code audit — BTD6 Paragon Calculator
 
 Full review of the calculation engine, both UIs, the public API, SEO and repo

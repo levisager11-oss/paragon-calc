@@ -62,15 +62,6 @@ export default function App() {
     } catch { /* storage unavailable — the theme still applies for this visit */ }
   }, [lightMode]);
 
-  // The calculator lives at /classic. Canonicalise the bare "/" landing onto it
-  // so the route is linkable and bookmarkable, keeping the query string that
-  // carries a shared build.
-  useEffect(() => {
-    if (!window.location.pathname.startsWith("/classic")) {
-      window.history.replaceState({}, "", "/classic" + window.location.search);
-    }
-  }, []);
-
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -563,7 +554,6 @@ export default function App() {
             results={results}
             paragon={activeParagon}
             onLoadState={applyState}
-            sharePath="/classic"
           />
 
           {/* ── CORE WORKSPACE ── */}

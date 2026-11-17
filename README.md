@@ -112,9 +112,8 @@ documents: `src/components/EmbedCalculator.css` (the `/embed` widget) and the
 `BASE_CSS` block in `scripts/generate-pages.js` (the static pages). The values
 are identical — change one, change all three.
 
-`/ticket`, a second neo-brutalist design that used to live alongside the
-calculator, was retired: two design languages in one product is a consistency
-problem, and `vercel.json` now redirects the route to `/classic`.
+There is one calculator, at `/`. The old `/classic` and `/ticket` addresses
+redirect to it in `vercel.json`, so links shared before still open their build.
 
 ### Paragon artwork
 

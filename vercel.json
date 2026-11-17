@@ -1,10 +1,31 @@
 {
   "redirects": [
-    { "source": "/ticket", "destination": "/classic", "permanent": true },
-    { "source": "/ticket/:path*", "destination": "/classic", "permanent": true }
+    {
+      "source": "/classic",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/classic/:path*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/ticket",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/ticket/:path*",
+      "destination": "/",
+      "permanent": true
+    }
   ],
   "rewrites": [
-    { "source": "/embed", "destination": "/embed.html" },
+    {
+      "source": "/embed",
+      "destination": "/embed.html"
+    },
     {
       "source": "/((?!api/|paragons$|paragons/|faq$|degrees$|about$|.*\\.[A-Za-z0-9]+$).*)",
       "destination": "/index.html"

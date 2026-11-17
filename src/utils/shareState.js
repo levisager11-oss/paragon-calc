@@ -3,7 +3,7 @@
 // This is the shared foundation for shareable build links, the saved-build
 // store and the embeddable widget — they all describe a build with the same
 // shape and encode it the same way. Keys are short but readable so shared URLs
-// stay legible (e.g. /classic?paragon=ascended-shadow&diff=hard&pops=1200000).
+// stay legible (e.g. /?paragon=ascended-shadow&diff=hard&pops=1200000).
 
 import { PARAGONS, DIFFICULTY_MULTIPLIERS, MAX_EQUIVALENT_POPS } from "../constants/paragons.js";
 
@@ -108,7 +108,7 @@ export function hasBuildParams(search) {
 const resolveOrigin = (origin) =>
   origin || (typeof window !== "undefined" ? window.location.origin : "");
 
-export function buildShareUrl(state, { origin, path = "/classic" } = {}) {
+export function buildShareUrl(state, { origin, path = "/" } = {}) {
   return `${resolveOrigin(origin)}${path}?${encodeState(state)}`;
 }
 
