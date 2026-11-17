@@ -18,6 +18,7 @@ import AdUnit from "./components/AdUnit";
 import ParagonIcon from "./components/ParagonIcon";
 import BuildToolbar from "./components/BuildToolbar";
 import { decodeState } from "./utils/shareState";
+import { parseWholeNumber } from "./utils/number";
 
 // Slider track fill, as a CSS percentage string for the --pct custom property.
 const pct = (val, min, max) => `${Math.round(((val - min) / (max - min)) * 100)}%`;
@@ -43,14 +44,20 @@ export default function App() {
   const [difficulty, setDifficulty] = useState(() => initialBuild.difficulty);
   const [gameMode, setGameMode] = useState(() => initialBuild.gameMode); // "solo" or "coop"
   const [lightMode, setLightMode] = useState(() => {
-    const stored = localStorage.getItem("theme");
-    if (stored) return stored === "light";
+    // localStorage throws when site data is blocked (e.g. cookies disabled in
+    // Chrome); the theme is a nicety, so fall back to the OS preference.
+    try {
+      const stored = localStorage.getItem("theme");
+      if (stored) return stored === "light";
+    } catch { /* storage unavailable */ }
     return window.matchMedia("(prefers-color-scheme: light)").matches;
   });
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", lightMode ? "light" : "dark");
-    localStorage.setItem("theme", lightMode ? "light" : "dark");
+    try {
+      localStorage.setItem("theme", lightMode ? "light" : "dark");
+    } catch { /* storage unavailable — the theme still applies for this visit */ }
   }, [lightMode]);
 
   // The calculator lives at /classic. Canonicalise the bare "/" landing onto it
@@ -66,6 +73,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const searchInputRef = useRef(null);
+  const dropdownRef = useRef(null);
 
   // Goal Planner state
   const [targetDegree, setTargetDegree]       = useState(100);
@@ -109,7 +117,7 @@ export default function App() {
   const popAdderTriggerRef = useRef(null);
 
   const popAdderTotal = useMemo(() => {
-    return popAdderEntries.reduce((sum, v) => sum + (parseInt(v.replace(/,/g, "")) || 0), 0);
+    return popAdderEntries.reduce((sum, v) => sum + parseWholeNumber(v), 0);
   }, [popAdderEntries]);
 
   const openPopAdder = useCallback(() => {
@@ -194,7 +202,9 @@ export default function App() {
   // Paragon search
   const searchResults = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return [];
+    // An empty query lists the whole roster, so the field doubles as a picker
+    // for anyone who does not know a Paragon's name yet.
+    if (!q) return Object.values(PARAGONS);
     return Object.values(PARAGONS).filter(p =>
       p.name.toLowerCase().includes(q) ||
       p.tower.toLowerCase().includes(q) ||
@@ -266,12 +276,12 @@ export default function App() {
   };
 
   const handleSliderCashText = (e) => {
-    const val = parseInt(e.target.value.replace(/,/g, "")) || 0;
+    const val = parseWholeNumber(e.target.value);
     setSliderCash(Math.min(maxSliderLimit, Math.max(0, val)));
   };
 
   const handleSacrificeCashText = (e) => {
-    const val = parseInt(e.target.value.replace(/,/g, "")) || 0;
+    const val = parseWholeNumber(e.target.value);
     setSacrificedTowerCash(Math.max(0, val));
   };
 
@@ -286,12 +296,12 @@ export default function App() {
   };
 
   const handlePopsText = (e) => {
-    const val = parseInt(e.target.value.replace(/,/g, "")) || 0;
+    const val = parseWholeNumber(e.target.value);
     setPops(Math.max(0, val));
   };
 
   const handleIncomeText = (e) => {
-    const val = parseInt(e.target.value.replace(/,/g, "")) || 0;
+    const val = parseWholeNumber(e.target.value);
     setIncome(Math.max(0, val));
   };
 
@@ -345,7 +355,12 @@ export default function App() {
           {/* ── SETUP: which paragon, on what difficulty, in which mode ── */}
           <section className="setup" aria-label="Build setup" id="calculator">
             <div className="setup-row">
-              <div className="paragon-search-wrapper">
+              {/* Close the list only when focus leaves the whole widget, so the
+                  results stay reachable by Tab and arrow keys. */}
+              <div
+                className="paragon-search-wrapper"
+                onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setShowDropdown(false); }}
+              >
                 <div className="paragon-search-bar">
                   <Search size={ICON_MD} className="search-icon" aria-hidden="true" />
                   <input
@@ -356,14 +371,26 @@ export default function App() {
                     placeholder="Search by name, tower or class"
                     value={searchQuery}
                     onChange={(e) => { setSearchQuery(e.target.value); setShowDropdown(true); }}
-                    onFocus={() => searchQuery.trim() && setShowDropdown(true)}
-                    onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+                    onFocus={() => setShowDropdown(true)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && showDropdown && searchResults.length > 0) {
+                        e.preventDefault();
+                        handleSelectParagon(searchResults[0].id);
+                      } else if (e.key === "Escape") {
+                        setShowDropdown(false);
+                      } else if (e.key === "ArrowDown" && searchResults.length > 0) {
+                        e.preventDefault();
+                        setShowDropdown(true);
+                        // Wait for the list to render when this keypress opened it.
+                        setTimeout(() => dropdownRef.current?.querySelector("button")?.focus(), 0);
+                      }
+                    }}
                   />
                   {searchQuery && (
                     <button
                       className="search-clear-btn"
                       aria-label="Clear search"
-                      onMouseDown={() => { setSearchQuery(""); setShowDropdown(false); searchInputRef.current?.focus(); }}
+                      onClick={() => { setSearchQuery(""); searchInputRef.current?.focus(); }}
                     >
                       <X size={12} />
                     </button>
@@ -371,14 +398,18 @@ export default function App() {
                 </div>
 
                 {showDropdown && (
-                  <div className="paragon-dropdown">
+                  <div className="paragon-dropdown" ref={dropdownRef}>
                     {searchResults.length > 0 ? searchResults.map(p => (
                       <button
                         key={p.id}
                         type="button"
                         className="paragon-dropdown-item"
-                        onMouseDown={() => handleSelectParagon(p.id)}
-                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSelectParagon(p.id); } }}
+                        onClick={() => handleSelectParagon(p.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "ArrowDown") { e.preventDefault(); e.currentTarget.nextElementSibling?.focus(); }
+                          else if (e.key === "ArrowUp") { e.preventDefault(); (e.currentTarget.previousElementSibling ?? searchInputRef.current)?.focus(); }
+                          else if (e.key === "Escape") { setShowDropdown(false); searchInputRef.current?.focus(); }
+                        }}
                       >
                         <span className="dropdown-icon">
                           <ParagonIcon paragon={p} size={32} />
@@ -735,7 +766,7 @@ export default function App() {
                   <div className="input-controls">
                     <div className="control-row">
                       <p className="input-note input-note-tight">
-                        Paragon Power Totems from Geraldo&rsquo;s shop add flat power that ignores every cap.
+                        Paragon Power Totems from Geraldo&rsquo;s shop add flat power that ignores every cap.{" "}
                         {totemsToMax > 0
                           ? `${totemsToMax} more would take this build to Degree 100.`
                           : "This build reaches Degree 100 without any more."}
@@ -1082,7 +1113,9 @@ export default function App() {
                 A Paragon&rsquo;s degree comes from Paragon Power Points, which top out at{" "}
                 {MAX_POWER.toLocaleString()} at Degree 100. Three categories each have their own ceiling;
                 Geraldo&rsquo;s totems sit outside all of them. These are the Update {GAME_VERSION} rates —
-                upgrade tiers on sacrificed towers stopped counting in that update.
+                upgrade tiers on sacrificed towers stopped counting in that update. The Xbox, PlayStation
+                and Switch versions have not received it yet and still use the older, lower caps, so
+                console results will differ.
               </p>
 
               <div className="guide-grid">
@@ -1213,8 +1246,8 @@ export default function App() {
           </nav>
           <p>
             An open-source degree calculator for Bloons TD 6 Paragons. The degree curve and power caps
-            are community-documented and pinned in the repository&rsquo;s test suite against four known
-            in-game values.
+            are community-documented, and the full 100-degree threshold table is pinned in the
+            repository&rsquo;s test suite.
           </p>
           <p>
             &copy; {new Date().getFullYear()} Paragon Calculator. Bloons TD 6 is a trademark of Ninja

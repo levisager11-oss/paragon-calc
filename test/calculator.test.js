@@ -417,3 +417,31 @@ describe("reverseCalculate", () => {
     }
   });
 });
+
+describe("Goal Planner answers reach their own target", () => {
+  // Regression: ceil(power / rate) can land a float hair short once the engine
+  // floors cash power, which used to leave e.g. Navarch on Easy one degree low.
+  it("holds for every paragon, difficulty, mode, strategy and degree", () => {
+    const misses = [];
+    for (const paragon of Object.values(PARAGONS))
+      for (const difficulty of ["easy", "medium", "hard", "impoppable"])
+        for (const gameMode of ["solo", "coop"])
+          for (const strategy of ["leastCash", "balanced", "leastPops"])
+            for (const [useSacrificeCash, useSliderCash] of [[true, false], [false, true], [true, true]])
+              for (let targetDegree = 2; targetDegree <= 100; targetDegree++) {
+                const plan = reverseCalculate({
+                  paragon, difficulty, gameMode, targetDegree, strategy,
+                  useSacrificeCash, useSliderCash, useTotems: false,
+                });
+                if (!plan.achievable) continue;
+                const { degree } = calculateParagonData({
+                  paragon, difficulty, gameMode,
+                  pops: plan.popsNeeded, income: 0, extraT5s: plan.t5sNeeded,
+                  sacrificedTowerCash: plan.sacrificeCashNeeded,
+                  sliderCash: plan.sliderCashNeeded, totems: plan.totemsNeeded,
+                });
+                if (degree < targetDegree) misses.push(`${paragon.id}/${difficulty}/${strategy}/${targetDegree}`);
+              }
+    expect(misses).toEqual([]);
+  });
+});

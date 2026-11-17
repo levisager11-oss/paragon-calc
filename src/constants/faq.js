@@ -86,6 +86,6 @@ export const FAQ_ITEMS = [
   },
   {
     q: "Is this calculator accurate and up to date?",
-    a: `It models the current Update ${GAME_VERSION} Paragon formula, including the cash slider and Geraldo totems, and is open-source so the math can be checked. The degree curve is pinned by a regression test against the documented in-game values. Use the Goal Planner to work backwards from a target degree, or enter your sacrifices directly to see the exact degree you will get.`,
+    a: `It models the current Update ${GAME_VERSION} Paragon formula, including the cash slider and Geraldo totems, and is open-source so the math can be checked. The Xbox, PlayStation and Switch versions have not received that update yet and still use the older, lower caps, so results there will differ. The degree curve is pinned by a regression test against the documented in-game values. Use the Goal Planner to work backwards from a target degree, or enter your sacrifices directly to see the exact degree you will get.`,
   },
 ];

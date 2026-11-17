@@ -265,6 +265,8 @@ kbd {
 }
 
 .page {
+  /* Containing block for pending ad slots, so they measure the content width. */
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--s-12);
@@ -1573,15 +1575,24 @@ main {
    Ads & footer
    ========================================================================== */
 
-/* No frame and no reserved height. AdUnit sets [hidden] until AdSense reports
-   the slot filled, so an unfilled or blocked slot leaves no gap at all — the
-   `display:none` from [hidden] also removes it from the page's flex gaps. */
+/* An ad slot stays out of the layout until AdSense reports it filled, so an
+   unfilled or blocked slot leaves no gap. It must NOT be display:none while it
+   waits: AdSense measures the slot when it is requested and refuses one with no
+   width ("No slot size for availableWidth=0"), so a hidden slot can never fill.
+   Taking it out of flow keeps its width and removes it from the flex gaps. */
 .ad-container {
   display: flex;
   justify-content: center;
   overflow: hidden;
 }
-.ad-container[hidden] { display: none; }
+.ad-container.is-pending {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
 .ad-container ins { width: 100%; }
 
 .more-games {

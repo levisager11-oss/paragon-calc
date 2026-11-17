@@ -214,10 +214,14 @@ export function reverseCalculate({
       const half = cashPow / 2;
       sacrificeCashNeeded = Math.ceil(half / sacrificePowerRate);
       sliderCashNeeded    = Math.ceil(half / sliderPowerRate);
+      // The engine floors the *combined* cash power, so check the sum.
+      while (
+        Math.floor(sacrificeCashNeeded * sacrificePowerRate + sliderCashNeeded * sliderPowerRate) < cashPow
+      ) sacrificeCashNeeded++;
     } else if (useSacrificeCash) {
-      sacrificeCashNeeded = Math.ceil(cashPow / sacrificePowerRate);
+      sacrificeCashNeeded = cashForPower(cashPow, sacrificePowerRate);
     } else {
-      sliderCashNeeded = Math.ceil(cashPow / sliderPowerRate);
+      sliderCashNeeded = cashForPower(cashPow, sliderPowerRate);
     }
   }
 
@@ -238,6 +242,23 @@ export function reverseCalculate({
     totalCashNeeded:     sacrificeCashNeeded + sliderCashNeeded,
     totemsNeeded,
   };
+}
+
+/**
+ * Smallest whole-dollar amount that yields at least `power` at `powerPerDollar`.
+ *
+ * `Math.ceil(power / rate)` alone is not enough: the rate is a non-terminating
+ * fraction for most prices, so `dollars * rate` can come back a hair under the
+ * power it was sized for, and the engine floors cash power. That left the Goal
+ * Planner one power — and therefore one whole degree — short on a handful of
+ * builds (e.g. Navarch on Easy, Degree 66). Checking the forward direction and
+ * nudging by a dollar makes the planner's answer always reach its own target.
+ */
+export function cashForPower(power, powerPerDollar) {
+  if (!(power > 0)) return 0;
+  let dollars = Math.ceil(power / powerPerDollar);
+  while (Math.floor(dollars * powerPerDollar) < power) dollars++;
+  return dollars;
 }
 
 /**

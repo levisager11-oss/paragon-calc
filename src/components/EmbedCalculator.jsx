@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { PARAGONS, DIFFICULTY_MULTIPLIERS, MAX_EQUIVALENT_POPS, SLIDER_CAP_MULTIPLE } from "../constants/paragons.js";
 import { calculateParagonData, getBasePrice, maxT5sFor, MAX_POWER } from "../utils/calculator.js";
 import { decodeState, buildShareUrl } from "../utils/shareState.js";
+import { parseWholeNumber } from "../utils/number.js";
 
 // The three capped power sources. Colour is not identity here: every bar is the
 // accent until its source hits its ceiling, which is the one thing worth
@@ -13,8 +14,7 @@ const BREAKDOWN = [
 ];
 
 const clampNum = (v, min, max) => {
-  const n = parseInt(String(v).replace(/,/g, ""), 10);
-  if (!Number.isFinite(n)) return min;
+  const n = parseWholeNumber(v);
   return Math.min(max, Math.max(min, n));
 };
 
