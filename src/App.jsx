@@ -244,6 +244,8 @@ export default function App() {
     setSelectedParagonId(id);
     setSearchQuery("");
     setShowDropdown(false);
+    // Drop focus so a phone's keyboard closes and the new build is visible.
+    document.activeElement?.blur?.();
   };
 
   // 4. Enforce Game Constraints
@@ -390,7 +392,7 @@ export default function App() {
                     type="text"
                     className="paragon-search-input"
                     aria-label="Search paragons by name, tower or class"
-                    placeholder="Search by name, tower or class"
+                    placeholder="Choose a Paragon — tap to list, or type to search"
                     value={searchQuery}
                     onChange={(e) => { setSearchQuery(e.target.value); setShowDropdown(true); }}
                     onFocus={() => setShowDropdown(true)}
@@ -420,7 +422,15 @@ export default function App() {
                 </div>
 
                 {showDropdown && (
-                  <div className="paragon-dropdown" ref={dropdownRef}>
+                  <div
+                    className="paragon-dropdown"
+                    ref={dropdownRef}
+                    // Keep focus in the search field while the list is pressed.
+                    // Safari on iOS never focuses a tapped button, so without
+                    // this the field blurs, the list unmounts and the tap
+                    // selects nothing.
+                    onMouseDown={(e) => e.preventDefault()}
+                  >
                     {searchResults.length > 0 ? searchResults.map(p => (
                       <button
                         key={p.id}
@@ -1229,16 +1239,11 @@ export default function App() {
         {/* ── MORE FROM THE DEVELOPER ── */}
         <section className="more-games" aria-labelledby="more-games-title">
           <h2 id="more-games-title" className="paragon-selector-title">More from the developer</h2>
-          <iframe
-            className="itch-embed"
-            src="https://itch.io/embed/5114290?linkback=true&bg_color=0b1a20&fg_color=cbdcd7&link_color=72e5b0&border_color=353d42"
-            width="552"
-            height="167"
-            loading="lazy"
-            title="DEEPSUB on itch.io"
-          >
-            <a href="https://levisager11-oss.itch.io/deepsub">DEEPSUB by levisager11-oss</a>
-          </iframe>
+          <p className="more-games-text">
+            <a href="https://www.playtoki.app" target="_blank" rel="noopener noreferrer">Toki</a>{" "}
+            — free browser games you can play straight away, no account needed, with high scores
+            and friends if you want them.
+          </p>
         </section>
 
         <footer className="site-footer">
