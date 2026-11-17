@@ -4,7 +4,7 @@ export const PARAGONS = {
     name: "Apex Plasma Master",
     tower: "Dart Monkey",
     mediumCost: 150000,
-    maxT4Cost: { easy: 7205, medium: 8480, hard: 9155, impoppable: 10180 },
+    maxT4Cost: { easy: 7210, medium: 8480, hard: 9155, impoppable: 10180 },
     maxT4Build: "2-4-0",
     // Master Double Cross lets one player own a second Crossbow Master, so this
     // Paragon can absorb one extra Tier 5 even in solo play.
@@ -24,7 +24,7 @@ export const PARAGONS = {
     name: "Glaive Dominus",
     tower: "Boomerang Monkey",
     mediumCost: 375000,
-    maxT4Cost: { easy: 5670, medium: 6670, hard: 7200, impoppable: 8005 },
+    maxT4Cost: { easy: 5680, medium: 6670, hard: 7200, impoppable: 8005 },
     maxT4Build: "2-4-0",
     category: "primary",
     description: "The ultimate defensive tower. Possesses high-speed homing glaives, a permanent orbital glaive ring, and an explosive press attack that pushes back massive Bloons.",
@@ -41,7 +41,7 @@ export const PARAGONS = {
     name: "Ascended Shadow",
     tower: "Ninja Monkey",
     mediumCost: 500000,
-    maxT4Cost: { easy: 7725, medium: 9100, hard: 9830, impoppable: 10920 },
+    maxT4Cost: { easy: 7745, medium: 9100, hard: 9830, impoppable: 10920 },
     maxT4Build: "2-0-4",
     category: "magic",
     description: "An absolute assassin that floods the map with seeking shurikens, flash bombs and sticky bombs, under a permanent Grand Saboteur debuff. Cloaked in shadow, nothing escapes.",
@@ -58,7 +58,7 @@ export const PARAGONS = {
     name: "Navarch of the Seas",
     tower: "Monkey Buccaneer",
     mediumCost: 550000,
-    maxT4Cost: { easy: 11470, medium: 13500, hard: 14580, impoppable: 16200 },
+    maxT4Cost: { easy: 11480, medium: 13500, hard: 14580, impoppable: 16200 },
     maxT4Build: "4-2-0",
     category: "military",
     description: "The ruler of the waters. Features three fighter planes, six triple-barreled cannon-and-grape turrets, and the legendary ability to hook and instantly destroy BADs.",
@@ -75,7 +75,7 @@ export const PARAGONS = {
     name: "Nautic Siege Core",
     tower: "Monkey Sub",
     mediumCost: 400000,
-    maxT4Cost: { easy: 14335, medium: 16875, hard: 18225, impoppable: 20250 },
+    maxT4Cost: { easy: 14350, medium: 16875, hard: 18225, impoppable: 20250 },
     maxT4Build: "0-4-2",
     category: "military",
     description: "A nuclear submarine that submerges to buff Heroes, Subs and other towers, fires pre-emptive missiles at every Bloon entering the map, and emits radioactive pulses.",
@@ -92,7 +92,7 @@ export const PARAGONS = {
     name: "Master Builder",
     tower: "Engineer Monkey",
     mediumCost: 600000,
-    maxT4Cost: { easy: 13810, medium: 16250, hard: 17550, impoppable: 19500 },
+    maxT4Cost: { easy: 13820, medium: 16250, hard: 17550, impoppable: 19500 },
     maxT4Build: "2-4-0",
     category: "support",
     description: "The pinnacle of support. Deploys three Mega Sentries (Green, Red, Blue) that build their own sentries and can be detonated, and can Overclock other towers and Paragons.",
@@ -109,7 +109,7 @@ export const PARAGONS = {
     name: "Magus Perfectus",
     tower: "Wizard Monkey",
     mediumCost: 800000,
-    maxT4Cost: { easy: 11405, medium: 13425, hard: 14500, impoppable: 16110 },
+    maxT4Cost: { easy: 11420, medium: 13425, hard: 14500, impoppable: 16110 },
     maxT4Build: "4-2-0",
     category: "magic",
     description: "Master of arcane, fire, and necromancy. Uses a unique mana system, switching between mana-hungry Arcane Spike and Dark Phoenix attacks and a weak Draining Beam that restores mana.",
@@ -126,7 +126,7 @@ export const PARAGONS = {
     name: "Goliath Doomship",
     tower: "Monkey Ace",
     mediumCost: 900000,
-    maxT4Cost: { easy: 24470, medium: 28800, hard: 31105, impoppable: 34560 },
+    maxT4Cost: { easy: 24490, medium: 28800, hard: 31105, impoppable: 34560 },
     maxT4Build: "2-0-4",
     category: "military",
     description: "A massive flying fortress that commands the skies. Constantly fires rings of piercing missiles and seeking missiles, with a Carpet Bomb ability that devastates the field.",
@@ -143,7 +143,7 @@ export const PARAGONS = {
     name: "Crucible of Steel and Flame",
     tower: "Tack Shooter",
     mediumCost: 200000,
-    maxT4Cost: { easy: 4290, medium: 5055, hard: 5460, impoppable: 6065 },
+    maxT4Cost: { easy: 4300, medium: 5055, hard: 5460, impoppable: 6065 },
     maxT4Build: "4-2-0",
     category: "primary",
     description: "Spinning blades of Bloon immolation! Combines the ultra-fast shooting Tack Zone, high-speed Super Maelstrom, and fire-spewing Inferno Ring.",
@@ -179,7 +179,7 @@ export const PARAGONS = {
     name: "Ballistic Obliteration Missile Bunker (B.O.M.B.)",
     tower: "Bomb Shooter",
     mediumCost: 650000,
-    maxT4Cost: { easy: 5410, medium: 6375, hard: 6880, impoppable: 7650 },
+    maxT4Cost: { easy: 5430, medium: 6375, hard: 6880, impoppable: 7650 },
     maxT4Build: "2-4-0",
     category: "primary",
     description: "The ultimate artillery fortress. Combines the cluster impact of Bomb Blitz, the Moab-destroying power of MOAB Eliminator, and the stun capability of Bloon Crush.",
@@ -197,7 +197,7 @@ export const PARAGONS = {
     name: "Herald of Everfrost",
     tower: "Ice Monkey",
     mediumCost: 300000,
-    maxT4Cost: { easy: 7555, medium: 8900, hard: 9610, impoppable: 10680 },
+    maxT4Cost: { easy: 7575, medium: 8900, hard: 9610, impoppable: 10680 },
     maxT4Build: "2-4-0",
     // Silas at level 13+ lets one player own two Ice Monkeys with the same Tier 5
     // upgrade, which is the Ice Monkey's equivalent of Master Double Cross.
@@ -218,7 +218,7 @@ export const PARAGONS = {
     name: "Root of all Nature",
     tower: "Druid",
     mediumCost: 475000,
-    maxT4Cost: { easy: 7130, medium: 8400, hard: 9075, impoppable: 10080 },
+    maxT4Cost: { easy: 7150, medium: 8400, hard: 9075, impoppable: 10080 },
     maxT4Build: "4-2-0",
     category: "magic",
     description: "The absolute embodiment of natural fury. Combines the lightning storm control of Monarch of Storms, the global vine coverage of Spirit of the Forest, and the escalating speed/power of Avatar of Wrath.",
@@ -279,6 +279,10 @@ export const MAX_EQUIVALENT_POPS = POWER_LIMITS.pops.maxPower * POWER_LIMITS.pop
 // slider stops at that multiple plus its premium (4.2x).
 export const CASH_CAP_MULTIPLE = POWER_LIMITS.cash.maxPower / CASH_POWER_PER_BASE_PRICE;
 export const SLIDER_CAP_MULTIPLE = Math.round(CASH_CAP_MULTIPLE * SLIDER_PREMIUM * 100) / 100;
+
+// The Paragon Boost perk (v56.0): the first Paragon bought in a game gains this
+// many degrees on top of whatever its power earned, up to the Degree 100 ceiling.
+export const PARAGON_BOOST_DEGREES = 25;
 
 // The game version the roster, prices and power rules above were verified against.
 export const GAME_VERSION = "57.0";

@@ -445,3 +445,39 @@ describe("Goal Planner answers reach their own target", () => {
     expect(misses).toEqual([]);
   });
 });
+
+describe("Paragon Boost perk", () => {
+  const build = (over = {}) => calculateParagonData({
+    paragon: NINJA, difficulty: "medium", gameMode: "solo",
+    pops: 0, income: 0, extraT5s: 0, sacrificedTowerCash: 0, sliderCash: 0, totems: 0,
+    ...over,
+  });
+
+  it("adds 25 degrees on top of the power-earned degree", () => {
+    const plain = build({ totems: 10 });
+    const boosted = build({ totems: 10, paragonBoost: true });
+    expect(boosted.baseDegree).toBe(plain.degree);
+    expect(boosted.degree).toBe(plain.degree + 25);
+    expect(boosted.totalPower).toBe(plain.totalPower);
+  });
+
+  it("never exceeds Degree 100", () => {
+    const boosted = build({ pops: MAX_EQUIVALENT_POPS, paragonBoost: true });
+    expect(boosted.baseDegree).toBe(81);
+    expect(boosted.degree).toBe(100);
+    expect(boosted.recommendations).toEqual([]);
+  });
+
+  it("sizes the next-degree gap from the unboosted degree", () => {
+    const boosted = build({ paragonBoost: true }); // Degree 1 + 25
+    expect(boosted.degree).toBe(26);
+    expect(boosted.nextDegree).toBe(27);
+    expect(boosted.powerGap).toBe(getPowerThreshold(2));
+  });
+
+  it("lets the Goal Planner aim 25 degrees lower", () => {
+    const args = { paragon: NINJA, difficulty: "medium", gameMode: "solo", targetDegree: 100 };
+    expect(reverseCalculate({ ...args, paragonBoost: true }).targetPower).toBe(getPowerThreshold(75));
+    expect(reverseCalculate(args).targetPower).toBe(MAX_POWER);
+  });
+});

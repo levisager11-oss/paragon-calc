@@ -89,6 +89,7 @@ export default function BuildToolbar({ state, results, paragon, onLoadState, sha
         paragon,
         difficulty: state.difficulty,
         gameMode: state.gameMode,
+        playerCount: state.playerCount,
         results,
       });
     } catch (err) {

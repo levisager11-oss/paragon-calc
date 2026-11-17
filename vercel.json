@@ -6,7 +6,7 @@
   "rewrites": [
     { "source": "/embed", "destination": "/embed.html" },
     {
-      "source": "/((?!api/|paragons$|paragons/|faq$|.*\\.[A-Za-z0-9]+$).*)",
+      "source": "/((?!api/|paragons$|paragons/|faq$|degrees$|about$|.*\\.[A-Za-z0-9]+$).*)",
       "destination": "/index.html"
     }
   ]

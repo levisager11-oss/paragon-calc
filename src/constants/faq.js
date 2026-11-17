@@ -10,7 +10,7 @@
 
 import { MAX_POWER, soloCeilingFacts } from "../utils/calculator.js";
 import {
-  PARAGONS, POWER_LIMITS, GAME_VERSION,
+  PARAGONS, POWER_LIMITS, GAME_VERSION, PARAGON_BOOST_DEGREES,
   MAX_EQUIVALENT_POPS, CASH_CAP_MULTIPLE, SLIDER_CAP_MULTIPLE,
 } from "./paragons.js";
 
@@ -75,6 +75,10 @@ export const FAQ_ITEMS = [
   {
     q: "What are Geraldo's Paragon Power Totems?",
     a: `Paragon Power Totems are an item sold by the hero Geraldo. Each totem absorbed into a Paragon adds a flat ${n(TOTEM_POWER)} power points and, unlike the other categories, has no cap. They stand in for pops or cash you have not banked yet, which makes them the quickest way to a high degree before the late rounds.`,
+  },
+  {
+    q: "What does the Paragon Boost perk do?",
+    a: `Paragon Boost is a perk that gives the first Paragon you buy in a game ${PARAGON_BOOST_DEGREES} extra degrees. The bonus is added after the degree is worked out from Paragon power and cannot go past Degree 100, so with the perk a Paragon only needs enough power for Degree ${100 - PARAGON_BOOST_DEGREES} to max out. Perks are disabled in CHIMPS and competitive modes. Switch on "Paragon Boost" in the calculator to include it.`,
   },
   {
     q: "Can I over-sacrifice and waste resources?",

@@ -2,13 +2,13 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   User, Users, Wrench, Target, Crown, DollarSign, Gem,
   RotateCcw, BarChart3, AlertTriangle, Lightbulb, ArrowRight,
-  Trophy, BookOpen, Search, X, Plus, Calculator, Sun, Moon, CircleCheck,
+  Trophy, BookOpen, Search, X, Plus, Calculator, Sun, Moon, CircleCheck, Zap,
 } from "lucide-react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import {
   PARAGONS, DIFFICULTY_MULTIPLIERS, POWER_LIMITS, GAME_VERSION,
-  MAX_EQUIVALENT_POPS, CASH_CAP_MULTIPLE, SLIDER_CAP_MULTIPLE,
+  MAX_EQUIVALENT_POPS, CASH_CAP_MULTIPLE, SLIDER_CAP_MULTIPLE, PARAGON_BOOST_DEGREES,
 } from "./constants/paragons";
 import {
   calculateParagonData, reverseCalculate, getBasePrice, getMaxT4Cost,
@@ -43,6 +43,8 @@ export default function App() {
   const [selectedParagonId, setSelectedParagonId] = useState(() => initialBuild.paragon);
   const [difficulty, setDifficulty] = useState(() => initialBuild.difficulty);
   const [gameMode, setGameMode] = useState(() => initialBuild.gameMode); // "solo" or "coop"
+  const [playerCount, setPlayerCount] = useState(() => initialBuild.playerCount); // co-op lobby size, 2-4
+  const [paragonBoost, setParagonBoost] = useState(() => initialBuild.paragonBoost); // Paragon Boost perk
   const [lightMode, setLightMode] = useState(() => {
     // localStorage throws when site data is blocked (e.g. cookies disabled in
     // Chrome); the theme is a nicety, so fall back to the OS preference.
@@ -92,9 +94,9 @@ export default function App() {
 
   // Snapshot of the current build for the share / save / embed / export toolbar.
   const currentState = useMemo(() => ({
-    paragon: selectedParagonId, difficulty, gameMode, pops, income,
+    paragon: selectedParagonId, difficulty, gameMode, playerCount, paragonBoost, pops, income,
     extraT5s, sacrificedTowerCash, sliderCash, totems,
-  }), [selectedParagonId, difficulty, gameMode, pops, income,
+  }), [selectedParagonId, difficulty, gameMode, playerCount, paragonBoost, pops, income,
        extraT5s, sacrificedTowerCash, sliderCash, totems]);
 
   // Apply a saved or shared build (from the toolbar) to every input at once.
@@ -102,6 +104,9 @@ export default function App() {
     setSelectedParagonId(s.paragon);
     setDifficulty(s.difficulty);
     setGameMode(s.gameMode);
+    // Builds saved before these existed carry neither field.
+    setPlayerCount(s.playerCount ?? 4);
+    setParagonBoost(Boolean(s.paragonBoost));
     setPops(s.pops);
     setIncome(s.income);
     setExtraT5s(s.extraT5s);
@@ -224,13 +229,15 @@ export default function App() {
     paragon:         activeParagon,
     difficulty,
     gameMode,
+    playerCount,
+    paragonBoost,
     targetDegree,
     useExtraT5s:      goalUseExtraT5s,
     useSacrificeCash: goalCashMode === "sacrifice" || goalCashMode === "both",
     useSliderCash:    goalCashMode === "slider"    || goalCashMode === "both",
     useTotems:        goalUseTotems,
     strategy:         goalStrategy,
-  }), [activeParagon, difficulty, gameMode, targetDegree,
+  }), [activeParagon, difficulty, gameMode, playerCount, paragonBoost, targetDegree,
        goalUseExtraT5s, goalCashMode, goalUseTotems, goalStrategy]);
 
   const handleSelectParagon = (id) => {
@@ -243,7 +250,7 @@ export default function App() {
   // These limits depend on the selected paragon, mode and difficulty, so clamp
   // during render rather than in an effect: the value is corrected before paint
   // instead of after a second, cascading render.
-  const allowedT5s = maxT5sFor(activeParagon, gameMode);
+  const allowedT5s = maxT5sFor(activeParagon, gameMode, playerCount);
   if (extraT5s > allowedT5s) setExtraT5s(allowedT5s);
   if (sliderCash > maxSliderLimit) setSliderCash(maxSliderLimit);
 
@@ -253,14 +260,16 @@ export default function App() {
       paragon: activeParagon,
       difficulty,
       gameMode,
+      playerCount,
       pops,
       income,
       extraT5s,
       sacrificedTowerCash,
       sliderCash,
-      totems
+      totems,
+      paragonBoost
     });
-  }, [activeParagon, difficulty, gameMode, pops, income, extraT5s, sacrificedTowerCash, sliderCash, totems]);
+  }, [activeParagon, difficulty, gameMode, playerCount, pops, income, extraT5s, sacrificedTowerCash, sliderCash, totems, paragonBoost]);
 
   // 6. Helper Actions
   const setMaxPops = () => setPops(MAX_EQUIVALENT_POPS);
@@ -307,8 +316,20 @@ export default function App() {
 
   const gaugePct = Math.min(100, (results.totalPower / MAX_POWER) * 100);
 
+  // On narrow screens the gauge sits below the inputs, so a slim bar repeats
+  // the degree while the gauge itself is scrolled out of view.
+  const gaugeRef = useRef(null);
+  const [gaugeVisible, setGaugeVisible] = useState(true);
+  useEffect(() => {
+    const el = gaugeRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([entry]) => setGaugeVisible(entry.isIntersecting));
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   // Totems still needed on top of everything entered to reach Degree 100.
-  const totemsToMax = Math.max(0, Math.ceil((MAX_POWER - results.totalPower) / 2000));
+  const totemsToMax = Math.max(0, Math.ceil((results.powerForMaxDegree - results.totalPower) / 2000));
 
   // The three capped power sources, rendered as one list so every row shares the
   // same markup, bar and cap treatment.
@@ -336,6 +357,7 @@ export default function App() {
 
           <nav className="site-nav" aria-label="Primary">
             <a href="/paragons">Paragons</a>
+            <a href="/degrees">Degrees</a>
             <a href="/faq">FAQ</a>
             <a href="https://github.com/levisager11-oss/paragon-calc" target="_blank" rel="noopener noreferrer">Source</a>
           </nav>
@@ -465,6 +487,38 @@ export default function App() {
                   </button>
                 </div>
               </div>
+
+              {gameMode === "coop" && (
+                <div className="setup-field">
+                  <span className="eyebrow" id="players-label">Players</span>
+                  <div className="control-group" role="group" aria-labelledby="players-label">
+                    {[2, 3, 4].map((count) => (
+                      <button
+                        key={count}
+                        className={`control-btn ${playerCount === count ? "active" : ""}`}
+                        aria-pressed={playerCount === count}
+                        onClick={() => setPlayerCount(count)}
+                      >
+                        {count}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="setup-field">
+                <span className="eyebrow" id="perk-label">Perk</span>
+                <div className="control-group" role="group" aria-labelledby="perk-label">
+                  <button
+                    className={`control-btn ${paragonBoost ? "active" : ""}`}
+                    aria-pressed={paragonBoost}
+                    title={`Paragon Boost perk: the first Paragon you buy in a game gains ${PARAGON_BOOST_DEGREES} degrees`}
+                    onClick={() => setParagonBoost(prev => !prev)}
+                  >
+                    <Zap size={ICON_SM} aria-hidden="true" /> Paragon Boost +{PARAGON_BOOST_DEGREES}
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="paragon-active-chip">
@@ -501,8 +555,6 @@ export default function App() {
             onLoadState={applyState}
             sharePath="/classic"
           />
-
-          <AdUnit slot="1234567890" format="horizontal" />
 
           {/* ── CORE WORKSPACE ── */}
           <main>
@@ -618,7 +670,7 @@ export default function App() {
                             `Solo, you cannot field a fourth ${activeParagon.tower} Tier 5 — the Paragon consumes all three. Switch to Co-op to plan multiplayer sacrifices.`
                           )
                         ) : (
-                          `Co-op, each of the four players can place three Tier 5s of their own. Three go into the Paragon, leaving up to ${allowedT5s} extra${activeParagon.soloExtraT5Source ? ` — nine, plus one duplicate from ${activeParagon.soloExtraT5Source}` : ""}.`
+                          `Co-op, each of the ${playerCount} players can place three Tier 5s of their own. Three go into the Paragon, leaving up to ${allowedT5s} extra${activeParagon.soloExtraT5Source ? ` — ${allowedT5s - 1}, plus one duplicate from ${activeParagon.soloExtraT5Source}` : ""}.`
                         )}
                       </p>
                       <div>
@@ -797,9 +849,9 @@ export default function App() {
               </section>
 
               {/* Right: results */}
-              <aside className="sticky-results" aria-label="Results">
+              <aside className="sticky-results" aria-label="Results" id="results">
                 <div className="panel">
-                  <div className="gauge-container">
+                  <div className="gauge-container" ref={gaugeRef}>
                     <div
                       className={`circular-gauge ${results.degree === 100 ? "is-complete" : ""}`}
                       style={{ '--pct': gaugePct }}
@@ -812,6 +864,12 @@ export default function App() {
                         <span className="power-label-bold">{results.totalPower.toLocaleString()}</span> / {MAX_POWER.toLocaleString()}
                       </span>
                     </div>
+                    {paragonBoost && (
+                      <p className="boost-note">
+                        <Zap size={ICON_SM} aria-hidden="true" />
+                        Degree {results.baseDegree} from power, +{results.boostDegrees} from Paragon Boost
+                      </p>
+                    )}
                   </div>
 
                   <div className="capabilities">
@@ -914,8 +972,10 @@ export default function App() {
                       <CircleCheck size={ICON_MD} aria-hidden="true" /> Degree 100 reached
                     </h3>
                     <p className="maxed-body">
-                      This build hits the {MAX_POWER.toLocaleString()}-power ceiling. Anything you add
-                      beyond it changes nothing in game.
+                      {results.totalPower >= MAX_POWER
+                        ? `This build hits the ${MAX_POWER.toLocaleString()}-power ceiling.`
+                        : `Paragon Boost carries this build from Degree ${results.baseDegree} to the Degree 100 ceiling.`}{" "}
+                      Anything you add beyond it changes nothing in game.
                     </p>
                   </div>
                 )}
@@ -993,7 +1053,7 @@ export default function App() {
                     </div>
                     <div className="goal-toggles">
                       {[
-                        { id: "t5s",      label: "Extra Tier 5s",   sub: `up to ${allowedT5s} in ${gameMode === "coop" ? "co-op" : "solo"}`, state: goalUseExtraT5s, set: setGoalUseExtraT5s },
+                        { id: "t5s",      label: "Extra Tier 5s",   sub: `up to ${allowedT5s} in ${gameMode === "coop" ? `${playerCount}-player co-op` : "solo"}`, state: goalUseExtraT5s, set: setGoalUseExtraT5s },
                         { id: "totems",   label: "Geraldo totems",  sub: "2,000 power each, uncapped",     state: goalUseTotems,   set: setGoalUseTotems },
                       ].map(({ id, label, sub, state, set }) => (
                         <div key={id} className="goal-toggle-row">
@@ -1163,58 +1223,7 @@ export default function App() {
                 </div>
               </div>
             </section>
-
-            <AdUnit slot="1122334455" format="auto" />
           </main>
-
-          {/* ── PRIVACY POLICY — required for AdSense ── */}
-          <section className="privacy-policy-section" id="privacy-policy" aria-label="Privacy policy">
-            <h2 className="paragon-selector-title">Privacy policy</h2>
-            <div className="privacy-content">
-              <p><strong>Last updated:</strong> October 19, 2026</p>
-
-              <h3>What we collect</h3>
-              <p>
-                This site does not collect personal information directly. It serves ads through Google
-                AdSense, which may use cookies and web beacons to select ads based on your prior visits
-                to this and other sites.
-              </p>
-
-              <h3>Third-party advertising</h3>
-              <p>
-                Google may use cookies to personalise ads. You can opt out of personalised advertising in{" "}
-                <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer">Google Ads Settings</a>,
-                and read how Google uses this data in{" "}
-                <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer">Google&rsquo;s Privacy &amp; Terms</a>.
-              </p>
-
-              <h3>Embedded content</h3>
-              <p>
-                The &ldquo;More from the developer&rdquo; section embeds a widget from{" "}
-                <a href="https://itch.io/docs/legal/privacy-policy" target="_blank" rel="noopener noreferrer">itch.io</a>,
-                which loads from itch.io&rsquo;s servers and is subject to its privacy policy.
-              </p>
-
-              <h3>Analytics</h3>
-              <p>
-                Vercel Analytics records aggregated, anonymised page views. No personally identifiable
-                information is stored.
-              </p>
-
-              <h3>Cookies and local storage</h3>
-              <p>
-                Your theme preference and any builds you save stay in your own browser&rsquo;s local
-                storage — they are never sent anywhere. Google AdSense sets its own third-party cookies,
-                which you can control in your browser settings.
-              </p>
-
-              <h3>Contact</h3>
-              <p>
-                Questions about this policy belong in an issue on the{" "}
-                <a href="https://github.com/levisager11-oss/paragon-calc/issues" target="_blank" rel="noopener noreferrer">GitHub repository</a>.
-              </p>
-            </div>
-          </section>
         </div>
 
         {/* ── MORE FROM THE DEVELOPER ── */}
@@ -1238,7 +1247,9 @@ export default function App() {
             <span className="footer-sep" aria-hidden="true">·</span>
             <a href="/faq">FAQ</a>
             <span className="footer-sep" aria-hidden="true">·</span>
-            <a href="#privacy-policy">Privacy policy</a>
+            <a href="/degrees">Degree table</a>
+            <span className="footer-sep" aria-hidden="true">·</span>
+            <a href="/about">About &amp; privacy</a>
             <span className="footer-sep" aria-hidden="true">·</span>
             <a href="https://github.com/levisager11-oss/paragon-calc" target="_blank" rel="noopener noreferrer">Source on GitHub</a>
             <span className="footer-sep" aria-hidden="true">·</span>
@@ -1255,6 +1266,13 @@ export default function App() {
           </p>
         </footer>
       </div>
+
+      {!gaugeVisible && (
+        <a className="degree-bar" href="#results" aria-label={`Degree ${results.degree}. Jump to results.`}>
+          <span>Degree <strong>{results.degree}</strong></span>
+          <span>{results.totalPower.toLocaleString()} / {MAX_POWER.toLocaleString()} power</span>
+        </a>
+      )}
 
       {/* ── POP COUNT ADDER ── */}
       {popAdderOpen && (

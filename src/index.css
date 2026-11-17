@@ -566,8 +566,7 @@ main {
 .panel,
 .breakdown-card,
 .diagnostics-card,
-.guide-card,
-.privacy-policy-section {
+.guide-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
@@ -981,6 +980,16 @@ main {
 .degree-label,
 .degree-number,
 .power-total { position: relative; z-index: 1; }
+.boost-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  margin-top: var(--s-3);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+  color: var(--text-muted);
+}
 
 .degree-label {
   font-size: var(--fs-xs);
@@ -1384,17 +1393,6 @@ main {
   background: var(--text-subtle);
 }
 
-.privacy-content { display: flex; flex-direction: column; gap: var(--s-4); max-width: 72ch; }
-.privacy-content h3 {
-  font-size: var(--fs-h3);
-  line-height: var(--lh-h3);
-  margin-top: var(--s-2);
-}
-.privacy-content p {
-  font-size: var(--fs-sm);
-  line-height: var(--lh-sm);
-  color: var(--text-muted);
-}
 
 /* ============================================================================
    Modal — shared shell for the pop counter and the toolbar dialogs
@@ -1741,7 +1739,37 @@ input:focus-visible,
    Responsive — three breakpoints, no more
    ========================================================================== */
 
+/* Slim degree readout for single-column layouts; desktop keeps the gauge in
+   its sticky column, so the bar never shows there. */
+.degree-bar { display: none; }
+
 @media (max-width: 1024px) {
+  .degree-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4);
+    padding: var(--s-3) var(--gutter);
+    padding-bottom: calc(var(--s-3) + env(safe-area-inset-bottom));
+    background: var(--surface-raised);
+    border-top: 1px solid var(--border-strong);
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-sm);
+    text-decoration: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .degree-bar strong {
+    font-family: var(--font-display);
+    font-size: var(--fs-h3);
+    color: var(--text);
+  }
+  .site-footer { padding-bottom: var(--s-16); }
   :root { --gutter: var(--s-5); }
 
   .dashboard-grid,
@@ -1771,7 +1799,6 @@ input:focus-visible,
   .breakdown-card,
   .diagnostics-card,
   .guide-card,
-  .privacy-policy-section { padding: var(--s-5) var(--s-4); }
 
   .control-row { grid-template-columns: minmax(0, 1fr); align-items: stretch; }
   .number-input { width: 100%; text-align: left; }

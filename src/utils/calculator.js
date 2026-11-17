@@ -4,6 +4,7 @@ import {
   SLIDER_PREMIUM,
   MAX_EQUIVALENT_POPS,
   SLIDER_CAP_MULTIPLE,
+  PARAGON_BOOST_DEGREES,
 } from "../constants/paragons.js";
 
 /**
@@ -131,9 +132,13 @@ export function reverseCalculate({
   useSliderCash    = false,
   useTotems        = true,
   strategy         = 'leastCash',  // 'leastCash' | 'leastPops' | 'balanced'
+  paragonBoost     = false,        // Paragon Boost perk: +25 degrees for free
 }) {
   const basePrice          = getBasePrice(paragon.mediumCost, difficulty);
-  const targetPower        = getPowerThreshold(targetDegree);
+  // With the perk, power only has to earn the target minus the boost.
+  const targetPower        = getPowerThreshold(
+    paragonBoost ? Math.max(1, targetDegree - PARAGON_BOOST_DEGREES) : targetDegree
+  );
   const sacrificePowerRate = CASH_POWER_PER_BASE_PRICE / basePrice;
   const sliderPowerRate    = CASH_POWER_PER_BASE_PRICE / (basePrice * SLIDER_PREMIUM);
 
@@ -307,8 +312,9 @@ export function getBasePrice(mediumCost, difficulty) {
  *
  * These are read from a per-difficulty table rather than derived from the Medium
  * price, because BTD6 applies the difficulty multiplier to each upgrade and
- * rounds it individually. Scaling the total instead lands up to $5 off (a 2-4-0
- * Dart Monkey is $7,205 on Easy, not the $7,210 the multiplier suggests).
+ * rounds it individually, with ties rounding up. Scaling the total instead lands
+ * a few dollars off (a 2-0-4 Ninja Monkey is $7,745 on Easy, not the $7,735 the
+ * multiplier suggests).
  */
 export function getMaxT4Cost(paragon, difficulty) {
   const costs = paragon?.maxT4Cost;
@@ -352,7 +358,8 @@ export function calculateParagonData({
   extraT5s, // number of additional T5s sacrificed (excluding the initial 3)
   sacrificedTowerCash, // cash spent on non-T5 towers
   sliderCash, // cash injected via the slider
-  totems // Geraldo totems count
+  totems, // Geraldo totems count
+  paragonBoost = false // Paragon Boost perk active for this Paragon (+25 degrees)
 }) {
   const basePrice = getBasePrice(paragon.mediumCost, difficulty);
 
@@ -417,11 +424,21 @@ export function calculateParagonData({
 
   // Total Power
   const totalPower = t5Power + popsPower + cashPower + totemsPower;
-  const degree = calculateDegreeFromPower(totalPower);
+  // The Paragon Boost perk is applied after the degree is worked out from
+  // power, and cannot push past Degree 100.
+  const baseDegree = calculateDegreeFromPower(totalPower);
+  const degree = paragonBoost
+    ? Math.min(100, baseDegree + PARAGON_BOOST_DEGREES)
+    : baseDegree;
+  // Power at which this build shows Degree 100 (lower with the perk).
+  const powerForMaxDegree = getPowerThreshold(
+    paragonBoost ? 100 - PARAGON_BOOST_DEGREES : 100
+  );
 
-  // Next Degree calculations
+  // Next Degree calculations — one more *power-earned* degree is one more
+  // displayed degree, so the threshold is read from the unboosted degree.
   const nextDegree = Math.min(100, degree + 1);
-  const nextDegreeThreshold = getPowerThreshold(nextDegree);
+  const nextDegreeThreshold = getPowerThreshold(baseDegree + 1);
   const powerGap = nextDegree === degree ? 0 : nextDegreeThreshold - totalPower;
 
   // Max Slider allowed in-game (4.2x base price: the 4x cash cap plus the 5% premium)
@@ -524,6 +541,9 @@ export function calculateParagonData({
     maxSliderAllowed,
     totalPower,
     degree,
+    baseDegree,
+    boostDegrees: degree - baseDegree,
+    powerForMaxDegree,
     powerBreakdown: {
       t5:       { power: t5Power,       max: POWER_LIMITS.t5.maxPower,       pct: (t5Power / POWER_LIMITS.t5.maxPower) * 100,             capped: t5Capped },
       pops:     { power: popsPower,     max: POWER_LIMITS.pops.maxPower,     pct: (popsPower / POWER_LIMITS.pops.maxPower) * 100,         capped: popsCapped },

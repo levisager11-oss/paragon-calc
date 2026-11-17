@@ -36,20 +36,23 @@ export default function EmbedCalculator() {
   const [totems, setTotems] = useState(initial.totems);
 
   const paragon = PARAGONS[paragonId] || PARAGONS.apex_plasma_master;
-  const maxT5 = maxT5sFor(paragon, gameMode);
+  // Lobby size and the Paragon Boost perk come from the shared link; the
+  // widget has no room for their controls, but must not drop them.
+  const { playerCount, paragonBoost } = initial;
+  const maxT5 = maxT5sFor(paragon, gameMode, playerCount);
   const effT5 = Math.min(extraT5s, maxT5);
   const basePrice = getBasePrice(paragon.mediumCost, difficulty);
 
   const results = useMemo(
     () => calculateParagonData({
-      paragon, difficulty, gameMode, pops, income,
-      extraT5s: effT5, sacrificedTowerCash, sliderCash, totems,
+      paragon, difficulty, gameMode, playerCount, pops, income,
+      extraT5s: effT5, sacrificedTowerCash, sliderCash, totems, paragonBoost,
     }),
-    [paragon, difficulty, gameMode, pops, income, effT5, sacrificedTowerCash, sliderCash, totems]
+    [paragon, difficulty, gameMode, playerCount, pops, income, effT5, sacrificedTowerCash, sliderCash, totems, paragonBoost]
   );
 
   const fullUrl = buildShareUrl(
-    { paragon: paragonId, difficulty, gameMode, pops, income, extraT5s: effT5, sacrificedTowerCash, sliderCash, totems },
+    { paragon: paragonId, difficulty, gameMode, playerCount, paragonBoost, pops, income, extraT5s: effT5, sacrificedTowerCash, sliderCash, totems },
     { path: "/classic" }
   );
 
