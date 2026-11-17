@@ -10,7 +10,7 @@
 
 import { MAX_POWER, soloCeilingFacts } from "../utils/calculator.js";
 import {
-  PARAGONS, POWER_LIMITS, GAME_VERSION,
+  PARAGONS, POWER_LIMITS, GAME_VERSION, PARAGON_BOOST_DEGREES,
   MAX_EQUIVALENT_POPS, CASH_CAP_MULTIPLE, SLIDER_CAP_MULTIPLE,
 } from "./paragons.js";
 
@@ -77,6 +77,10 @@ export const FAQ_ITEMS = [
     a: `Paragon Power Totems are an item sold by the hero Geraldo. Each totem absorbed into a Paragon adds a flat ${n(TOTEM_POWER)} power points and, unlike the other categories, has no cap. They stand in for pops or cash you have not banked yet, which makes them the quickest way to a high degree before the late rounds.`,
   },
   {
+    q: "What does the Paragon Boost perk do?",
+    a: `Paragon Boost is a perk that gives the first Paragon you buy in a game ${PARAGON_BOOST_DEGREES} extra degrees. The bonus is added after the degree is worked out from Paragon power and cannot go past Degree 100, so with the perk a Paragon only needs enough power for Degree ${100 - PARAGON_BOOST_DEGREES} to max out. Perks are disabled in CHIMPS and competitive modes. Switch on "Paragon Boost" in the calculator to include it.`,
+  },
+  {
     q: "Can I over-sacrifice and waste resources?",
     a: `Yes — every category except totems is capped, so anything past the cap is wasted. Pops & Income maxes at ${millions(MAX_EQUIVALENT_POPS)} equivalent pops (${n(POWER_LIMITS.pops.maxPower)} power) and cash at ${CASH_CAP_MULTIPLE}x the base price (${n(POWER_LIMITS.cash.maxPower)} power). Upgrade tiers no longer count at all, though the money spent on those towers still counts as cash. The calculator flags wasted cash and pops so you don't over-invest.`,
   },
@@ -86,6 +90,6 @@ export const FAQ_ITEMS = [
   },
   {
     q: "Is this calculator accurate and up to date?",
-    a: `It models the current Update ${GAME_VERSION} Paragon formula, including the cash slider and Geraldo totems, and is open-source so the math can be checked. The degree curve is pinned by a regression test against the documented in-game values. Use the Goal Planner to work backwards from a target degree, or enter your sacrifices directly to see the exact degree you will get.`,
+    a: `It models the current Update ${GAME_VERSION} Paragon formula, including the cash slider and Geraldo totems, and is open-source so the math can be checked. The Xbox, PlayStation and Switch versions have not received that update yet and still use the older, lower caps, so results there will differ. The degree curve is pinned by a regression test against the documented in-game values. Use the Goal Planner to work backwards from a target degree, or enter your sacrifices directly to see the exact degree you will get.`,
   },
 ];

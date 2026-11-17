@@ -12,6 +12,8 @@ describe("shareState encode/decode", () => {
       paragon: "ascended_shadow",
       difficulty: "hard",
       gameMode: "coop",
+      playerCount: 3,
+      paragonBoost: true,
       pops: 1234567,
       income: 5000,
       extraT5s: 3,
@@ -20,6 +22,14 @@ describe("shareState encode/decode", () => {
       totems: 7,
     };
     expect(decodeState(encodeState(s))).toEqual(s);
+  });
+
+  it("writes the lobby size and perk only when they differ from the defaults", () => {
+    const base = { ...DEFAULT_STATE, gameMode: "coop" };
+    expect(encodeState(base)).not.toMatch(/players=|boost=/);
+    expect(encodeState({ ...base, playerCount: 2, paragonBoost: true })).toMatch(/players=2.*boost=1/);
+    // Solo has no lobby, so a stale player count is not written.
+    expect(encodeState({ ...DEFAULT_STATE, playerCount: 2 })).not.toContain("players=");
   });
 
   it("uses a readable paragon slug", () => {

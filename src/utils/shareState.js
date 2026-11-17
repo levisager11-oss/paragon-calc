@@ -11,6 +11,8 @@ export const DEFAULT_STATE = {
   paragon: "apex_plasma_master",
   difficulty: "medium",
   gameMode: "solo",
+  playerCount: 4,      // co-op lobby size (2-4); ignored solo
+  paragonBoost: false, // Paragon Boost perk (+25 degrees)
   pops: 0,
   income: 0,
   extraT5s: 0,
@@ -54,6 +56,10 @@ export function encodeState(state) {
   params.set("paragon", slugForId(s.paragon));
   params.set("diff", s.difficulty);
   params.set("mode", s.gameMode);
+  // A full four-player lobby is the default, so only smaller ones are written.
+  const players = clampInt(s.playerCount, 2, 4);
+  if (s.gameMode === "coop" && players !== 4) params.set("players", String(players));
+  if (s.paragonBoost) params.set("boost", "1");
   for (const [key, param, min, max] of NUM_FIELDS) {
     const v = clampInt(s[key], min, max);
     if (v > 0) params.set(param, String(v));
@@ -76,6 +82,9 @@ export function decodeState(search) {
   const mode = params.get("mode");
   if (mode === "solo" || mode === "coop") out.gameMode = mode;
 
+  if (params.has("players")) out.playerCount = clampInt(params.get("players"), 2, 4);
+  out.paragonBoost = params.get("boost") === "1";
+
   for (const [key, param, min, max] of NUM_FIELDS) {
     if (params.has(param)) out[key] = clampInt(params.get(param), min, max);
   }
@@ -90,6 +99,8 @@ export function hasBuildParams(search) {
     params.has("paragon") ||
     params.has("diff") ||
     params.has("mode") ||
+    params.has("players") ||
+    params.has("boost") ||
     NUM_FIELDS.some(([, param]) => params.has(param))
   );
 }

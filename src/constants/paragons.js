@@ -4,13 +4,13 @@ export const PARAGONS = {
     name: "Apex Plasma Master",
     tower: "Dart Monkey",
     mediumCost: 150000,
-    maxT4Cost: { easy: 7205, medium: 8480, hard: 9155, impoppable: 10180 },
+    maxT4Cost: { easy: 7210, medium: 8480, hard: 9155, impoppable: 10180 },
     maxT4Build: "2-4-0",
     // Master Double Cross lets one player own a second Crossbow Master, so this
     // Paragon can absorb one extra Tier 5 even in solo play.
     soloExtraT5Source: "the Master Double Cross Monkey Knowledge",
     category: "primary",
-    description: "Combines the speed of Ultra-Juggernaut, the pierce of Plasma Monkey Fan Club, and the raw power of Crossbow Master. Shoots three bouncing, explosive plasma juggernaut balls.",
+    description: "Combines the speed of Ultra-Juggernaut, the pierce of Plasma Monkey Fan Club, and the raw power of Crossbow Master. Shoots volleys of three bouncing plasma juggernaut balls that each split into smaller juggernauts.",
     icon: "🎯",
     color: "#ff5722",
     abilities: [
@@ -24,7 +24,7 @@ export const PARAGONS = {
     name: "Glaive Dominus",
     tower: "Boomerang Monkey",
     mediumCost: 375000,
-    maxT4Cost: { easy: 5670, medium: 6670, hard: 7200, impoppable: 8005 },
+    maxT4Cost: { easy: 5680, medium: 6670, hard: 7200, impoppable: 8005 },
     maxT4Build: "2-4-0",
     category: "primary",
     description: "The ultimate defensive tower. Possesses high-speed homing glaives, a permanent orbital glaive ring, and an explosive press attack that pushes back massive Bloons.",
@@ -32,8 +32,8 @@ export const PARAGONS = {
     color: "#ff9800",
     abilities: [
       "Permanent ring of orbital glaives that shred anything nearby.",
-      "Kylie Glaives that bounce between targets and inflict a heavy bleeding effect.",
-      "Knocks back all non-BAD Bloons and heavily damages MOAB-class."
+      "Ricocheting glaives that seek targets across the whole map and leave a shredding damage-over-time effect.",
+      "MOAB Press glaive pushes back MOAB-class Bloons, then explodes for heavy damage and a burn."
     ]
   },
   ascended_shadow: {
@@ -41,16 +41,16 @@ export const PARAGONS = {
     name: "Ascended Shadow",
     tower: "Ninja Monkey",
     mediumCost: 500000,
-    maxT4Cost: { easy: 7725, medium: 9100, hard: 9830, impoppable: 10920 },
+    maxT4Cost: { easy: 7745, medium: 9100, hard: 9830, impoppable: 10920 },
     maxT4Build: "2-0-4",
     category: "magic",
-    description: "An absolute assassin that covers the entire map in shurikens, sticky bombs, and a permanent Grandmaster Sabotage slow effect. Cloaked in shadow, nothing escapes.",
+    description: "An absolute assassin that floods the map with seeking shurikens, flash bombs and sticky bombs, under a permanent Grand Saboteur debuff. Cloaked in shadow, nothing escapes.",
     icon: "🥷",
     color: "#e040fb",
     abilities: [
       "Throws 8 tracking shurikens at once with immense speed.",
-      "Automatically attaches Flash Bombs and Sticky Bombs that deal huge damage to MOABs.",
-      "Global permanent Grandmaster Sabotage that slows down all incoming Bloons by 25% (and 50% for bosses/spawned Bloons)."
+      "Throws stunning Flash Bombs that burst into mini-shurikens, and attaches Sticky Bombs that deal huge damage to MOABs.",
+      "Global permanent Grand Saboteur: slows all Bloons except BADs and Bosses by 50% and cuts MOAB-class health by 25% (not Bosses)."
     ]
   },
   navarch_of_the_seas: {
@@ -58,15 +58,15 @@ export const PARAGONS = {
     name: "Navarch of the Seas",
     tower: "Monkey Buccaneer",
     mediumCost: 550000,
-    maxT4Cost: { easy: 11470, medium: 13500, hard: 14580, impoppable: 16200 },
+    maxT4Cost: { easy: 11480, medium: 13500, hard: 14580, impoppable: 16200 },
     maxT4Build: "4-2-0",
     category: "military",
-    description: "The ruler of the waters. Features three active landing pads with powerful fighter planes, multiple grape cannons, and the legendary ability to hook and instantly destroy BADs.",
+    description: "The ruler of the waters. Features three fighter planes, six triple-barreled cannon-and-grape turrets, and the legendary ability to hook and instantly destroy BADs.",
     icon: "🚢",
     color: "#4caf50",
     abilities: [
       "Dual active hooks per round to pull in and instantly shred any MOAB-class Bloon (including BADs).",
-      "Spawns two high-tier Paragon fighter planes that patrol the map and fire missiles.",
+      "Spawns three permanent fighter planes that patrol the map, firing darts and anti-MOAB missile volleys.",
       "Passively generates cash at the end of each round and boosts other water towers."
     ]
   },
@@ -75,16 +75,16 @@ export const PARAGONS = {
     name: "Nautic Siege Core",
     tower: "Monkey Sub",
     mediumCost: 400000,
-    maxT4Cost: { easy: 14335, medium: 16875, hard: 18225, impoppable: 20250 },
+    maxT4Cost: { easy: 14350, medium: 16875, hard: 18225, impoppable: 20250 },
     maxT4Build: "0-4-2",
     category: "military",
-    description: "A high-tech nuclear submarine that can submerge to support all water towers, fires pre-emptive missiles at spawned Bloons, and launches a devastating radioactive pulse.",
+    description: "A nuclear submarine that submerges to buff Heroes, Subs and other towers, fires pre-emptive missiles at every Bloon entering the map, and emits radioactive pulses.",
     icon: "⚓",
     color: "#2196f3",
     abilities: [
-      "Submerging grants local and global buffs, decreases hero cooldowns, and reveals Camo.",
+      "Submerging cuts ability cooldowns map-wide, hugely boosts nearby Heroes' and Subs' damage and pierce, and strips Camo.",
       "Launches automatic Pre-emptive Strike missiles at any Bloon entering the screen.",
-      "Activated capability to supercharge with nuclear energy, wiping out large rushes."
+      "Final Strike ability: after a 15-second countdown, three missiles deal heavy damage, stun Bloons and leave radioactive fallout."
     ]
   },
   master_builder: {
@@ -92,16 +92,16 @@ export const PARAGONS = {
     name: "Master Builder",
     tower: "Engineer Monkey",
     mediumCost: 600000,
-    maxT4Cost: { easy: 13810, medium: 16250, hard: 17550, impoppable: 19500 },
+    maxT4Cost: { easy: 13820, medium: 16250, hard: 17550, impoppable: 19500 },
     maxT4Build: "2-4-0",
     category: "support",
-    description: "The pinnacle of support. Deploys three ultra-powered specialized sentries (Red, Green, Blue) that can be detonated, while boosting building speeds and cleaning the map.",
+    description: "The pinnacle of support. Deploys three Mega Sentries (Green, Red, Blue) that build their own sentries and can be detonated, and can Overclock other towers and Paragons.",
     icon: "🔧",
     color: "#9e9e9e",
     abilities: [
-      "Manually places and upgrades three massive sentries with distinct elemental beams.",
-      "Self-destruct ability to blow up sentries for screen-clearing mega damage.",
-      "Ultraboost passive that buffs the fire rate of nearby Paragons."
+      "Places three Mega Sentries anywhere: a Green laser, Red plasma streams and Blue anti-MOAB missiles.",
+      "Selling or replacing a Mega Sentry detonates it and its child sentries for massive damage, especially to Bosses.",
+      "Power Glove ability Overclocks any tower, even other Paragons; a passive Ultraboost speeds itself up every round."
     ]
   },
   magus_perfectus: {
@@ -109,15 +109,15 @@ export const PARAGONS = {
     name: "Magus Perfectus",
     tower: "Wizard Monkey",
     mediumCost: 800000,
-    maxT4Cost: { easy: 11405, medium: 13425, hard: 14500, impoppable: 16110 },
+    maxT4Cost: { easy: 11420, medium: 13425, hard: 14500, impoppable: 16110 },
     maxT4Build: "4-2-0",
     category: "magic",
-    description: "Master of arcane, fire, and necromancy. Uses a unique Dark Magic mana system to alternate between firing dense piercing energy beams and transforming into a massive Fire Phoenix.",
+    description: "Master of arcane, fire, and necromancy. Uses a unique mana system, switching between mana-hungry Arcane Spike and Dark Phoenix attacks and a weak Draining Beam that restores mana.",
     icon: "🧙",
     color: "#9c27b0",
     abilities: [
-      "Alternates between Spellcaster and Phoenix forms.",
-      "Necromancy capabilities: Summons a graveyard of zombie ZOMGs to fight for you.",
+      "Alternates between an attack mode that spends mana and a Draining Beam that restores it.",
+      "Necromancy: pops raise Undead Bloons, and Phoenix Explosion spends all mana to summon up to 10 Undead ZOMGs.",
       "Arcane Metamorphosis drains mana to annihilate whole screens of Bloons."
     ]
   },
@@ -126,16 +126,16 @@ export const PARAGONS = {
     name: "Goliath Doomship",
     tower: "Monkey Ace",
     mediumCost: 900000,
-    maxT4Cost: { easy: 24470, medium: 28800, hard: 31105, impoppable: 34560 },
+    maxT4Cost: { easy: 24490, medium: 28800, hard: 31105, impoppable: 34560 },
     maxT4Build: "2-0-4",
     category: "military",
-    description: "A massive flying fortress that commands the skies. Constantly fires circles of heavy darts and target-locked seeker missiles, with a manual Carpet Bomb ability that devastates the field.",
+    description: "A massive flying fortress that commands the skies. Constantly fires rings of piercing missiles and seeking missiles, with a Carpet Bomb ability that devastates the field.",
     icon: "🛩️",
     color: "#00bcd4",
     abilities: [
-      "Launches a high-precision targetable nuclear bomb payload.",
-      "Constantly fires eight streams of radial darts and homing heavy missiles.",
-      "Unmatched global screen coverage, dealing continuous damage to all Bloons."
+      "Carpet Bomb ability sends three bombers to drop 8 stunning bombs along a line you set.",
+      "Constantly fires volleys of 12 radial missiles and 8 homing missiles, plus twin streams of forward darts.",
+      "Covers the whole map from the air, but rewards steering its flight path over the Bloons."
     ]
   },
   crucible_of_steel_and_flame: {
@@ -143,7 +143,7 @@ export const PARAGONS = {
     name: "Crucible of Steel and Flame",
     tower: "Tack Shooter",
     mediumCost: 200000,
-    maxT4Cost: { easy: 4290, medium: 5055, hard: 5460, impoppable: 6065 },
+    maxT4Cost: { easy: 4300, medium: 5055, hard: 5460, impoppable: 6065 },
     maxT4Build: "4-2-0",
     category: "primary",
     description: "Spinning blades of Bloon immolation! Combines the ultra-fast shooting Tack Zone, high-speed Super Maelstrom, and fire-spewing Inferno Ring.",
@@ -151,7 +151,7 @@ export const PARAGONS = {
     color: "#f44336",
     abilities: [
       "Fires extremely fast rotating white-hot blades that burst into tacks.",
-      "Activated Maelstrom ability that shoots a giant wave of flaming blades.",
+      "Maelstrom ability greatly extends blade and tack reach and adds a ring of fire for 9 seconds.",
       "Activated Meteor Impact payload that unleashes heavy damage explosions.",
       "Innate Camo: None (requires external detection to hit Camo)."
     ]
@@ -171,7 +171,7 @@ export const PARAGONS = {
       "Deploys massive spiked mines that explode on contact and split into smaller spike piles.",
       "Passively covers the entire track with a persistent, damaging carpet of spikes.",
       "Activated ability that boosts the factory's attack speed to extreme levels for a short duration.",
-      "Activated mine-placement ability to layer high-explosive mines on designated parts of the track."
+      "Spikeageddon ability lays high-explosive land mines at intervals along every path; re-activate to detonate them."
     ]
   },
   ballistic_obliteration_missile_bunker: {
@@ -179,16 +179,16 @@ export const PARAGONS = {
     name: "Ballistic Obliteration Missile Bunker (B.O.M.B.)",
     tower: "Bomb Shooter",
     mediumCost: 650000,
-    maxT4Cost: { easy: 5410, medium: 6375, hard: 6880, impoppable: 7650 },
+    maxT4Cost: { easy: 5430, medium: 6375, hard: 6880, impoppable: 7650 },
     maxT4Build: "2-4-0",
     category: "primary",
     description: "The ultimate artillery fortress. Combines the cluster impact of Bomb Blitz, the Moab-destroying power of MOAB Eliminator, and the stun capability of Bloon Crush.",
     icon: "💣",
     color: "#37474f",
     abilities: [
-      "Fires extremely rapid cluster bombs that stun and shred massive groups of Bloons.",
-      "Active MOAB Elimination missile targeting that deletes or heavily damages high-tier MOABs.",
-      "Passive emergency Bomb Blitz blast that clears the screen when Bloons get close to the exit.",
+      "Slowly fires heavy homing missiles that stun, push back and burst into two layers of cluster bombs.",
+      "Indomitable Surface-to-Air Ballistic Missile ability: a seeking missile that trails pushback explosions and ends in a huge blast.",
+      "Passive Blitz Tactical Storm wipes the screen when a Bloon tries to leak, with reduced damage to BADs and Bosses.",
       "Innate Camo: None (requires external detection to hit Camo)."
     ]
   },
@@ -197,7 +197,7 @@ export const PARAGONS = {
     name: "Herald of Everfrost",
     tower: "Ice Monkey",
     mediumCost: 300000,
-    maxT4Cost: { easy: 7555, medium: 8900, hard: 9610, impoppable: 10680 },
+    maxT4Cost: { easy: 7575, medium: 8900, hard: 9610, impoppable: 10680 },
     maxT4Build: "2-4-0",
     // Silas at level 13+ lets one player own two Ice Monkeys with the same Tier 5
     // upgrade, which is the Ice Monkey's equivalent of Master Double Cross.
@@ -209,7 +209,7 @@ export const PARAGONS = {
     abilities: [
       "Fires Ice Lance Beams and unleashes Snowstorm Roar map-wide freezes.",
       "Creates ice platforms on water surfaces so land-based towers can be placed.",
-      "Applies heavy vulnerability debuffs to all frozen Bloons, boosting other towers' damage.",
+      "Snowstorm Roar makes all Bloons, even BADs and Bosses, take extra damage from every attack.",
       "Activated ability 'Eclipse of Fimbulwinter' that freezes all incoming Bloons and slows down Bosses."
     ]
   },
@@ -218,16 +218,16 @@ export const PARAGONS = {
     name: "Root of all Nature",
     tower: "Druid",
     mediumCost: 475000,
-    maxT4Cost: { easy: 7130, medium: 8400, hard: 9075, impoppable: 10080 },
+    maxT4Cost: { easy: 7150, medium: 8400, hard: 9075, impoppable: 10080 },
     maxT4Build: "4-2-0",
     category: "magic",
     description: "The absolute embodiment of natural fury. Combines the lightning storm control of Monarch of Storms, the global vine coverage of Spirit of the Forest, and the escalating speed/power of Avatar of Wrath.",
     icon: "🌿",
     color: "#4caf50",
     abilities: [
-      "Fires Electrified Thorns that chain-ricochet across the screen.",
+      "Fires volleys of seven Electrified Thorns that ricochet between Bloons.",
       "Passively wraps the entire track in sentient vines that deal heavy continuous damage.",
-      "Periodically spawns Storm Trees that act as cash farms and blow back MOAB-class Bloons.",
+      "Periodically grows Storm Trees that count as Banana Farms for its income bonus and blow Bloons back with Vineados.",
       "Toggleable ability 'Primordial Wrath' that grants immense combat power in exchange for draining cash."
     ]
   },
@@ -279,6 +279,10 @@ export const MAX_EQUIVALENT_POPS = POWER_LIMITS.pops.maxPower * POWER_LIMITS.pop
 // slider stops at that multiple plus its premium (4.2x).
 export const CASH_CAP_MULTIPLE = POWER_LIMITS.cash.maxPower / CASH_POWER_PER_BASE_PRICE;
 export const SLIDER_CAP_MULTIPLE = Math.round(CASH_CAP_MULTIPLE * SLIDER_PREMIUM * 100) / 100;
+
+// The Paragon Boost perk (v56.0): the first Paragon bought in a game gains this
+// many degrees on top of whatever its power earned, up to the Degree 100 ceiling.
+export const PARAGON_BOOST_DEGREES = 25;
 
 // The game version the roster, prices and power rules above were verified against.
 export const GAME_VERSION = "57.0";

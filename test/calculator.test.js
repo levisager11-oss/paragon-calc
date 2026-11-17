@@ -417,3 +417,67 @@ describe("reverseCalculate", () => {
     }
   });
 });
+
+describe("Goal Planner answers reach their own target", () => {
+  // Regression: ceil(power / rate) can land a float hair short once the engine
+  // floors cash power, which used to leave e.g. Navarch on Easy one degree low.
+  it("holds for every paragon, difficulty, mode, strategy and degree", () => {
+    const misses = [];
+    for (const paragon of Object.values(PARAGONS))
+      for (const difficulty of ["easy", "medium", "hard", "impoppable"])
+        for (const gameMode of ["solo", "coop"])
+          for (const strategy of ["leastCash", "balanced", "leastPops"])
+            for (const [useSacrificeCash, useSliderCash] of [[true, false], [false, true], [true, true]])
+              for (let targetDegree = 2; targetDegree <= 100; targetDegree++) {
+                const plan = reverseCalculate({
+                  paragon, difficulty, gameMode, targetDegree, strategy,
+                  useSacrificeCash, useSliderCash, useTotems: false,
+                });
+                if (!plan.achievable) continue;
+                const { degree } = calculateParagonData({
+                  paragon, difficulty, gameMode,
+                  pops: plan.popsNeeded, income: 0, extraT5s: plan.t5sNeeded,
+                  sacrificedTowerCash: plan.sacrificeCashNeeded,
+                  sliderCash: plan.sliderCashNeeded, totems: plan.totemsNeeded,
+                });
+                if (degree < targetDegree) misses.push(`${paragon.id}/${difficulty}/${strategy}/${targetDegree}`);
+              }
+    expect(misses).toEqual([]);
+  });
+});
+
+describe("Paragon Boost perk", () => {
+  const build = (over = {}) => calculateParagonData({
+    paragon: NINJA, difficulty: "medium", gameMode: "solo",
+    pops: 0, income: 0, extraT5s: 0, sacrificedTowerCash: 0, sliderCash: 0, totems: 0,
+    ...over,
+  });
+
+  it("adds 25 degrees on top of the power-earned degree", () => {
+    const plain = build({ totems: 10 });
+    const boosted = build({ totems: 10, paragonBoost: true });
+    expect(boosted.baseDegree).toBe(plain.degree);
+    expect(boosted.degree).toBe(plain.degree + 25);
+    expect(boosted.totalPower).toBe(plain.totalPower);
+  });
+
+  it("never exceeds Degree 100", () => {
+    const boosted = build({ pops: MAX_EQUIVALENT_POPS, paragonBoost: true });
+    expect(boosted.baseDegree).toBe(81);
+    expect(boosted.degree).toBe(100);
+    expect(boosted.recommendations).toEqual([]);
+  });
+
+  it("sizes the next-degree gap from the unboosted degree", () => {
+    const boosted = build({ paragonBoost: true }); // Degree 1 + 25
+    expect(boosted.degree).toBe(26);
+    expect(boosted.nextDegree).toBe(27);
+    expect(boosted.powerGap).toBe(getPowerThreshold(2));
+  });
+
+  it("lets the Goal Planner aim 25 degrees lower", () => {
+    const args = { paragon: NINJA, difficulty: "medium", gameMode: "solo", targetDegree: 100 };
+    expect(reverseCalculate({ ...args, paragonBoost: true }).targetPower).toBe(getPowerThreshold(75));
+    expect(reverseCalculate(args).targetPower).toBe(MAX_POWER);
+  });
+});

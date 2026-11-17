@@ -13,7 +13,8 @@ inputs to hit it.
 - **Cash optimiser** — moves whole tower sacrifices off the 95%-efficient cash slider
 - **Shareable builds** — every build round-trips through the URL; save, embed or export a PNG
 - **Public JSON API** — `POST /api/paragon/calculate`, for Discord bots and integrations
-- **Static SEO pages** — `/paragons`, `/paragons/<slug>` and `/faq` are pre-rendered HTML
+- **Static SEO pages** — `/paragons`, `/paragons/<slug>`, `/degrees`, `/faq` and `/about` are pre-rendered HTML
+- **Co-op lobby size and Paragon Boost** — 2–4 players set the extra-Tier-5 ceiling; the perk adds 25 degrees (max 100)
 
 ## The formula
 
@@ -79,8 +80,8 @@ and 1.20× (Impoppable). Every Paragon's scaled price is already a whole $5, so
 the rounding in `getBasePrice` never has to correct anything.
 
 Tower prices are the exception: BTD6 applies the difficulty multiplier to each
-upgrade and rounds each one, so scaling a tower's total instead lands up to $5
-off. The priciest legal non-Tier-5 sacrifice — a Tier 4 with a +2 crosspath, the
+upgrade and rounds each one (ties round up: a $350 tower is $300 on Easy), so
+scaling a tower's total instead lands a few dollars off. The priciest legal non-Tier-5 sacrifice — a Tier 4 with a +2 crosspath, the
 largest chunk the cash optimiser can move off the slider — is therefore stored
 per difficulty as `maxT4Cost`, not derived.
 
@@ -96,7 +97,7 @@ Nothing below that block invents its own.
 | --- | --- |
 | Spacing | 4pt scale, `--s-1` (4px) to `--s-20` (80px). Everything that separates two elements is a token; the only literals are optical icon alignment and slider-thumb geometry. |
 | Radii | `--r-sm` 6px, `--r-md` 10px, `--r-lg` 16px, plus `--r-pill` for capsules and circles |
-| Type | Space Grotesk for headings, Inter for body; seven steps, every line-height on the 4pt grid |
+| Type | Space Grotesk for headings, Inter for body, self-hosted from `public/fonts/` (no Google Fonts request); seven steps, every line-height on the 4pt grid |
 | Colour | Flat `#0B0D12` canvas, three text weights, one accent (`#2E7DF6`); amber/green/red carry state only |
 | Tower classes | BTD6's Primary/Military/Magic/Support colours, used on 12px chips only |
 | Elevation | One neutral shadow, for surfaces that float (dropdowns, dialogs). Everything else separates with a border. |
@@ -192,7 +193,8 @@ curl -X POST https://paragon-calc.vercel.app/api/paragon/calculate \
 
 `tower` accepts a tower name, a Paragon name or a Paragon id. Everything else is
 optional: `pops`, `income`, `cash_spent`, `slider_cash`, `tier5_count`,
-`geraldo_totems`, `player_count` (1–4), `difficulty`.
+`geraldo_totems`, `player_count` (1–4), `difficulty`, `paragon_boost` (boolean;
+adds 25 degrees, capped at 100 — the response then also reports `base_degree`).
 
 `upgrade_count` is still accepted so older clients keep working, but since v57.0
 it contributes nothing and the response carries an `upgrades_ignored` warning;
@@ -200,9 +202,8 @@ it contributes nothing and the response carries an `upgrades_ignored` warning;
 `2.0` and `formula_revision` is `btd6-v57.0`.
 
 `player_count` sizes the lobby, and therefore the extra-Tier-5 ceiling: a
-two-player game allows 3, not the 9 a four-player game does. The web UI's
-solo/co-op toggle describes a full four-player lobby, so it is the `player_count:
-4` case.
+two-player game allows 3, not the 9 a four-player game does. The web UI has the
+same 2–4 player choice in co-op.
 
 The response carries the degree, total power, a per-source breakdown with cap
 flags, warnings for anything wasted or disallowed, and the rate-limit state.

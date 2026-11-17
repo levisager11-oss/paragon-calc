@@ -3,7 +3,9 @@ import { useEffect, useRef, useState } from "react";
 /**
  * A single AdSense slot.
  *
- * The container stays out of the layout until AdSense reports the slot filled.
+ * The container stays out of the layout until AdSense reports the slot filled —
+ * taken out of flow rather than `hidden`, because AdSense rejects a slot whose
+ * width is 0 at request time and a display:none slot would never fill at all.
  * An unfilled slot — no fill available, or the script blocked entirely, which is
  * how a large share of visitors see the page — would otherwise leave a gap the
  * width of the page and two flex gaps tall, with nothing in it.
@@ -37,7 +39,7 @@ export default function AdUnit({ slot, format = "auto", responsive = true, style
   }, []);
 
   return (
-    <div className="ad-container" style={style} hidden={!filled} aria-hidden="true">
+    <div className={`ad-container ${filled ? "" : "is-pending"}`} style={style} aria-hidden="true">
       <ins
         className="adsbygoogle"
         style={{ display: "block" }}

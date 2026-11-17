@@ -67,7 +67,7 @@ async function ensureFonts() {
 
 const numFmt = (n) => Math.round(n).toLocaleString("en-US");
 
-export async function exportResultImage({ paragon, difficulty, gameMode, results }) {
+export async function exportResultImage({ paragon, difficulty, gameMode, playerCount, results }) {
   await ensureFonts();
 
   const canvas = document.createElement("canvas");
@@ -213,7 +213,9 @@ export async function exportResultImage({ paragon, difficulty, gameMode, results
 
   const basePrice = getBasePrice(paragon.mediumCost, difficulty);
   const diffLabel = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
-  const modeLabel = gameMode === "coop" ? "Co-op" : "Solo";
+  const modeLabel =
+    (gameMode === "coop" ? `Co-op (${playerCount ?? 4} players)` : "Solo") +
+    (results.boostDegrees > 0 ? "  •  Paragon Boost" : "");
   ctx.fillStyle = T.muted;
   ctx.font = `400 22px ${FONT_SANS}`;
   ctx.textAlign = "right";

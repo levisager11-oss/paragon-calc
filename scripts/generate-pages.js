@@ -7,6 +7,8 @@
  *   /paragons                       — hub listing every Paragon
  *   /paragons/<slug>                — one landing page per Paragon
  *   /faq                            — FAQ page (matches the FAQPage JSON-LD)
+ *   /degrees                        — what every degree costs and gives
+ *   /about                          — about, contact and the privacy policy
  *   /sitemap.xml                    — full sitemap including the above
  *
  * Run after `vite build` (see package.json). Output defaults to ./dist so the
@@ -24,7 +26,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { PARAGONS, DIFFICULTY_MULTIPLIERS, GAME_VERSION, paragonSlug } from "../src/constants/paragons.js";
-import { getBasePrice, getMaxT4Cost, reverseCalculate, soloCeilingFacts } from "../src/utils/calculator.js";
+import { getBasePrice, getMaxT4Cost, getPowerThreshold, reverseCalculate, soloCeilingFacts } from "../src/utils/calculator.js";
 import { FAQ_ITEMS } from "../src/constants/faq.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -191,6 +193,15 @@ img.p-emoji,img.pcard-emoji{object-fit:contain;padding:var(--s-1)}
 }
 .stat-table tr:last-child th,.stat-table tr:last-child td{border-bottom:none}
 
+.table-scroll{overflow-x:auto}
+.deg-table{width:100%;border-collapse:collapse;font-size:var(--fs-sm);line-height:var(--lh-sm);font-variant-numeric:tabular-nums}
+.deg-table th,.deg-table td{text-align:right;padding:var(--s-2) var(--s-3);border-bottom:1px solid var(--border);white-space:nowrap}
+.deg-table thead th{color:var(--text-muted);font-weight:500;position:sticky;top:0;background:var(--surface)}
+.deg-table tbody th{color:var(--text);font-weight:600}
+.deg-table tr.is-step th,.deg-table tr.is-step td{background:var(--surface-sunken)}
+.prose{display:flex;flex-direction:column;gap:var(--s-3);max-width:72ch}
+.prose h2{margin:var(--s-4) 0 0}
+
 .reqs,.abilities{display:flex;flex-direction:column;gap:var(--s-3);margin-top:var(--s-4)}
 .reqs+p,.abilities+p{margin-top:var(--s-4)}
 .reqs li,.abilities li{
@@ -313,9 +324,7 @@ ${keywords ? `<meta name="keywords" content="${esc(keywords)}" />\n` : ""}<meta 
 <meta name="twitter:title" content="${esc(title)}" />
 <meta name="twitter:description" content="${esc(description)}" />
 <meta name="twitter:image" content="${SITE_URL}/og-image.png" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/fonts/fonts.css" />
 ${jsonLdBlocks.join("\n")}
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}" crossorigin="anonymous"></script>
 <style>${BASE_CSS}</style>
@@ -334,6 +343,7 @@ ${jsonLdBlocks.join("\n")}
     <nav class="site-nav" aria-label="Primary">
       <a href="/classic">Calculator</a>
       <a href="/paragons">Paragons</a>
+      <a href="/degrees">Degrees</a>
       <a href="/faq">FAQ</a>
     </nav>
   </header>
@@ -344,7 +354,9 @@ ${main}
     <nav class="foot-nav" aria-label="Footer">
       <a href="/">Calculator</a><span>&bull;</span>
       <a href="/paragons">All Paragons</a><span>&bull;</span>
+      <a href="/degrees">Degree table</a><span>&bull;</span>
       <a href="/faq">FAQ</a><span>&bull;</span>
+      <a href="/about">About &amp; privacy</a><span>&bull;</span>
       <a href="https://github.com/levisager11-oss/paragon-calc" target="_blank" rel="noopener noreferrer">GitHub</a>
     </nav>
     <p>Free, open-source BTD6 Paragon degree calculator. Bloons TD 6 is a trademark of Ninja Kiwi. Not affiliated with Ninja Kiwi.</p>
@@ -608,6 +620,122 @@ function faqPage() {
   });
 }
 
+// What a degree does to the Paragon's stats. These are the game's own scaling
+// rules: +1% damage and pierce per degree above 1 (Degree 100 is a flat x2),
+// a flat +1 damage per 10 degrees and +0.1 pierce per degree (+10 at 100), a
+// cooldown divisor that grows with the square root of the degree, and a boss
+// damage multiplier that steps up every 20 degrees.
+function degreeStats(d) {
+  const top = d === 100;
+  return {
+    damagePct: top ? 100 : d - 1,
+    damageFlat: top ? 10 : Math.floor((d - 1) / 10),
+    pierceFlat: top ? 10 : (d - 1) / 10,
+    cooldownPct: 100 / (1 + 0.01 * Math.round(Math.sqrt(50 * (d - 1)) * 10) / 10),
+    boss: 1 + 0.25 * Math.floor(d / 20),
+  };
+}
+
+function degreesPage() {
+  const canonicalPath = "/degrees";
+  const { html: crumbHtml, ld: crumbLd } = breadcrumb([
+    { name: "Home", path: "/" },
+    { name: "Degree table", path: canonicalPath },
+  ]);
+
+  const rows = [];
+  for (let d = 1; d <= 100; d++) {
+    const st = degreeStats(d);
+    const power = getPowerThreshold(d);
+    const step = d === 1 ? 0 : power - getPowerThreshold(d - 1);
+    rows.push(`<tr${d % 20 === 0 ? ' class="is-step"' : ""}>
+      <th scope="row">${d}</th>
+      <td>${num(power)}</td>
+      <td>${d === 1 ? "&mdash;" : "+" + num(step)}</td>
+      <td>+${st.damagePct}%${st.damageFlat ? ` +${st.damageFlat}` : ""}</td>
+      <td>+${st.damagePct}%${st.pierceFlat ? ` +${+st.pierceFlat.toFixed(1)}` : ""}</td>
+      <td>${st.cooldownPct.toFixed(1)}%</td>
+      <td>&times;${st.boss}</td>
+    </tr>`);
+  }
+
+  const main = `${crumbHtml}
+<header class="page-head">
+  <h1>BTD6 Paragon degree table</h1>
+  <p class="lede">The Paragon power every degree from 1 to 100 needs, and what that degree does to the Paragon's damage, pierce, attack cooldown and boss damage. Current for Update ${esc(GAME_VERSION)}.</p>
+  <a class="cta" href="/classic">Open the Paragon Calculator &rarr;</a>
+</header>
+<section class="card prose">
+  <h2>How to read it</h2>
+  <p><strong>Power needed</strong> is the total Paragon power for that degree, and <strong>step</strong> is how much more it takes than the degree before. Steps grow steadily, then jump at the end: Degree 100 costs ${num(getPowerThreshold(100) - getPowerThreshold(99))} power more than Degree 99, about twice the step before it.</p>
+  <p><strong>Boss damage</strong> is a multiplier on everything the Paragon deals to Boss Bloons, and it only moves every 20 degrees (highlighted rows). Degree 40 hits bosses as hard as Degree 59, so when cash is tight, stopping on a multiple of 20 is the efficient choice. Elite bosses take double these values.</p>
+  <p><strong>Cooldown</strong> is the time between attacks compared with Degree 1 &mdash; lower is faster. Most of the speed arrives early: Degree 20 already attacks about 31% faster, while the last 20 degrees add only a few percent.</p>
+</section>
+<section class="card">
+  <div class="table-scroll">
+  <table class="deg-table">
+    <thead><tr>
+      <th scope="col">Degree</th><th scope="col">Power needed</th><th scope="col">Step</th>
+      <th scope="col">Damage</th><th scope="col">Pierce</th><th scope="col">Cooldown</th><th scope="col">Boss damage</th>
+    </tr></thead>
+    <tbody>
+    ${rows.join("\n    ")}
+    </tbody>
+  </table>
+  </div>
+</section>`;
+
+  return shell({
+    title: "BTD6 Paragon Degree Table — Power Needed and Stats for Degrees 1–100",
+    description:
+      "Every BTD6 Paragon degree from 1 to 100: the Paragon power it needs and its damage, pierce, attack cooldown and boss damage bonuses.",
+    canonicalPath,
+    keywords: "btd6 paragon degree table, paragon power requirements, paragon degree stats, boss damage multiplier",
+    jsonLdBlocks: [jsonLd(crumbLd)],
+    main,
+  });
+}
+
+function aboutPage() {
+  const canonicalPath = "/about";
+  const { html: crumbHtml, ld: crumbLd } = breadcrumb([
+    { name: "Home", path: "/" },
+    { name: "About & privacy", path: canonicalPath },
+  ]);
+  const repo = "https://github.com/levisager11-oss/paragon-calc";
+
+  const main = `${crumbHtml}
+<header class="page-head">
+  <h1>About this calculator</h1>
+  <p class="lede">A free, open-source tool that works out the degree a Bloons TD 6 Paragon will reach before you commit the sacrifice.</p>
+</header>
+<section class="card prose">
+  <h2>What it is</h2>
+  <p>The calculator is a hobby project by a BTD6 player. It follows the game's Paragon power rules as of Update ${esc(GAME_VERSION)}, and every price and threshold is checked against community documentation and pinned by automated tests. The full source is on <a href="${repo}" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
+  <p>It is not affiliated with or endorsed by Ninja Kiwi. Bloons TD 6 is a trademark of Ninja Kiwi.</p>
+  <h2>Contact</h2>
+  <p>Found a wrong number, or a balance patch the site has not caught up with? Please open an issue on the <a href="${repo}/issues" target="_blank" rel="noopener noreferrer">GitHub repository</a>.</p>
+</section>
+<section class="card prose" id="privacy">
+  <h2>Privacy policy</h2>
+  <p><strong>Last updated:</strong> ${esc(new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }))}</p>
+  <p><strong>What we collect.</strong> This site does not ask for or store personal information. Your theme preference and any builds you save stay in your own browser's local storage and are never sent anywhere.</p>
+  <p><strong>Analytics.</strong> Vercel Analytics and Speed Insights record aggregated, anonymised page views and loading times. No personally identifiable information is stored.</p>
+  <p><strong>Advertising.</strong> The site may show ads through Google AdSense. Google may use cookies and web beacons to select ads based on your prior visits to this and other sites. You can opt out of personalised advertising in <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer">Google Ads Settings</a>, and read how Google uses this data in <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer">Google's Privacy &amp; Terms</a>.</p>
+  <p><strong>Embedded content.</strong> The calculator page embeds a widget from <a href="https://itch.io/docs/legal/privacy-policy" target="_blank" rel="noopener noreferrer">itch.io</a>, which loads from itch.io's servers and is subject to its privacy policy.</p>
+  <p><strong>Questions</strong> about this policy belong in an issue on the <a href="${repo}/issues" target="_blank" rel="noopener noreferrer">GitHub repository</a>.</p>
+</section>`;
+
+  return shell({
+    title: "About the BTD6 Paragon Calculator — Contact and Privacy Policy",
+    description:
+      "Who makes the BTD6 Paragon Calculator, how its numbers are verified, how to report a mistake, and the site's privacy policy.",
+    canonicalPath,
+    jsonLdBlocks: [jsonLd(crumbLd)],
+    main,
+  });
+}
+
 function canonical(p) {
   return SITE_URL + p;
 }
@@ -616,7 +744,9 @@ function sitemap() {
   const entries = [
     { loc: "/", priority: "1.0", changefreq: "weekly" },
     { loc: "/paragons", priority: "0.9", changefreq: "weekly" },
+    { loc: "/degrees", priority: "0.8", changefreq: "monthly" },
     { loc: "/faq", priority: "0.7", changefreq: "monthly" },
+    { loc: "/about", priority: "0.3", changefreq: "yearly" },
     ...Object.values(PARAGONS).map((p) => ({
       loc: `/paragons/${slugFor(p)}`,
       priority: "0.8",
@@ -657,7 +787,9 @@ function main() {
     pages++;
   }
   writePage("/faq", faqPage());
-  pages++;
+  writePage("/degrees", degreesPage());
+  writePage("/about", aboutPage());
+  pages += 3;
 
   writeFileSync(path.join(OUT_DIR, "sitemap.xml"), sitemap(), "utf8");
 

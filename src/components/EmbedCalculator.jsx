@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { PARAGONS, DIFFICULTY_MULTIPLIERS, MAX_EQUIVALENT_POPS, SLIDER_CAP_MULTIPLE } from "../constants/paragons.js";
 import { calculateParagonData, getBasePrice, maxT5sFor, MAX_POWER } from "../utils/calculator.js";
 import { decodeState, buildShareUrl } from "../utils/shareState.js";
+import { parseWholeNumber } from "../utils/number.js";
 
 // The three capped power sources. Colour is not identity here: every bar is the
 // accent until its source hits its ceiling, which is the one thing worth
@@ -13,8 +14,7 @@ const BREAKDOWN = [
 ];
 
 const clampNum = (v, min, max) => {
-  const n = parseInt(String(v).replace(/,/g, ""), 10);
-  if (!Number.isFinite(n)) return min;
+  const n = parseWholeNumber(v);
   return Math.min(max, Math.max(min, n));
 };
 
@@ -36,20 +36,23 @@ export default function EmbedCalculator() {
   const [totems, setTotems] = useState(initial.totems);
 
   const paragon = PARAGONS[paragonId] || PARAGONS.apex_plasma_master;
-  const maxT5 = maxT5sFor(paragon, gameMode);
+  // Lobby size and the Paragon Boost perk come from the shared link; the
+  // widget has no room for their controls, but must not drop them.
+  const { playerCount, paragonBoost } = initial;
+  const maxT5 = maxT5sFor(paragon, gameMode, playerCount);
   const effT5 = Math.min(extraT5s, maxT5);
   const basePrice = getBasePrice(paragon.mediumCost, difficulty);
 
   const results = useMemo(
     () => calculateParagonData({
-      paragon, difficulty, gameMode, pops, income,
-      extraT5s: effT5, sacrificedTowerCash, sliderCash, totems,
+      paragon, difficulty, gameMode, playerCount, pops, income,
+      extraT5s: effT5, sacrificedTowerCash, sliderCash, totems, paragonBoost,
     }),
-    [paragon, difficulty, gameMode, pops, income, effT5, sacrificedTowerCash, sliderCash, totems]
+    [paragon, difficulty, gameMode, playerCount, pops, income, effT5, sacrificedTowerCash, sliderCash, totems, paragonBoost]
   );
 
   const fullUrl = buildShareUrl(
-    { paragon: paragonId, difficulty, gameMode, pops, income, extraT5s: effT5, sacrificedTowerCash, sliderCash, totems },
+    { paragon: paragonId, difficulty, gameMode, playerCount, paragonBoost, pops, income, extraT5s: effT5, sacrificedTowerCash, sliderCash, totems },
     { path: "/classic" }
   );
 

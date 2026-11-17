@@ -40,11 +40,9 @@
     <meta name="twitter:image" content="https://paragon-calc.vercel.app/og-image.png" />
     <meta name="twitter:image:alt" content="BTD6 Paragon Calculator — the Paragon power caps: Pops &amp; Income 125,000, Cash 80,000, Extra Tier 5s 50,000" />
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" />
+    <!-- Fonts: self-hosted, no third-party request -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/inter.woff2" crossorigin />
+    <link rel="stylesheet" href="/fonts/fonts.css" />
 
     <!-- Apply the stored theme before first paint so the page never flashes the
          wrong canvas colour while the bundle loads. -->

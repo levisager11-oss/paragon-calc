@@ -265,6 +265,8 @@ kbd {
 }
 
 .page {
+  /* Containing block for pending ad slots, so they measure the content width. */
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--s-12);
@@ -564,8 +566,7 @@ main {
 .panel,
 .breakdown-card,
 .diagnostics-card,
-.guide-card,
-.privacy-policy-section {
+.guide-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
@@ -979,6 +980,16 @@ main {
 .degree-label,
 .degree-number,
 .power-total { position: relative; z-index: 1; }
+.boost-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  margin-top: var(--s-3);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+  color: var(--text-muted);
+}
 
 .degree-label {
   font-size: var(--fs-xs);
@@ -1382,17 +1393,6 @@ main {
   background: var(--text-subtle);
 }
 
-.privacy-content { display: flex; flex-direction: column; gap: var(--s-4); max-width: 72ch; }
-.privacy-content h3 {
-  font-size: var(--fs-h3);
-  line-height: var(--lh-h3);
-  margin-top: var(--s-2);
-}
-.privacy-content p {
-  font-size: var(--fs-sm);
-  line-height: var(--lh-sm);
-  color: var(--text-muted);
-}
 
 /* ============================================================================
    Modal — shared shell for the pop counter and the toolbar dialogs
@@ -1573,15 +1573,24 @@ main {
    Ads & footer
    ========================================================================== */
 
-/* No frame and no reserved height. AdUnit sets [hidden] until AdSense reports
-   the slot filled, so an unfilled or blocked slot leaves no gap at all — the
-   `display:none` from [hidden] also removes it from the page's flex gaps. */
+/* An ad slot stays out of the layout until AdSense reports it filled, so an
+   unfilled or blocked slot leaves no gap. It must NOT be display:none while it
+   waits: AdSense measures the slot when it is requested and refuses one with no
+   width ("No slot size for availableWidth=0"), so a hidden slot can never fill.
+   Taking it out of flow keeps its width and removes it from the flex gaps. */
 .ad-container {
   display: flex;
   justify-content: center;
   overflow: hidden;
 }
-.ad-container[hidden] { display: none; }
+.ad-container.is-pending {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
 .ad-container ins { width: 100%; }
 
 .more-games {
@@ -1730,7 +1739,37 @@ input:focus-visible,
    Responsive — three breakpoints, no more
    ========================================================================== */
 
+/* Slim degree readout for single-column layouts; desktop keeps the gauge in
+   its sticky column, so the bar never shows there. */
+.degree-bar { display: none; }
+
 @media (max-width: 1024px) {
+  .degree-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4);
+    padding: var(--s-3) var(--gutter);
+    padding-bottom: calc(var(--s-3) + env(safe-area-inset-bottom));
+    background: var(--surface-raised);
+    border-top: 1px solid var(--border-strong);
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-sm);
+    text-decoration: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .degree-bar strong {
+    font-family: var(--font-display);
+    font-size: var(--fs-h3);
+    color: var(--text);
+  }
+  .site-footer { padding-bottom: var(--s-16); }
   :root { --gutter: var(--s-5); }
 
   .dashboard-grid,
@@ -1760,7 +1799,6 @@ input:focus-visible,
   .breakdown-card,
   .diagnostics-card,
   .guide-card,
-  .privacy-policy-section { padding: var(--s-5) var(--s-4); }
 
   .control-row { grid-template-columns: minmax(0, 1fr); align-items: stretch; }
   .number-input { width: 100%; text-align: left; }

@@ -87,14 +87,15 @@ describe("paragon maxT4 data", () => {
 
   it("reads the per-difficulty price rather than scaling the medium one", () => {
     // BTD6 applies the difficulty multiplier to each upgrade and rounds it
-    // individually, so scaling the total lands off by a few dollars: a 2-4-0
-    // Dart Monkey is $7,205 on Easy, not the $7,210 that 8,480 x 0.85 suggests.
-    const p = PARAGONS.apex_plasma_master;
-    expect(getMaxT4Cost(p, "easy")).toBe(7205);
-    expect(getMaxT4Cost(p, "medium")).toBe(8480);
-    expect(getMaxT4Cost(p, "hard")).toBe(9155);
-    expect(getMaxT4Cost(p, "impoppable")).toBe(10180);
-    expect(getMaxT4Cost(p, "easy")).not.toBe(Math.round((8480 * 0.85) / 5) * 5);
+    // individually (a tie rounds up: a $350 tower is $300 on Easy), so scaling
+    // the total lands off by a few dollars: a 2-0-4 Ninja Monkey is $7,745 on
+    // Easy, not the $7,735 that 9,100 x 0.85 suggests.
+    const p = PARAGONS.ascended_shadow;
+    expect(getMaxT4Cost(p, "easy")).toBe(7745);
+    expect(getMaxT4Cost(p, "medium")).toBe(9100);
+    expect(getMaxT4Cost(p, "hard")).toBe(9830);
+    expect(getMaxT4Cost(p, "impoppable")).toBe(10920);
+    expect(getMaxT4Cost(p, "easy")).not.toBe(Math.round((9100 * 0.85) / 5) * 5);
   });
 
   it("falls back to no tower cost when the paragon has no T4 data", () => {

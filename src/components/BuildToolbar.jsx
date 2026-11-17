@@ -50,8 +50,9 @@ export default function BuildToolbar({ state, results, paragon, onLoadState, sha
     try {
       await navigator.clipboard.writeText(text);
     } catch {
-      // Clipboard API unavailable (e.g. insecure context). The value is left
-      // selected in its field so it can still be copied by hand.
+      // Clipboard API unavailable (e.g. insecure context or permission denied).
+      // Do not claim success; the field is still there to copy from by hand.
+      return;
     }
     setCopied(tag);
     window.setTimeout(() => setCopied(""), 1600);
@@ -88,6 +89,7 @@ export default function BuildToolbar({ state, results, paragon, onLoadState, sha
         paragon,
         difficulty: state.difficulty,
         gameMode: state.gameMode,
+        playerCount: state.playerCount,
         results,
       });
     } catch (err) {
