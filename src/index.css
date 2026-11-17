@@ -1847,3 +1847,11 @@ input:focus-visible,
     scroll-behavior: auto !important;
   }
 }
+
+/* iOS Safari zooms the page whenever a focused field's text is under 16px, so
+   touch devices and phone-width screens get 16px fields. */
+@media (pointer: coarse), (max-width: 720px) {
+  input,
+  select,
+  textarea { font-size: 16px !important; }
+}

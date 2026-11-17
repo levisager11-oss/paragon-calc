@@ -244,6 +244,8 @@ export default function App() {
     setSelectedParagonId(id);
     setSearchQuery("");
     setShowDropdown(false);
+    // Drop focus so a phone's keyboard closes and the new build is visible.
+    document.activeElement?.blur?.();
   };
 
   // 4. Enforce Game Constraints
@@ -390,7 +392,7 @@ export default function App() {
                     type="text"
                     className="paragon-search-input"
                     aria-label="Search paragons by name, tower or class"
-                    placeholder="Search by name, tower or class"
+                    placeholder="Choose a Paragon — tap to list, or type to search"
                     value={searchQuery}
                     onChange={(e) => { setSearchQuery(e.target.value); setShowDropdown(true); }}
                     onFocus={() => setShowDropdown(true)}
@@ -420,7 +422,15 @@ export default function App() {
                 </div>
 
                 {showDropdown && (
-                  <div className="paragon-dropdown" ref={dropdownRef}>
+                  <div
+                    className="paragon-dropdown"
+                    ref={dropdownRef}
+                    // Keep focus in the search field while the list is pressed.
+                    // Safari on iOS never focuses a tapped button, so without
+                    // this the field blurs, the list unmounts and the tap
+                    // selects nothing.
+                    onMouseDown={(e) => e.preventDefault()}
+                  >
                     {searchResults.length > 0 ? searchResults.map(p => (
                       <button
                         key={p.id}
