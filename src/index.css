@@ -1598,12 +1598,9 @@ main {
   flex-direction: column;
   gap: var(--s-4);
 }
-.itch-embed {
-  display: block;
-  width: 100%;
-  max-width: 552px;
-  height: 167px;
-  border: 0;
+.more-games-text {
+  max-width: 66ch;
+  color: var(--text-muted);
 }
 
 .site-footer {

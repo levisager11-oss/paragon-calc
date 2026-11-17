@@ -722,7 +722,6 @@ function aboutPage() {
   <p><strong>What we collect.</strong> This site does not ask for or store personal information. Your theme preference and any builds you save stay in your own browser's local storage and are never sent anywhere.</p>
   <p><strong>Analytics.</strong> Vercel Analytics and Speed Insights record aggregated, anonymised page views and loading times. No personally identifiable information is stored.</p>
   <p><strong>Advertising.</strong> The site may show ads through Google AdSense. Google may use cookies and web beacons to select ads based on your prior visits to this and other sites. You can opt out of personalised advertising in <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer">Google Ads Settings</a>, and read how Google uses this data in <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer">Google's Privacy &amp; Terms</a>.</p>
-  <p><strong>Embedded content.</strong> The calculator page embeds a widget from <a href="https://itch.io/docs/legal/privacy-policy" target="_blank" rel="noopener noreferrer">itch.io</a>, which loads from itch.io's servers and is subject to its privacy policy.</p>
   <p><strong>Questions</strong> about this policy belong in an issue on the <a href="${repo}/issues" target="_blank" rel="noopener noreferrer">GitHub repository</a>.</p>
 </section>`;
 
