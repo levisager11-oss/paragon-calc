@@ -26,7 +26,7 @@ const fmtDate = (ts) => {
  * (localStorage), grab an embed snippet, and export a result image. All of these
  * describe the build with the same share-state shape (see utils/shareState.js).
  */
-export default function BuildToolbar({ state, results, paragon, onLoadState, sharePath = "/classic" }) {
+export default function BuildToolbar({ state, results, paragon, onLoadState, sharePath = "/" }) {
   const [dialog, setDialog] = useState(null); // "share" | "embed" | "save" | "load"
   const [copied, setCopied] = useState("");
   const [saveName, setSaveName] = useState("");

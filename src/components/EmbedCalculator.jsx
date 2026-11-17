@@ -53,7 +53,7 @@ export default function EmbedCalculator() {
 
   const fullUrl = buildShareUrl(
     { paragon: paragonId, difficulty, gameMode, playerCount, paragonBoost, pops, income, extraT5s: effT5, sacrificedTowerCash, sliderCash, totems },
-    { path: "/classic" }
+    { path: "/" }
   );
 
   return (

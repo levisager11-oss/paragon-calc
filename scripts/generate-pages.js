@@ -25,7 +25,7 @@
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { mkdirSync, writeFileSync, existsSync } from "node:fs";
-import { PARAGONS, DIFFICULTY_MULTIPLIERS, GAME_VERSION, paragonSlug } from "../src/constants/paragons.js";
+import { PARAGONS, DIFFICULTY_MULTIPLIERS, POWER_LIMITS, GAME_VERSION, paragonSlug } from "../src/constants/paragons.js";
 import { getBasePrice, getMaxT4Cost, getPowerThreshold, reverseCalculate, soloCeilingFacts } from "../src/utils/calculator.js";
 import { FAQ_ITEMS } from "../src/constants/faq.js";
 
@@ -341,7 +341,7 @@ ${jsonLdBlocks.join("\n")}
       <span class="brand-text">BTD6 Paragon Calculator</span>
     </a>
     <nav class="site-nav" aria-label="Primary">
-      <a href="/classic">Calculator</a>
+      <a href="/">Calculator</a>
       <a href="/paragons">Paragons</a>
       <a href="/degrees">Degrees</a>
       <a href="/faq">FAQ</a>
@@ -454,7 +454,7 @@ function paragonPage(p) {
       <span class="badge" style="--cat:${cat.color}">${esc(cat.label)} &bull; ${esc(p.tower)}</span>
       <h1>${esc(p.name)}</h1>
       <p class="lede">${esc(p.description)}</p>
-      <a class="cta" href="/classic?paragon=${slug}">Open in the Paragon Calculator &rarr;</a>
+      <a class="cta" href="/?paragon=${slug}">Open in the Paragon Calculator &rarr;</a>
     </div>
   </div>
 
@@ -557,7 +557,7 @@ function paragonsIndexPage() {
 <header class="page-head">
   <h1>All ${all.length} BTD6 Paragons</h1>
   <p class="lede">Bloons TD 6 has ${all.length} Paragons &mdash; one ultimate upgrade per tower path family. Browse costs and classes below, then jump into the calculator to plan your exact degree.</p>
-  <a class="cta" href="/classic">Open the Paragon Calculator &rarr;</a>
+  <a class="cta" href="/">Open the Paragon Calculator &rarr;</a>
 </header>
 <section class="grid grid-wide">
   ${all.map((p) => paragonCard(p)).join("\n  ")}
@@ -598,7 +598,7 @@ function faqPage() {
 <header class="page-head">
   <h1>Paragon Calculator FAQ</h1>
   <p class="lede">How BTD6 Paragon degrees work, and how to get the most out of this calculator.</p>
-  <a class="cta" href="/classic">Open the Paragon Calculator &rarr;</a>
+  <a class="cta" href="/">Open the Paragon Calculator &rarr;</a>
 </header>
 <section class="faq">
   ${FAQ_ITEMS.map(
@@ -663,7 +663,7 @@ function degreesPage() {
 <header class="page-head">
   <h1>BTD6 Paragon degree table</h1>
   <p class="lede">The Paragon power every degree from 1 to 100 needs, and what that degree does to the Paragon's damage, pierce, attack cooldown and boss damage. Current for Update ${esc(GAME_VERSION)}.</p>
-  <a class="cta" href="/classic">Open the Paragon Calculator &rarr;</a>
+  <a class="cta" href="/">Open the Paragon Calculator &rarr;</a>
 </header>
 <section class="card prose">
   <h2>How to read it</h2>
@@ -735,6 +735,45 @@ function aboutPage() {
   });
 }
 
+// A short plain-text summary for AI search tools. Generated from the roster and
+// the engine so it cannot go stale the way a hand-written file would.
+function llmsTxt() {
+  const paragons = Object.values(PARAGONS)
+    .map((p) => `- [${p.name}](${SITE_URL}/paragons/${slugFor(p)}): ${p.tower} Paragon, ${money(p.mediumCost)} on Medium`)
+    .join("\n");
+  return `# BTD6 Paragon Calculator
+
+> A free, open-source calculator for Bloons TD 6 that works out the degree (1-100) a Paragon will reach from what you sacrifice. Current for BTD6 Update ${GAME_VERSION}.
+
+The site has one calculator, at ${SITE_URL}/. There are no separate modes or alternative designs: older "classic" and "ticket" addresses simply redirect to it.
+
+## Pages
+
+- [Calculator](${SITE_URL}/): enter pops, income, cash, extra Tier 5s and Geraldo totems to get the exact degree; includes a Goal Planner that works backwards from a target degree, co-op lobby size (2-4 players) and the Paragon Boost perk
+- [Degree table](${SITE_URL}/degrees): Paragon power needed for every degree, with its damage, pierce, cooldown and boss damage bonuses
+- [All Paragons](${SITE_URL}/paragons): every Paragon with prices on each difficulty
+- [FAQ](${SITE_URL}/faq): how Paragon degrees are calculated
+- [About and privacy](${SITE_URL}/about)
+
+## Paragon power rules (Update ${GAME_VERSION})
+
+- Degree 100 needs ${num(getPowerThreshold(100))} Paragon power.
+- Pops and income: 1 power per ${POWER_LIMITS.pops.popDivisor} pops or $${POWER_LIMITS.pops.incomeDivisor} generated, up to ${num(POWER_LIMITS.pops.maxPower)}.
+- Cash invested: 20,000 power per Paragon base price spent on sacrificed towers (the in-game slider costs 5% more), up to ${num(POWER_LIMITS.cash.maxPower)}.
+- Extra Tier 5 towers: ${num(POWER_LIMITS.t5.pointsPerExtra)} power each beyond the three required, up to ${num(POWER_LIMITS.t5.maxPower)}.
+- Geraldo's Paragon Power Totems: 2,000 power each, no cap.
+- Upgrade tiers on sacrificed towers no longer give power.
+
+## Paragons
+
+${paragons}
+
+## Optional
+
+- [Source code and JSON API](https://github.com/levisager11-oss/paragon-calc)
+`;
+}
+
 function canonical(p) {
   return SITE_URL + p;
 }
@@ -791,6 +830,7 @@ function main() {
   pages += 3;
 
   writeFileSync(path.join(OUT_DIR, "sitemap.xml"), sitemap(), "utf8");
+  writeFileSync(path.join(OUT_DIR, "llms.txt"), llmsTxt(), "utf8");
 
   const rel = path.relative(ROOT, OUT_DIR) || ".";
   console.log(`Generated ${pages} static pages + sitemap.xml into ${rel}/`);
